@@ -1,2 +1,6 @@
 env/
-
+__pycache__/
+.vscode/
+wandb/
+thesis_manta_ray.code-workspace
+utils/
