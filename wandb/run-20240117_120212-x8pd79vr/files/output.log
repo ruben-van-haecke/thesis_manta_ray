@@ -1,0 +1,34 @@
+obs:  OrderedDict([('task/time', array([[0.]], dtype=float32)), ('task/xyz-distance-from-origin', array([[0.]], dtype=float32))])
+time:  [0.]
+time:  [0.]
+time:  [0.]
+time:  [0.]
+time:  [0.]
+time:  [0.]
+time:  [0.]
+time:  [0.]
+normalised action:  (8,)
+max:  (8,)
+scaled action:  (8,)
+self._action_space.shape:  (8,)
+time:  [0.002]
+Traceback (most recent call last):
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 287, in <module>
+    sim.run()
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 177, in run
+    self.run_generation(generation=gen)
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 168, in run_generation
+    reward = self.run_episode_parallel(generation=generation, episode=agent)
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 142, in run_episode_parallel
+    scaled_action[id, :] = self.run_episode_single(generation=generation,
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 106, in run_episode_single
+    normalised_action = (cpg.ask(observation=obs).flatten()+1)/2
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/controller/cmaes_cpg.py", line 178, in ask
+    neuron.get_neuron_respons(observation=observation,
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/controller/cmaes_cpg.py", line 122, in get_neuron_respons
+    y = self.integrate(observation=observation,
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/controller/cmaes_cpg.py", line 84, in integrate
+    sol = solve_ivp(fun=dynamics,
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/env/lib/python3.10/site-packages/scipy/integrate/_ivp/ivp.py", line 548, in solve_ivp
+    raise ValueError("`t_eval` must be 1-dimensional.")
+ValueError: `t_eval` must be 1-dimensional.

@@ -1,0 +1,100 @@
+{
+    "os": "Linux-6.5.0-14-generic-x86_64-with-glibc2.35",
+    "python": "3.10.12",
+    "heartbeatAt": "2024-01-17T09:27:53.669046",
+    "startedAt": "2024-01-17T09:27:50.951786",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py",
+    "codePathLocal": "evolution_simulation.py",
+    "codePath": "evolution_simulation.py",
+    "git": {
+        "remote": "git@github.com:ruvhaeck/thesis_manta_ray.git",
+        "commit": "fd486563c8014209490c13e063073cd6d37032d9"
+    },
+    "email": "ruben.vanhaecke@ugent.be",
+    "root": "/media/ruben/data/documents/unief/thesis/thesis_manta_ray",
+    "host": "pc-ruben-vh",
+    "username": "ruben",
+    "executable": "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/env/bin/python",
+    "cpu_count": 10,
+    "cpu_count_logical": 12,
+    "cpu_freq": {
+        "current": 1217.59925,
+        "min": 400.0,
+        "max": 3900.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 1262.659,
+            "min": 400.0,
+            "max": 4700.0
+        },
+        {
+            "current": 1246.512,
+            "min": 400.0,
+            "max": 4700.0
+        },
+        {
+            "current": 1004.773,
+            "min": 400.0,
+            "max": 4700.0
+        },
+        {
+            "current": 1178.014,
+            "min": 400.0,
+            "max": 4700.0
+        },
+        {
+            "current": 1259.216,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 1202.673,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 1284.955,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 1246.385,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 1201.751,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 1260.482,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 1273.811,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 1245.387,
+            "min": 400.0,
+            "max": 3500.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 163.9468765258789,
+            "used": 149.10367584228516
+        }
+    },
+    "memory": {
+        "total": 15.302433013916016
+    }
+}

@@ -1,0 +1,198 @@
+2024-01-17 11:38:39,945 INFO    StreamThr :51909 [internal.py:wandb_internal():86] W&B internal server running at pid: 51909, started at: 2024-01-17 11:38:39.944657
+2024-01-17 11:38:39,947 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: status
+2024-01-17 11:38:39,952 INFO    WriterThread:51909 [datastore.py:open_for_write():87] open: /media/ruben/data/documents/unief/thesis/thesis_manta_ray/wandb/run-20240117_113839-l841d1ro/run-l841d1ro.wandb
+2024-01-17 11:38:39,953 DEBUG   SenderThread:51909 [sender.py:send():382] send: header
+2024-01-17 11:38:39,960 DEBUG   SenderThread:51909 [sender.py:send():382] send: run
+2024-01-17 11:38:40,769 INFO    SenderThread:51909 [dir_watcher.py:__init__():211] watching files in: /media/ruben/data/documents/unief/thesis/thesis_manta_ray/wandb/run-20240117_113839-l841d1ro/files
+2024-01-17 11:38:40,769 INFO    SenderThread:51909 [sender.py:_start_run_threads():1136] run started: l841d1ro with start time 1705487919.945013
+2024-01-17 11:38:40,782 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: check_version
+2024-01-17 11:38:40,782 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: check_version
+2024-01-17 11:38:41,458 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: run_start
+2024-01-17 11:38:41,459 DEBUG   HandlerThread:51909 [system_info.py:__init__():27] System info init
+2024-01-17 11:38:41,459 DEBUG   HandlerThread:51909 [system_info.py:__init__():42] System info init done
+2024-01-17 11:38:41,459 INFO    HandlerThread:51909 [system_monitor.py:start():194] Starting system monitor
+2024-01-17 11:38:41,459 INFO    SystemMonitor:51909 [system_monitor.py:_start():158] Starting system asset monitoring threads
+2024-01-17 11:38:41,460 INFO    HandlerThread:51909 [system_monitor.py:probe():214] Collecting system info
+2024-01-17 11:38:41,461 INFO    SystemMonitor:51909 [interfaces.py:start():190] Started cpu monitoring
+2024-01-17 11:38:41,462 INFO    SystemMonitor:51909 [interfaces.py:start():190] Started disk monitoring
+2024-01-17 11:38:41,463 INFO    SystemMonitor:51909 [interfaces.py:start():190] Started memory monitoring
+2024-01-17 11:38:41,463 INFO    SystemMonitor:51909 [interfaces.py:start():190] Started network monitoring
+2024-01-17 11:38:41,474 DEBUG   HandlerThread:51909 [system_info.py:probe():151] Probing system
+2024-01-17 11:38:41,477 DEBUG   HandlerThread:51909 [system_info.py:_probe_git():136] Probing git
+2024-01-17 11:38:41,483 DEBUG   HandlerThread:51909 [system_info.py:_probe_git():144] Probing git done
+2024-01-17 11:38:41,484 DEBUG   HandlerThread:51909 [system_info.py:probe():199] Probing system done
+2024-01-17 11:38:41,484 DEBUG   HandlerThread:51909 [system_monitor.py:probe():223] {'os': 'Linux-6.5.0-14-generic-x86_64-with-glibc2.35', 'python': '3.10.12', 'heartbeatAt': '2024-01-17T10:38:41.474986', 'startedAt': '2024-01-17T10:38:39.936293', 'docker': None, 'cuda': None, 'args': (), 'state': 'running', 'program': '/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py', 'codePathLocal': 'evolution_simulation.py', 'codePath': 'evolution_simulation.py', 'git': {'remote': 'git@github.com:ruvhaeck/thesis_manta_ray.git', 'commit': 'fd486563c8014209490c13e063073cd6d37032d9'}, 'email': 'ruben.vanhaecke@ugent.be', 'root': '/media/ruben/data/documents/unief/thesis/thesis_manta_ray', 'host': 'pc-ruben-vh', 'username': 'ruben', 'executable': '/media/ruben/data/documents/unief/thesis/thesis_manta_ray/env/bin/python', 'cpu_count': 10, 'cpu_count_logical': 12, 'cpu_freq': {'current': 1434.5300000000004, 'min': 400.0, 'max': 3900.0}, 'cpu_freq_per_core': [{'current': 1667.029, 'min': 400.0, 'max': 4700.0}, {'current': 528.565, 'min': 400.0, 'max': 4700.0}, {'current': 1615.023, 'min': 400.0, 'max': 4700.0}, {'current': 1153.174, 'min': 400.0, 'max': 4700.0}, {'current': 1700.39, 'min': 400.0, 'max': 3500.0}, {'current': 1697.334, 'min': 400.0, 'max': 3500.0}, {'current': 1700.007, 'min': 400.0, 'max': 3500.0}, {'current': 1631.107, 'min': 400.0, 'max': 3500.0}, {'current': 612.263, 'min': 400.0, 'max': 3500.0}, {'current': 814.367, 'min': 400.0, 'max': 3500.0}, {'current': 400.0, 'min': 400.0, 'max': 3500.0}, {'current': 1417.123, 'min': 400.0, 'max': 3500.0}], 'disk': {'/': {'total': 163.9468765258789, 'used': 149.10514450073242}}, 'memory': {'total': 15.302433013916016}}
+2024-01-17 11:38:41,484 INFO    HandlerThread:51909 [system_monitor.py:probe():224] Finished collecting system info
+2024-01-17 11:38:41,484 INFO    HandlerThread:51909 [system_monitor.py:probe():227] Publishing system info
+2024-01-17 11:38:41,484 INFO    HandlerThread:51909 [system_monitor.py:probe():229] Finished publishing system info
+2024-01-17 11:38:41,488 DEBUG   SenderThread:51909 [sender.py:send():382] send: files
+2024-01-17 11:38:41,488 INFO    SenderThread:51909 [sender.py:_save_file():1403] saving file wandb-metadata.json with policy now
+2024-01-17 11:38:41,493 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: python_packages
+2024-01-17 11:38:41,494 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: python_packages
+2024-01-17 11:38:41,538 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: stop_status
+2024-01-17 11:38:41,538 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: internal_messages
+2024-01-17 11:38:41,539 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: stop_status
+2024-01-17 11:38:41,775 INFO    Thread-12 :51909 [dir_watcher.py:_on_file_created():271] file/dir created: /media/ruben/data/documents/unief/thesis/thesis_manta_ray/wandb/run-20240117_113839-l841d1ro/files/wandb-metadata.json
+2024-01-17 11:38:41,778 INFO    Thread-12 :51909 [dir_watcher.py:_on_file_created():271] file/dir created: /media/ruben/data/documents/unief/thesis/thesis_manta_ray/wandb/run-20240117_113839-l841d1ro/files/requirements.txt
+2024-01-17 11:38:42,499 INFO    wandb-upload_0:51909 [upload_job.py:push():131] Uploaded file /tmp/tmp2_4_33yuwandb/g9q6hvrb-wandb-metadata.json
+2024-01-17 11:38:42,627 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: poll_exit
+2024-01-17 11:38:46,898 DEBUG   SenderThread:51909 [sender.py:send():382] send: telemetry
+2024-01-17 11:38:46,898 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: status_report
+2024-01-17 11:38:46,901 DEBUG   SenderThread:51909 [sender.py:send():382] send: exit
+2024-01-17 11:38:46,901 INFO    SenderThread:51909 [sender.py:send_exit():589] handling exit code: 1
+2024-01-17 11:38:46,901 INFO    SenderThread:51909 [sender.py:send_exit():591] handling runtime: 0
+2024-01-17 11:38:46,903 INFO    SenderThread:51909 [sender.py:_save_file():1403] saving file wandb-summary.json with policy end
+2024-01-17 11:38:46,903 INFO    SenderThread:51909 [sender.py:send_exit():597] send defer
+2024-01-17 11:38:46,903 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: poll_exit
+2024-01-17 11:38:46,903 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: defer
+2024-01-17 11:38:46,904 INFO    HandlerThread:51909 [handler.py:handle_request_defer():172] handle defer: 0
+2024-01-17 11:38:46,904 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: defer
+2024-01-17 11:38:46,904 INFO    SenderThread:51909 [sender.py:send_request_defer():613] handle sender defer: 0
+2024-01-17 11:38:46,904 INFO    SenderThread:51909 [sender.py:transition_state():617] send defer: 1
+2024-01-17 11:38:46,904 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: defer
+2024-01-17 11:38:46,904 INFO    HandlerThread:51909 [handler.py:handle_request_defer():172] handle defer: 1
+2024-01-17 11:38:46,905 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: defer
+2024-01-17 11:38:46,905 INFO    SenderThread:51909 [sender.py:send_request_defer():613] handle sender defer: 1
+2024-01-17 11:38:46,905 INFO    SenderThread:51909 [sender.py:transition_state():617] send defer: 2
+2024-01-17 11:38:46,905 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: defer
+2024-01-17 11:38:46,905 INFO    HandlerThread:51909 [handler.py:handle_request_defer():172] handle defer: 2
+2024-01-17 11:38:46,905 INFO    HandlerThread:51909 [system_monitor.py:finish():203] Stopping system monitor
+2024-01-17 11:38:46,905 DEBUG   SystemMonitor:51909 [system_monitor.py:_start():172] Starting system metrics aggregation loop
+2024-01-17 11:38:46,905 DEBUG   SystemMonitor:51909 [system_monitor.py:_start():179] Finished system metrics aggregation loop
+2024-01-17 11:38:46,905 DEBUG   SystemMonitor:51909 [system_monitor.py:_start():183] Publishing last batch of metrics
+2024-01-17 11:38:46,906 INFO    HandlerThread:51909 [interfaces.py:finish():202] Joined cpu monitor
+2024-01-17 11:38:46,906 INFO    HandlerThread:51909 [interfaces.py:finish():202] Joined disk monitor
+2024-01-17 11:38:46,907 INFO    HandlerThread:51909 [interfaces.py:finish():202] Joined memory monitor
+2024-01-17 11:38:46,907 INFO    HandlerThread:51909 [interfaces.py:finish():202] Joined network monitor
+2024-01-17 11:38:46,907 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: defer
+2024-01-17 11:38:46,907 INFO    SenderThread:51909 [sender.py:send_request_defer():613] handle sender defer: 2
+2024-01-17 11:38:46,907 INFO    SenderThread:51909 [sender.py:transition_state():617] send defer: 3
+2024-01-17 11:38:46,907 DEBUG   SenderThread:51909 [sender.py:send():382] send: stats
+2024-01-17 11:38:46,908 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: defer
+2024-01-17 11:38:46,908 INFO    HandlerThread:51909 [handler.py:handle_request_defer():172] handle defer: 3
+2024-01-17 11:38:46,908 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: defer
+2024-01-17 11:38:46,908 INFO    SenderThread:51909 [sender.py:send_request_defer():613] handle sender defer: 3
+2024-01-17 11:38:46,908 INFO    SenderThread:51909 [sender.py:transition_state():617] send defer: 4
+2024-01-17 11:38:46,908 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: defer
+2024-01-17 11:38:46,908 INFO    HandlerThread:51909 [handler.py:handle_request_defer():172] handle defer: 4
+2024-01-17 11:38:46,909 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: defer
+2024-01-17 11:38:46,909 INFO    SenderThread:51909 [sender.py:send_request_defer():613] handle sender defer: 4
+2024-01-17 11:38:46,909 INFO    SenderThread:51909 [sender.py:transition_state():617] send defer: 5
+2024-01-17 11:38:46,909 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: defer
+2024-01-17 11:38:46,909 INFO    HandlerThread:51909 [handler.py:handle_request_defer():172] handle defer: 5
+2024-01-17 11:38:46,909 DEBUG   SenderThread:51909 [sender.py:send():382] send: summary
+2024-01-17 11:38:46,910 INFO    SenderThread:51909 [sender.py:_save_file():1403] saving file wandb-summary.json with policy end
+2024-01-17 11:38:46,910 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: defer
+2024-01-17 11:38:46,910 INFO    SenderThread:51909 [sender.py:send_request_defer():613] handle sender defer: 5
+2024-01-17 11:38:46,910 INFO    SenderThread:51909 [sender.py:transition_state():617] send defer: 6
+2024-01-17 11:38:46,910 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: defer
+2024-01-17 11:38:46,910 INFO    HandlerThread:51909 [handler.py:handle_request_defer():172] handle defer: 6
+2024-01-17 11:38:46,910 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: defer
+2024-01-17 11:38:46,910 INFO    SenderThread:51909 [sender.py:send_request_defer():613] handle sender defer: 6
+2024-01-17 11:38:46,915 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: status_report
+2024-01-17 11:38:47,068 INFO    SenderThread:51909 [sender.py:transition_state():617] send defer: 7
+2024-01-17 11:38:47,069 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: defer
+2024-01-17 11:38:47,069 INFO    HandlerThread:51909 [handler.py:handle_request_defer():172] handle defer: 7
+2024-01-17 11:38:47,070 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: defer
+2024-01-17 11:38:47,070 INFO    SenderThread:51909 [sender.py:send_request_defer():613] handle sender defer: 7
+2024-01-17 11:38:47,629 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: keepalive
+2024-01-17 11:38:47,630 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: poll_exit
+2024-01-17 11:38:47,774 INFO    Thread-12 :51909 [dir_watcher.py:_on_file_modified():288] file/dir modified: /media/ruben/data/documents/unief/thesis/thesis_manta_ray/wandb/run-20240117_113839-l841d1ro/files/config.yaml
+2024-01-17 11:38:47,774 INFO    Thread-12 :51909 [dir_watcher.py:_on_file_created():271] file/dir created: /media/ruben/data/documents/unief/thesis/thesis_manta_ray/wandb/run-20240117_113839-l841d1ro/files/wandb-summary.json
+2024-01-17 11:38:47,774 INFO    Thread-12 :51909 [dir_watcher.py:_on_file_created():271] file/dir created: /media/ruben/data/documents/unief/thesis/thesis_manta_ray/wandb/run-20240117_113839-l841d1ro/files/output.log
+2024-01-17 11:38:49,775 INFO    Thread-12 :51909 [dir_watcher.py:_on_file_modified():288] file/dir modified: /media/ruben/data/documents/unief/thesis/thesis_manta_ray/wandb/run-20240117_113839-l841d1ro/files/output.log
+2024-01-17 11:38:50,910 INFO    SenderThread:51909 [sender.py:transition_state():617] send defer: 8
+2024-01-17 11:38:50,911 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: poll_exit
+2024-01-17 11:38:50,912 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: defer
+2024-01-17 11:38:50,912 INFO    HandlerThread:51909 [handler.py:handle_request_defer():172] handle defer: 8
+2024-01-17 11:38:50,913 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: defer
+2024-01-17 11:38:50,913 INFO    SenderThread:51909 [sender.py:send_request_defer():613] handle sender defer: 8
+2024-01-17 11:38:50,913 INFO    SenderThread:51909 [job_builder.py:build():296] Attempting to build job artifact
+2024-01-17 11:38:50,914 INFO    SenderThread:51909 [job_builder.py:_get_source_type():426] is repo sourced job
+2024-01-17 11:38:50,934 INFO    SenderThread:51909 [job_builder.py:build():402] adding wandb-job metadata file
+2024-01-17 11:38:50,967 INFO    SenderThread:51909 [sender.py:transition_state():617] send defer: 9
+2024-01-17 11:38:50,968 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: defer
+2024-01-17 11:38:50,968 INFO    HandlerThread:51909 [handler.py:handle_request_defer():172] handle defer: 9
+2024-01-17 11:38:50,969 DEBUG   SenderThread:51909 [sender.py:send():382] send: artifact
+2024-01-17 11:38:51,634 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: poll_exit
+2024-01-17 11:38:51,776 INFO    Thread-12 :51909 [dir_watcher.py:_on_file_modified():288] file/dir modified: /media/ruben/data/documents/unief/thesis/thesis_manta_ray/wandb/run-20240117_113839-l841d1ro/files/output.log
+2024-01-17 11:38:52,123 INFO    SenderThread:51909 [sender.py:send_artifact():1494] sent artifact job-git_github.com_ruvhaeck_thesis_manta_ray.git_evolution_simulation.py - {'id': 'QXJ0aWZhY3Q6NjkzNTE2NjY5', 'state': 'COMMITTED', 'artifactSequence': {'id': 'QXJ0aWZhY3RDb2xsZWN0aW9uOjEzMTA2OTgzMA==', 'latestArtifact': {'id': 'QXJ0aWZhY3Q6NjkzNjMxNTAz', 'versionIndex': 1}}}
+2024-01-17 11:38:52,123 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: defer
+2024-01-17 11:38:52,123 INFO    SenderThread:51909 [sender.py:send_request_defer():613] handle sender defer: 9
+2024-01-17 11:38:52,124 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: status_report
+2024-01-17 11:38:52,124 INFO    SenderThread:51909 [dir_watcher.py:finish():358] shutting down directory watcher
+2024-01-17 11:38:52,777 INFO    SenderThread:51909 [dir_watcher.py:finish():388] scan: /media/ruben/data/documents/unief/thesis/thesis_manta_ray/wandb/run-20240117_113839-l841d1ro/files
+2024-01-17 11:38:52,778 INFO    SenderThread:51909 [dir_watcher.py:finish():402] scan save: /media/ruben/data/documents/unief/thesis/thesis_manta_ray/wandb/run-20240117_113839-l841d1ro/files/config.yaml config.yaml
+2024-01-17 11:38:52,778 INFO    SenderThread:51909 [dir_watcher.py:finish():402] scan save: /media/ruben/data/documents/unief/thesis/thesis_manta_ray/wandb/run-20240117_113839-l841d1ro/files/output.log output.log
+2024-01-17 11:38:52,779 INFO    SenderThread:51909 [dir_watcher.py:finish():402] scan save: /media/ruben/data/documents/unief/thesis/thesis_manta_ray/wandb/run-20240117_113839-l841d1ro/files/requirements.txt requirements.txt
+2024-01-17 11:38:52,783 INFO    SenderThread:51909 [dir_watcher.py:finish():402] scan save: /media/ruben/data/documents/unief/thesis/thesis_manta_ray/wandb/run-20240117_113839-l841d1ro/files/wandb-metadata.json wandb-metadata.json
+2024-01-17 11:38:52,783 INFO    SenderThread:51909 [dir_watcher.py:finish():402] scan save: /media/ruben/data/documents/unief/thesis/thesis_manta_ray/wandb/run-20240117_113839-l841d1ro/files/wandb-summary.json wandb-summary.json
+2024-01-17 11:38:52,789 INFO    SenderThread:51909 [sender.py:transition_state():617] send defer: 10
+2024-01-17 11:38:52,789 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: poll_exit
+2024-01-17 11:38:52,793 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: defer
+2024-01-17 11:38:52,793 INFO    HandlerThread:51909 [handler.py:handle_request_defer():172] handle defer: 10
+2024-01-17 11:38:52,794 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: defer
+2024-01-17 11:38:52,794 INFO    SenderThread:51909 [sender.py:send_request_defer():613] handle sender defer: 10
+2024-01-17 11:38:52,795 INFO    SenderThread:51909 [file_pusher.py:finish():175] shutting down file pusher
+2024-01-17 11:38:53,150 INFO    wandb-upload_1:51909 [upload_job.py:push():131] Uploaded file /media/ruben/data/documents/unief/thesis/thesis_manta_ray/wandb/run-20240117_113839-l841d1ro/files/output.log
+2024-01-17 11:38:53,449 INFO    wandb-upload_2:51909 [upload_job.py:push():131] Uploaded file /media/ruben/data/documents/unief/thesis/thesis_manta_ray/wandb/run-20240117_113839-l841d1ro/files/requirements.txt
+2024-01-17 11:38:53,636 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: poll_exit
+2024-01-17 11:38:53,637 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: poll_exit
+2024-01-17 11:38:54,371 INFO    wandb-upload_0:51909 [upload_job.py:push():131] Uploaded file /media/ruben/data/documents/unief/thesis/thesis_manta_ray/wandb/run-20240117_113839-l841d1ro/files/config.yaml
+2024-01-17 11:38:54,639 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: poll_exit
+2024-01-17 11:38:54,640 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: poll_exit
+2024-01-17 11:38:55,641 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: poll_exit
+2024-01-17 11:38:55,643 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: poll_exit
+2024-01-17 11:38:56,643 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: poll_exit
+2024-01-17 11:38:56,644 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: poll_exit
+2024-01-17 11:38:57,644 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: poll_exit
+2024-01-17 11:38:57,645 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: status_report
+2024-01-17 11:38:57,646 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: poll_exit
+2024-01-17 11:38:58,646 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: poll_exit
+2024-01-17 11:38:58,647 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: poll_exit
+2024-01-17 11:38:58,983 INFO    wandb-upload_3:51909 [upload_job.py:push():131] Uploaded file /media/ruben/data/documents/unief/thesis/thesis_manta_ray/wandb/run-20240117_113839-l841d1ro/files/wandb-summary.json
+2024-01-17 11:38:59,184 INFO    Thread-11 (_thread_body):51909 [sender.py:transition_state():617] send defer: 11
+2024-01-17 11:38:59,185 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: defer
+2024-01-17 11:38:59,185 INFO    HandlerThread:51909 [handler.py:handle_request_defer():172] handle defer: 11
+2024-01-17 11:38:59,186 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: defer
+2024-01-17 11:38:59,186 INFO    SenderThread:51909 [sender.py:send_request_defer():613] handle sender defer: 11
+2024-01-17 11:38:59,187 INFO    SenderThread:51909 [file_pusher.py:join():181] waiting for file pusher
+2024-01-17 11:38:59,187 INFO    SenderThread:51909 [sender.py:transition_state():617] send defer: 12
+2024-01-17 11:38:59,187 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: defer
+2024-01-17 11:38:59,187 INFO    HandlerThread:51909 [handler.py:handle_request_defer():172] handle defer: 12
+2024-01-17 11:38:59,188 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: defer
+2024-01-17 11:38:59,188 INFO    SenderThread:51909 [sender.py:send_request_defer():613] handle sender defer: 12
+2024-01-17 11:38:59,188 INFO    SenderThread:51909 [file_stream.py:finish():595] file stream finish called
+2024-01-17 11:38:59,396 INFO    SenderThread:51909 [file_stream.py:finish():599] file stream finish is done
+2024-01-17 11:38:59,396 INFO    SenderThread:51909 [sender.py:transition_state():617] send defer: 13
+2024-01-17 11:38:59,396 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: defer
+2024-01-17 11:38:59,396 INFO    HandlerThread:51909 [handler.py:handle_request_defer():172] handle defer: 13
+2024-01-17 11:38:59,397 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: defer
+2024-01-17 11:38:59,397 INFO    SenderThread:51909 [sender.py:send_request_defer():613] handle sender defer: 13
+2024-01-17 11:38:59,397 INFO    SenderThread:51909 [sender.py:transition_state():617] send defer: 14
+2024-01-17 11:38:59,397 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: defer
+2024-01-17 11:38:59,398 INFO    HandlerThread:51909 [handler.py:handle_request_defer():172] handle defer: 14
+2024-01-17 11:38:59,398 DEBUG   SenderThread:51909 [sender.py:send():382] send: final
+2024-01-17 11:38:59,398 DEBUG   SenderThread:51909 [sender.py:send():382] send: footer
+2024-01-17 11:38:59,398 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: defer
+2024-01-17 11:38:59,399 INFO    SenderThread:51909 [sender.py:send_request_defer():613] handle sender defer: 14
+2024-01-17 11:38:59,399 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: poll_exit
+2024-01-17 11:38:59,400 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: poll_exit
+2024-01-17 11:38:59,401 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: poll_exit
+2024-01-17 11:38:59,402 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: server_info
+2024-01-17 11:38:59,403 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: poll_exit
+2024-01-17 11:38:59,403 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: get_summary
+2024-01-17 11:38:59,403 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: server_info
+2024-01-17 11:38:59,404 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: sampled_history
+2024-01-17 11:38:59,407 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: internal_messages
+2024-01-17 11:38:59,408 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: job_info
+2024-01-17 11:38:59,541 DEBUG   SenderThread:51909 [sender.py:send_request():409] send_request: job_info
+2024-01-17 11:38:59,541 INFO    MainThread:51909 [wandb_run.py:_footer_history_summary_info():3857] rendering history
+2024-01-17 11:38:59,542 INFO    MainThread:51909 [wandb_run.py:_footer_history_summary_info():3889] rendering summary
+2024-01-17 11:38:59,542 INFO    MainThread:51909 [wandb_run.py:_footer_sync_info():3816] logging synced files
+2024-01-17 11:38:59,542 DEBUG   HandlerThread:51909 [handler.py:handle_request():146] handle_request: shutdown
+2024-01-17 11:38:59,543 INFO    HandlerThread:51909 [handler.py:finish():869] shutting down handler
+2024-01-17 11:39:00,409 INFO    WriterThread:51909 [datastore.py:close():296] close: /media/ruben/data/documents/unief/thesis/thesis_manta_ray/wandb/run-20240117_113839-l841d1ro/run-l841d1ro.wandb
+2024-01-17 11:39:00,541 INFO    SenderThread:51909 [sender.py:finish():1572] shutting down sender
+2024-01-17 11:39:00,542 INFO    SenderThread:51909 [file_pusher.py:finish():175] shutting down file pusher
+2024-01-17 11:39:00,542 INFO    SenderThread:51909 [file_pusher.py:join():181] waiting for file pusher

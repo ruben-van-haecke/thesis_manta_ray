@@ -1,0 +1,15 @@
+obs:  OrderedDict([('task/time', array([[0.]], dtype=float32)), ('task/xyz-distance-from-origin', array([[0.]], dtype=float32))])
+scaled action:  (8, 8)
+self._action_space.shape:  (8,)
+Traceback (most recent call last):
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 285, in <module>
+    sim.run()
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 175, in run
+    self.run_generation(generation=gen)
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 166, in run_generation
+    reward = self.run_episode_parallel(generation=generation, episode=agent)
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 140, in run_episode_parallel
+    scaled_action[id, :] = self.run_episode_single(generation=generation,
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 111, in run_episode_single
+    if self._record_actions: self._actions[generation, episode, :, counter] = scaled_action
+ValueError: could not broadcast input array from shape (8,8) into shape (8,)

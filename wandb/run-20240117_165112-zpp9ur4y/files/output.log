@@ -1,0 +1,32 @@
+Traceback (most recent call last):
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 286, in <module>
+    sim.run()
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 175, in run
+    self.run_generation(generation=gen)
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 166, in run_generation
+    reward = self.run_episode_parallel(generation=generation, episode=agent)
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 137, in run_episode_parallel
+    scaled_action[env_id, :] = self.run_episode_single(generation=generation,
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 114, in run_episode_single
+    normalised_action = (self._controllers[env_id].ask(observation=obs).flatten()+1)/2
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/controller/cmaes_cpg.py", line 177, in ask
+    neuron.get_neuron_respons(observation=observation,
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/controller/cmaes_cpg.py", line 121, in get_neuron_respons
+    y = self.integrate(observation=observation,
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/controller/cmaes_cpg.py", line 83, in integrate
+    sol = solve_ivp(fun=dynamics,
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/env/lib/python3.10/site-packages/scipy/integrate/_ivp/ivp.py", line 602, in solve_ivp
+    message = solver.step()
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/env/lib/python3.10/site-packages/scipy/integrate/_ivp/base.py", line 197, in step
+    success, message = self._step_impl()
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/env/lib/python3.10/site-packages/scipy/integrate/_ivp/rk.py", line 144, in _step_impl
+    y_new, f_new = rk_step(self.fun, t, y, self.f, h, self.A,
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/env/lib/python3.10/site-packages/scipy/integrate/_ivp/rk.py", line 64, in rk_step
+    K[s] = fun(t + c * h, y + dy)
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/env/lib/python3.10/site-packages/scipy/integrate/_ivp/base.py", line 154, in fun
+    return self.fun_single(t, y)
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/env/lib/python3.10/site-packages/scipy/integrate/_ivp/base.py", line 23, in fun_wrapped
+    return np.asarray(fun(t, y), dtype=dtype)
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/controller/cmaes_cpg.py", line 70, in dynamics
+    return np.array([self._omega.value+np.sum(w_ij*r_j*np.sin(phi_j-phi-small_phi_ij)),  # phi_dot
+KeyboardInterrupt

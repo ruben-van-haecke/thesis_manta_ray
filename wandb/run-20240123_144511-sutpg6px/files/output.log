@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 279, in <module>
+    sim.run()
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 169, in run
+    self.run_generation(generation=gen)
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 160, in run_generation
+    reward = self.run_episode_parallel(generation=generation, episode=agent)
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 139, in run_episode_parallel
+    scaled_action[env_id, :] = self.run_episode_single(generation=generation,
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 125, in run_episode_single
+    scaled_action = minimum + normalised_action * (maximum - minimum)
+ValueError: operands could not be broadcast together with shapes (60000,) (8,)

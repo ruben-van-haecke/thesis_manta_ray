@@ -1,0 +1,212 @@
+<mujoco model="hilly_light_aquarium">
+  <compiler boundmass="1.0000000000000001e-05" boundinertia="9.9999999999999994e-12" coordinate="local" angle="radian" eulerseq="xyz"/>
+  <option timestep="0.002" gravity="0 0 0" density="1000" viscosity="0.00089999999999999998" integrator="implicit" cone="elliptic" noslip_iterations="5" noslip_tolerance="0"/>
+  <visual>
+    <headlight ambient="0.29999999999999999 0.29999999999999999 0.29999999999999999" diffuse="0.59999999999999998 0.59999999999999998 0.59999999999999998" specular="0 0 0"/>
+    <map znear="0.01"/>
+    <scale forcewidth="0.01" contactwidth="0.059999999999999998" contactheight="0.01" jointwidth="0.01" framelength="0.29999999999999999" framewidth="0.01"/>
+  </visual>
+  <default>
+    <default class="/">
+      <geom contype="1" conaffinity="0"/>
+    </default>
+    <default class="morphology/">
+      <geom contype="1" conaffinity="0"/>
+    </default>
+  </default>
+  <asset>
+    <texture name="//unnamed_texture_0" type="skybox" builtin="flat" rgb1="1 1 1" rgb2="1 1 1" width="200" height="200"/>
+    <texture name="light_gradient_ground_plane" type="2d" file="lightmap_0-376c43fa6738aa724bf52c7023d2b240c64c5b1c.png"/>
+    <material name="groundplane" class="/" texture="light_gradient_ground_plane" reflectance="0"/>
+    <hfield name="heightmap" file="heightmap_0-91fcc20c0c8c7a3740585df582e9b54536c2b6da.png" size="10 10 1.5 0.5"/>
+  </asset>
+  <worldbody>
+    <camera name="top_camera" class="/" pos="-1 -1 20" quat="1 0 0 0"/>
+    <light name="//unnamed_light_0" class="/" directional="true" castshadow="true" pos="0 0 20" dir="0 0 -0.5" diffuse="0.10000000000000001 0.10000000000000001 0.10000000000000001"/>
+    <geom name="height_map_geom" class="/" type="hfield" conaffinity="1" material="groundplane" hfield="heightmap"/>
+    <geom name="north_wall" class="/" type="box" conaffinity="1" size="10 0.10000000000000001 2.1000000000000001" rgba="0.45098039215686275 0.57647058823529407 0.70196078431372544 0.19607843137254902" pos="0 10.1 1.6000000000000001"/>
+    <geom name="south_wall" class="/" type="box" conaffinity="1" size="10 0.10000000000000001 2.1000000000000001" rgba="0.45098039215686275 0.57647058823529407 0.70196078431372544 0.19607843137254902" pos="0 -10.1 1.6000000000000001"/>
+    <geom name="east_wall" class="/" type="box" conaffinity="1" size="0.10000000000000001 10.199999999999999 2.1000000000000001" rgba="0.45098039215686275 0.57647058823529407 0.70196078431372544 0.19607843137254902" pos="-10.1 0 1.6000000000000001"/>
+    <geom name="west_wall" class="/" type="box" conaffinity="1" size="0.10000000000000001 10.199999999999999 2.1000000000000001" rgba="0.45098039215686275 0.57647058823529407 0.70196078431372544 0.19607843137254902" pos="10.1 0 1.6000000000000001"/>
+    <body name="morphology/">
+      <freejoint name="morphology/"/>
+      <body name="morphology//unnamed_body_0">
+        <body name="morphology/torso" pos="0 0 0" euler="0 0 0">
+          <geom name="morphology/torso_body" class="morphology/" type="capsule" size="0.11111111111111112 0.22222222222222224" rgba="100 0 0 0.5" friction="0.10000000000000001 0.10000000000000001 0.10000000000000001" density="1000" pos="0 0 0" euler="0 1.5707963267948966 0"/>
+          <body name="morphology/right_pectoral_fin" pos="-0.22222222222222224 -0.11111111111111112 0" euler="0 0 0">
+            <body name="morphology/right_pectoral_fin_segment_0" pos="0.044444444444444446 0 0" euler="0 0 0">
+              <geom name="morphology/right_pectoral_fin_segment_0_capsule" class="morphology/" type="capsule" size="0.02 0.22222222222222224" rgba="100 0 0 0.5" density="1000" pos="0 -0.24222222222222223 0" euler="1.5707963267948966 0 0"/>
+              <joint name="morphology/right_pectoral_fin_segment_0_x_axis" class="morphology/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+              <joint name="morphology/right_pectoral_fin_segment_0_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+              <site name="morphology/right_pectoral_fin_segment_0_tendon_site" class="morphology/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 -0.24222222222222223 0" euler="0 0 0"/>
+            </body>
+            <body name="morphology/right_pectoral_fin_segment_1" pos="0.088888888888888892 0 0" euler="0 0 0">
+              <geom name="morphology/right_pectoral_fin_segment_1_capsule" class="morphology/" type="capsule" size="0.02 0.20000000000000001" rgba="100 0 0 0.5" density="1000" pos="0 -0.22 0" euler="1.5707963267948966 0 0"/>
+              <joint name="morphology/right_pectoral_fin_segment_1_x_axis" class="morphology/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+              <joint name="morphology/right_pectoral_fin_segment_1_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+              <site name="morphology/right_pectoral_fin_segment_1_tendon_site" class="morphology/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 -0.22 0" euler="0 0 0"/>
+            </body>
+            <body name="morphology/right_pectoral_fin_segment_2" pos="0.13333333333333333 0 0" euler="0 0 0">
+              <geom name="morphology/right_pectoral_fin_segment_2_capsule" class="morphology/" type="capsule" size="0.02 0.17777777777777778" rgba="100 0 0 0.5" density="1000" pos="0 -0.19777777777777777 0" euler="1.5707963267948966 0 0"/>
+              <joint name="morphology/right_pectoral_fin_segment_2_x_axis" class="morphology/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+              <joint name="morphology/right_pectoral_fin_segment_2_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+              <site name="morphology/right_pectoral_fin_segment_2_tendon_site" class="morphology/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 -0.19777777777777777 0" euler="0 0 0"/>
+            </body>
+            <body name="morphology/right_pectoral_fin_segment_3" pos="0.17777777777777778 0 0" euler="0 0 0">
+              <geom name="morphology/right_pectoral_fin_segment_3_capsule" class="morphology/" type="capsule" size="0.02 0.15555555555555556" rgba="100 0 0 0.5" density="1000" pos="0 -0.17555555555555555 0" euler="1.5707963267948966 0 0"/>
+              <joint name="morphology/right_pectoral_fin_segment_3_x_axis" class="morphology/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+              <joint name="morphology/right_pectoral_fin_segment_3_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+              <site name="morphology/right_pectoral_fin_segment_3_tendon_site" class="morphology/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 -0.17555555555555555 0" euler="0 0 0"/>
+            </body>
+            <body name="morphology/right_pectoral_fin_segment_4" pos="0.22222222222222224 0 0" euler="0 0 0">
+              <geom name="morphology/right_pectoral_fin_segment_4_capsule" class="morphology/" type="capsule" size="0.02 0.13333333333333336" rgba="100 0 0 0.5" density="1000" pos="0 -0.15333333333333335 0" euler="1.5707963267948966 0 0"/>
+              <joint name="morphology/right_pectoral_fin_segment_4_x_axis" class="morphology/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+              <joint name="morphology/right_pectoral_fin_segment_4_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+              <site name="morphology/right_pectoral_fin_segment_4_tendon_site" class="morphology/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 -0.15333333333333335 0" euler="0 0 0"/>
+            </body>
+            <body name="morphology/right_pectoral_fin_segment_5" pos="0.26666666666666666 0 0" euler="0 0 0">
+              <geom name="morphology/right_pectoral_fin_segment_5_capsule" class="morphology/" type="capsule" size="0.02 0.11111111111111112" rgba="100 0 0 0.5" density="1000" pos="0 -0.13111111111111112 0" euler="1.5707963267948966 0 0"/>
+              <joint name="morphology/right_pectoral_fin_segment_5_x_axis" class="morphology/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+              <joint name="morphology/right_pectoral_fin_segment_5_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+              <site name="morphology/right_pectoral_fin_segment_5_tendon_site" class="morphology/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 -0.13111111111111112 0" euler="0 0 0"/>
+            </body>
+            <body name="morphology/right_pectoral_fin_segment_6" pos="0.31111111111111112 0 0" euler="0 0 0">
+              <geom name="morphology/right_pectoral_fin_segment_6_capsule" class="morphology/" type="capsule" size="0.02 0.088888888888888878" rgba="100 0 0 0.5" density="1000" pos="0 -0.10888888888888888 0" euler="1.5707963267948966 0 0"/>
+              <joint name="morphology/right_pectoral_fin_segment_6_x_axis" class="morphology/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+              <joint name="morphology/right_pectoral_fin_segment_6_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+              <site name="morphology/right_pectoral_fin_segment_6_tendon_site" class="morphology/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 -0.10888888888888888 0" euler="0 0 0"/>
+            </body>
+            <body name="morphology/right_pectoral_fin_segment_7" pos="0.35555555555555557 0 0" euler="0 0 0">
+              <geom name="morphology/right_pectoral_fin_segment_7_capsule" class="morphology/" type="capsule" size="0.02 0.06666666666666668" rgba="100 0 0 0.5" density="1000" pos="0 -0.086666666666666684 0" euler="1.5707963267948966 0 0"/>
+              <joint name="morphology/right_pectoral_fin_segment_7_x_axis" class="morphology/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+              <joint name="morphology/right_pectoral_fin_segment_7_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+              <site name="morphology/right_pectoral_fin_segment_7_tendon_site" class="morphology/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 -0.086666666666666684 0" euler="0 0 0"/>
+            </body>
+            <body name="morphology/right_pectoral_fin_segment_8" pos="0.40000000000000002 0 0" euler="0 0 0">
+              <geom name="morphology/right_pectoral_fin_segment_8_capsule" class="morphology/" type="capsule" size="0.02 0.044444444444444453" rgba="100 0 0 0.5" density="1000" pos="0 -0.064444444444444457 0" euler="1.5707963267948966 0 0"/>
+              <joint name="morphology/right_pectoral_fin_segment_8_x_axis" class="morphology/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+              <joint name="morphology/right_pectoral_fin_segment_8_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+              <site name="morphology/right_pectoral_fin_segment_8_tendon_site" class="morphology/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 -0.064444444444444457 0" euler="0 0 0"/>
+            </body>
+            <body name="morphology/right_pectoral_fin_segment_9" pos="0.44444444444444448 0 0" euler="0 0 0">
+              <geom name="morphology/right_pectoral_fin_segment_9_capsule" class="morphology/" type="capsule" size="0.02 0.022222222222222227" rgba="100 0 0 0.5" density="1000" pos="0 -0.04222222222222223 0" euler="1.5707963267948966 0 0"/>
+              <joint name="morphology/right_pectoral_fin_segment_9_x_axis" class="morphology/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+              <joint name="morphology/right_pectoral_fin_segment_9_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+              <site name="morphology/right_pectoral_fin_segment_9_tendon_site" class="morphology/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 -0.04222222222222223 0" euler="0 0 0"/>
+            </body>
+          </body>
+          <body name="morphology/left_pectoral_fin" pos="-0.22222222222222224 0.11111111111111112 0" euler="0 0 0">
+            <body name="morphology/left_pectoral_fin_segment_0" pos="0.044444444444444446 0 0" euler="0 0 0">
+              <geom name="morphology/left_pectoral_fin_segment_0_capsule" class="morphology/" type="capsule" size="0.02 0.22222222222222224" rgba="100 0 0 0.5" density="1000" pos="0 0.24222222222222223 0" euler="1.5707963267948966 0 0"/>
+              <joint name="morphology/left_pectoral_fin_segment_0_x_axis" class="morphology/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+              <joint name="morphology/left_pectoral_fin_segment_0_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+              <site name="morphology/left_pectoral_fin_segment_0_tendon_site" class="morphology/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 0.24222222222222223 0" euler="0 0 0"/>
+            </body>
+            <body name="morphology/left_pectoral_fin_segment_1" pos="0.088888888888888892 0 0" euler="0 0 0">
+              <geom name="morphology/left_pectoral_fin_segment_1_capsule" class="morphology/" type="capsule" size="0.02 0.20000000000000001" rgba="100 0 0 0.5" density="1000" pos="0 0.22 0" euler="1.5707963267948966 0 0"/>
+              <joint name="morphology/left_pectoral_fin_segment_1_x_axis" class="morphology/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+              <joint name="morphology/left_pectoral_fin_segment_1_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+              <site name="morphology/left_pectoral_fin_segment_1_tendon_site" class="morphology/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 0.22 0" euler="0 0 0"/>
+            </body>
+            <body name="morphology/left_pectoral_fin_segment_2" pos="0.13333333333333333 0 0" euler="0 0 0">
+              <geom name="morphology/left_pectoral_fin_segment_2_capsule" class="morphology/" type="capsule" size="0.02 0.17777777777777778" rgba="100 0 0 0.5" density="1000" pos="0 0.19777777777777777 0" euler="1.5707963267948966 0 0"/>
+              <joint name="morphology/left_pectoral_fin_segment_2_x_axis" class="morphology/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+              <joint name="morphology/left_pectoral_fin_segment_2_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+              <site name="morphology/left_pectoral_fin_segment_2_tendon_site" class="morphology/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 0.19777777777777777 0" euler="0 0 0"/>
+            </body>
+            <body name="morphology/left_pectoral_fin_segment_3" pos="0.17777777777777778 0 0" euler="0 0 0">
+              <geom name="morphology/left_pectoral_fin_segment_3_capsule" class="morphology/" type="capsule" size="0.02 0.15555555555555556" rgba="100 0 0 0.5" density="1000" pos="0 0.17555555555555555 0" euler="1.5707963267948966 0 0"/>
+              <joint name="morphology/left_pectoral_fin_segment_3_x_axis" class="morphology/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+              <joint name="morphology/left_pectoral_fin_segment_3_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+              <site name="morphology/left_pectoral_fin_segment_3_tendon_site" class="morphology/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 0.17555555555555555 0" euler="0 0 0"/>
+            </body>
+            <body name="morphology/left_pectoral_fin_segment_4" pos="0.22222222222222224 0 0" euler="0 0 0">
+              <geom name="morphology/left_pectoral_fin_segment_4_capsule" class="morphology/" type="capsule" size="0.02 0.13333333333333336" rgba="100 0 0 0.5" density="1000" pos="0 0.15333333333333335 0" euler="1.5707963267948966 0 0"/>
+              <joint name="morphology/left_pectoral_fin_segment_4_x_axis" class="morphology/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+              <joint name="morphology/left_pectoral_fin_segment_4_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+              <site name="morphology/left_pectoral_fin_segment_4_tendon_site" class="morphology/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 0.15333333333333335 0" euler="0 0 0"/>
+            </body>
+            <body name="morphology/left_pectoral_fin_segment_5" pos="0.26666666666666666 0 0" euler="0 0 0">
+              <geom name="morphology/left_pectoral_fin_segment_5_capsule" class="morphology/" type="capsule" size="0.02 0.11111111111111112" rgba="100 0 0 0.5" density="1000" pos="0 0.13111111111111112 0" euler="1.5707963267948966 0 0"/>
+              <joint name="morphology/left_pectoral_fin_segment_5_x_axis" class="morphology/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+              <joint name="morphology/left_pectoral_fin_segment_5_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+              <site name="morphology/left_pectoral_fin_segment_5_tendon_site" class="morphology/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 0.13111111111111112 0" euler="0 0 0"/>
+            </body>
+            <body name="morphology/left_pectoral_fin_segment_6" pos="0.31111111111111112 0 0" euler="0 0 0">
+              <geom name="morphology/left_pectoral_fin_segment_6_capsule" class="morphology/" type="capsule" size="0.02 0.088888888888888878" rgba="100 0 0 0.5" density="1000" pos="0 0.10888888888888888 0" euler="1.5707963267948966 0 0"/>
+              <joint name="morphology/left_pectoral_fin_segment_6_x_axis" class="morphology/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+              <joint name="morphology/left_pectoral_fin_segment_6_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+              <site name="morphology/left_pectoral_fin_segment_6_tendon_site" class="morphology/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 0.10888888888888888 0" euler="0 0 0"/>
+            </body>
+            <body name="morphology/left_pectoral_fin_segment_7" pos="0.35555555555555557 0 0" euler="0 0 0">
+              <geom name="morphology/left_pectoral_fin_segment_7_capsule" class="morphology/" type="capsule" size="0.02 0.06666666666666668" rgba="100 0 0 0.5" density="1000" pos="0 0.086666666666666684 0" euler="1.5707963267948966 0 0"/>
+              <joint name="morphology/left_pectoral_fin_segment_7_x_axis" class="morphology/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+              <joint name="morphology/left_pectoral_fin_segment_7_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+              <site name="morphology/left_pectoral_fin_segment_7_tendon_site" class="morphology/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 0.086666666666666684 0" euler="0 0 0"/>
+            </body>
+            <body name="morphology/left_pectoral_fin_segment_8" pos="0.40000000000000002 0 0" euler="0 0 0">
+              <geom name="morphology/left_pectoral_fin_segment_8_capsule" class="morphology/" type="capsule" size="0.02 0.044444444444444453" rgba="100 0 0 0.5" density="1000" pos="0 0.064444444444444457 0" euler="1.5707963267948966 0 0"/>
+              <joint name="morphology/left_pectoral_fin_segment_8_x_axis" class="morphology/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+              <joint name="morphology/left_pectoral_fin_segment_8_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+              <site name="morphology/left_pectoral_fin_segment_8_tendon_site" class="morphology/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 0.064444444444444457 0" euler="0 0 0"/>
+            </body>
+            <body name="morphology/left_pectoral_fin_segment_9" pos="0.44444444444444448 0 0" euler="0 0 0">
+              <geom name="morphology/left_pectoral_fin_segment_9_capsule" class="morphology/" type="capsule" size="0.02 0.022222222222222227" rgba="100 0 0 0.5" density="1000" pos="0 0.04222222222222223 0" euler="1.5707963267948966 0 0"/>
+              <joint name="morphology/left_pectoral_fin_segment_9_x_axis" class="morphology/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+              <joint name="morphology/left_pectoral_fin_segment_9_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+              <site name="morphology/left_pectoral_fin_segment_9_tendon_site" class="morphology/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 0.04222222222222223 0" euler="0 0 0"/>
+            </body>
+          </body>
+        </body>
+        <body name="morphology/tail" pos="0.33333333333333337 0 0" euler="0 0 0">
+          <body name="morphology/tail_segment_0" pos="0 0 0" euler="0 0 0">
+            <geom name="morphology/tail_segment_0_capsule" class="morphology/" type="capsule" size="0.022222222222222223 0.11111111111111112" rgba="100 0 0 0.5" density="1000" pos="0.13333333333333333 0 0" euler="0 1.5707963267948966 0"/>
+            <joint name="morphology/tail_segment_0_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.01" range="-0.78539816339744828 0.78539816339744828" damping="1"/>
+            <joint name="morphology/tail_segment_0_y_axis" class="morphology/" type="hinge" axis="0 1 0" limited="true" stiffness="0.01" range="-0.78539816339744828 0.78539816339744828" damping="1"/>
+            <body name="morphology/tail_segment_1" pos="0.26666666666666666 0 0" euler="0 0 0">
+              <geom name="morphology/tail_segment_1_capsule" class="morphology/" type="capsule" size="0.022222222222222223 0.11111111111111112" rgba="100 0 0 0.5" density="1000" pos="0.13333333333333333 0 0" euler="0 1.5707963267948966 0"/>
+              <joint name="morphology/tail_segment_1_z_axis" class="morphology/" type="hinge" axis="0 0 1" limited="true" stiffness="0.01" range="-0.78539816339744828 0.78539816339744828" damping="1"/>
+              <joint name="morphology/tail_segment_1_y_axis" class="morphology/" type="hinge" axis="0 1 0" limited="true" stiffness="0.01" range="-0.78539816339744828 0.78539816339744828" damping="1"/>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+  <tendon>
+    <spatial name="morphology/right_pectoral_fin_tendon_right" class="morphology/" limited="true" range="-19.800000000000001 20.200000000000003" width="0.0050000000000000001" stiffness="1000" damping="1">
+      <site site="morphology/right_pectoral_fin_segment_0_tendon_site"/>
+      <site site="morphology/right_pectoral_fin_segment_1_tendon_site"/>
+      <site site="morphology/right_pectoral_fin_segment_2_tendon_site"/>
+      <site site="morphology/right_pectoral_fin_segment_3_tendon_site"/>
+      <site site="morphology/right_pectoral_fin_segment_4_tendon_site"/>
+      <site site="morphology/right_pectoral_fin_segment_5_tendon_site"/>
+      <site site="morphology/right_pectoral_fin_segment_6_tendon_site"/>
+      <site site="morphology/right_pectoral_fin_segment_7_tendon_site"/>
+      <site site="morphology/right_pectoral_fin_segment_8_tendon_site"/>
+      <site site="morphology/right_pectoral_fin_segment_9_tendon_site"/>
+    </spatial>
+    <spatial name="morphology/left_pectoral_fin_tendon_left" class="morphology/" limited="true" range="-19.800000000000001 20.200000000000003" width="0.0050000000000000001" stiffness="1000" damping="1">
+      <site site="morphology/left_pectoral_fin_segment_0_tendon_site"/>
+      <site site="morphology/left_pectoral_fin_segment_1_tendon_site"/>
+      <site site="morphology/left_pectoral_fin_segment_2_tendon_site"/>
+      <site site="morphology/left_pectoral_fin_segment_3_tendon_site"/>
+      <site site="morphology/left_pectoral_fin_segment_4_tendon_site"/>
+      <site site="morphology/left_pectoral_fin_segment_5_tendon_site"/>
+      <site site="morphology/left_pectoral_fin_segment_6_tendon_site"/>
+      <site site="morphology/left_pectoral_fin_segment_7_tendon_site"/>
+      <site site="morphology/left_pectoral_fin_segment_8_tendon_site"/>
+      <site site="morphology/left_pectoral_fin_segment_9_tendon_site"/>
+    </spatial>
+  </tendon>
+  <actuator>
+    <position name="morphology/tail_segment_0_z_axis_actuator" class="morphology/" ctrllimited="true" ctrlrange="-0.78539816339744828 0.78539816339744828" joint="morphology/tail_segment_0_z_axis" kp="100"/>
+    <position name="morphology/tail_segment_0_y_axis_actuator" class="morphology/" ctrllimited="true" ctrlrange="-0.78539816339744828 0.78539816339744828" joint="morphology/tail_segment_0_y_axis" kp="100"/>
+    <position name="morphology/tail_segment_1_z_axis_actuator" class="morphology/" ctrllimited="true" ctrlrange="-0.78539816339744828 0.78539816339744828" joint="morphology/tail_segment_1_z_axis" kp="100"/>
+    <position name="morphology/tail_segment_1_y_axis_actuator" class="morphology/" ctrllimited="true" ctrlrange="-0.78539816339744828 0.78539816339744828" joint="morphology/tail_segment_1_y_axis" kp="100"/>
+    <position name="morphology/right_pectoral_fin_actuator_x" class="morphology/" ctrllimited="true" ctrlrange="-1.5707963267948966 1.5707963267948966" joint="morphology/right_pectoral_fin_segment_0_x_axis" kp="100"/>
+    <position name="morphology/right_pectoral_fin_actuator_z" class="morphology/" ctrllimited="true" ctrlrange="-1.5707963267948966 1.5707963267948966" joint="morphology/right_pectoral_fin_segment_0_z_axis" kp="100"/>
+    <position name="morphology/left_pectoral_fin_actuator_x" class="morphology/" ctrllimited="true" ctrlrange="-1.5707963267948966 1.5707963267948966" joint="morphology/left_pectoral_fin_segment_0_x_axis" kp="100"/>
+    <position name="morphology/left_pectoral_fin_actuator_z" class="morphology/" ctrllimited="true" ctrlrange="-1.5707963267948966 1.5707963267948966" joint="morphology/left_pectoral_fin_segment_0_z_axis" kp="100"/>
+  </actuator>
+</mujoco>

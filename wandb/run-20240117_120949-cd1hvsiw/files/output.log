@@ -1,0 +1,87 @@
+obs:  OrderedDict([('task/time', array([[0.],
+       [0.]], dtype=float32)), ('task/xyz-distance-from-origin', array([[0.],
+       [0.]], dtype=float32))])
+time:  0.0
+time:  0.0
+time:  0.0
+time:  0.0
+time:  0.0
+time:  0.0
+time:  0.0
+time:  0.0
+time:  0.0
+time:  0.0
+time:  0.0
+time:  0.0
+time:  0.0
+time:  0.0
+time:  0.0
+time:  0.0
+time:  0.002
+sol:  [[0.]
+ [0.]
+ [0.]
+ [0.]
+ [0.]]
+time:  0.002
+sol:  [[0.]
+ [0.]
+ [0.]
+ [0.]
+ [0.]]
+time:  0.002
+sol:  [[0.]
+ [0.]
+ [0.]
+ [0.]
+ [0.]]
+time:  0.002
+sol:  [[0.]
+ [0.]
+ [0.]
+ [0.]
+ [0.]]
+time:  0.002
+sol:  [[2.00000009e-03]
+ [1.90561951e-04]
+ [5.57600749e-06]
+ [1.89293649e-01]
+ [5.53889588e-03]]
+time:  0.002
+sol:  [[0.]
+ [0.]
+ [0.]
+ [0.]
+ [0.]]
+time:  0.002
+sol:  [[5.84926492e-04]
+ [1.02066113e-04]
+ [8.00765005e-05]
+ [1.01386803e-01]
+ [7.95435443e-02]]
+time:  0.002
+sol:  [[0.]
+ [0.]
+ [0.]
+ [0.]
+ [0.]]
+time:  0.002
+sol:  []
+Traceback (most recent call last):
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 283, in <module>
+    sim.run()
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 173, in run
+    self.run_generation(generation=gen)
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 164, in run_generation
+    reward = self.run_episode_parallel(generation=generation, episode=agent)
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 138, in run_episode_parallel
+    scaled_action[id, :] = self.run_episode_single(generation=generation,
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 106, in run_episode_single
+    normalised_action = (cpg.ask(observation=obs).flatten()+1)/2
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/controller/cmaes_cpg.py", line 179, in ask
+    neuron.get_neuron_respons(observation=observation,
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/controller/cmaes_cpg.py", line 123, in get_neuron_respons
+    y = self.integrate(observation=observation,
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/controller/cmaes_cpg.py", line 96, in integrate
+    self._last_state = sol.y.flatten()
+AttributeError: 'list' object has no attribute 'flatten'

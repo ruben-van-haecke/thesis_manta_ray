@@ -1,0 +1,12 @@
+
+reward:  [17.69030108 17.69030108 17.69030108 17.69030108 15.45290553]
+TypeError: only length-1 arrays can be converted to Python scalars
+The above exception was the direct cause of the following exception:
+Traceback (most recent call last):
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 278, in <module>
+    sim.run()
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 167, in run
+    self.run_generation(generation=gen)
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 161, in run_generation
+    self._outer_rewards[generation, agent] = reward
+ValueError: setting an array element with a sequence.

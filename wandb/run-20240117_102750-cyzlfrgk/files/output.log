@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 258, in <module>
+    sim.run()
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 148, in run
+    self.run_generation(generation=gen)
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 140, in run_generation
+    reward = self.run_episode(generation=generation, episode=agent)
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 117, in run_episode
+    if self._record_actions: self._actions[generation, episode, :, counter] = scaled_action
+ValueError: could not broadcast input array from shape (8,8) into shape (1,)

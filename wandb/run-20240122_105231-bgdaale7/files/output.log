@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 269, in <module>
+    sim.run()
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 158, in run
+    self.run_generation(generation=gen)
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/evolution_simulation.py", line 147, in run_generation
+    self._parameterizer.parameter_space(specification=self._controller_specs[env_id],
+  File "/media/ruben/data/documents/unief/thesis/thesis_manta_ray/controller/parameters.py", line 84, in parameter_space
+    specification.r[self._left_fin_x] = controller_action[0]
+TypeError: 'NumpyArrayParameter' object does not support item assignment

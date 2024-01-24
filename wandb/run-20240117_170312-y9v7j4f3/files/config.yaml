@@ -1,0 +1,39 @@
+wandb_version: 1
+
+generations:
+  desc: null
+  value: 15
+duration:
+  desc: null
+  value: 15
+control_timestep:
+  desc: null
+  value: 0.002
+population_size:
+  desc: null
+  value: 5
+sigma_outer_loop:
+  desc: null
+  value: 0.05
+_wandb:
+  desc: null
+  value:
+    python_version: 3.10.12
+    cli_version: 0.16.2
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1705507392.865183
+    t:
+      1:
+      - 55
+      2:
+      - 55
+      3:
+      - 13
+      - 16
+      - 23
+      4: 3.10.12
+      5: 0.16.2
+      8:
+      - 5
+      13: linux-x86_64
