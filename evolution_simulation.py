@@ -139,7 +139,7 @@ class OptimizerSimulation:
                     episode: int,
                     ) -> float:
         done = False
-        obs, _ = self._gym_env.reset()
+        obs, info = self._gym_env.reset()
         counter = 0
         while not done:
             scaled_action = np.zeros(shape=(self._num_envs, 8))
@@ -159,7 +159,7 @@ class OptimizerSimulation:
                                                             obs=obs,
                                                             env_id=env_id,
                                                             )
-            obs, reward, terminated, truncated, info = self._gym_env.step(self._actions[generation, episode, :, counter])  # an action is a row
+            obs, reward, terminated, truncated, info = self._gym_env.step(self._actions[generation, episode:episode+self._num_envs, :, counter])  # an action is a row
             done = np.all(np.logical_or(terminated, truncated))
             counter += 1
         return reward
@@ -288,7 +288,7 @@ if __name__ == "__main__":
         robot_specification=robot_spec,
         parameterizer=controller_parameterizer,
         population_size=10,  # make sure this is a multiple of num_envs
-        num_generations=10,
+        num_generations=15,
         outer_optimalization=cma,
         controller=CPG,
         skip_inner_optimalization=True,

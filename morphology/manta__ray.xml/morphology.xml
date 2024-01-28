@@ -1,0 +1,191 @@
+<mujoco model="morphology">
+  <compiler angle="radian"/>
+  <default>
+    <default class="/"/>
+  </default>
+  <worldbody>
+    <body name="//unnamed_body_0">
+      <body name="torso" pos="0 0 0" euler="0 0 0">
+        <geom name="torso_body" class="/" type="capsule" size="0.11111111111111112 0.22222222222222224" rgba="100 0 0 0.5" friction="0.10000000000000001 0.10000000000000001 0.10000000000000001" density="1000" pos="0 0 0" euler="0 1.5707963267948966 0"/>
+        <body name="right_pectoral_fin" pos="-0.22222222222222224 -0.11111111111111112 0" euler="0 0 0">
+          <body name="right_pectoral_fin_segment_0" pos="0.044444444444444446 0 0" euler="0 0 0">
+            <geom name="right_pectoral_fin_segment_0_capsule" class="/" type="capsule" size="0.02 0.22222222222222224" rgba="100 0 0 0.5" density="1000" pos="0 -0.24222222222222223 0" euler="1.5707963267948966 0 0"/>
+            <joint name="right_pectoral_fin_segment_0_x_axis" class="/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+            <joint name="right_pectoral_fin_segment_0_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+            <site name="right_pectoral_fin_segment_0_tendon_site" class="/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 -0.24222222222222223 0" euler="0 0 0"/>
+          </body>
+          <body name="right_pectoral_fin_segment_1" pos="0.088888888888888892 0 0" euler="0 0 0">
+            <geom name="right_pectoral_fin_segment_1_capsule" class="/" type="capsule" size="0.02 0.15194938532959157" rgba="100 0 0 0.5" density="1000" pos="0 -0.17194938532959156 0" euler="1.5707963267948966 0 0"/>
+            <joint name="right_pectoral_fin_segment_1_x_axis" class="/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+            <joint name="right_pectoral_fin_segment_1_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+            <site name="right_pectoral_fin_segment_1_tendon_site" class="/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 -0.17194938532959156 0" euler="0 0 0"/>
+          </body>
+          <body name="right_pectoral_fin_segment_2" pos="0.13333333333333333 0 0" euler="0 0 0">
+            <geom name="right_pectoral_fin_segment_2_capsule" class="/" type="capsule" size="0.02 0.12284142322223159" rgba="100 0 0 0.5" density="1000" pos="0 -0.14284142322223159 0" euler="1.5707963267948966 0 0"/>
+            <joint name="right_pectoral_fin_segment_2_x_axis" class="/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+            <joint name="right_pectoral_fin_segment_2_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+            <site name="right_pectoral_fin_segment_2_tendon_site" class="/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 -0.14284142322223159 0" euler="0 0 0"/>
+          </body>
+          <body name="right_pectoral_fin_segment_3" pos="0.17777777777777778 0 0" euler="0 0 0">
+            <geom name="right_pectoral_fin_segment_3_capsule" class="/" type="capsule" size="0.02 0.10050609833218532" rgba="100 0 0 0.5" density="1000" pos="0 -0.12050609833218533 0" euler="1.5707963267948966 0 0"/>
+            <joint name="right_pectoral_fin_segment_3_x_axis" class="/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+            <joint name="right_pectoral_fin_segment_3_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+            <site name="right_pectoral_fin_segment_3_tendon_site" class="/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 -0.12050609833218533 0" euler="0 0 0"/>
+          </body>
+          <body name="right_pectoral_fin_segment_4" pos="0.22222222222222224 0 0" euler="0 0 0">
+            <geom name="right_pectoral_fin_segment_4_capsule" class="/" type="capsule" size="0.02 0.081676548436960927" rgba="100 0 0 0.5" density="1000" pos="0 -0.10167654843696093 0" euler="1.5707963267948966 0 0"/>
+            <joint name="right_pectoral_fin_segment_4_x_axis" class="/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+            <joint name="right_pectoral_fin_segment_4_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+            <site name="right_pectoral_fin_segment_4_tendon_site" class="/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 -0.10167654843696093 0" euler="0 0 0"/>
+          </body>
+          <body name="right_pectoral_fin_segment_5" pos="0.26666666666666666 0 0" euler="0 0 0">
+            <geom name="right_pectoral_fin_segment_5_capsule" class="/" type="capsule" size="0.02 0.065087381958544993" rgba="100 0 0 0.5" density="1000" pos="0 -0.085087381958544997 0" euler="1.5707963267948966 0 0"/>
+            <joint name="right_pectoral_fin_segment_5_x_axis" class="/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+            <joint name="right_pectoral_fin_segment_5_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+            <site name="right_pectoral_fin_segment_5_tendon_site" class="/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 -0.085087381958544997 0" euler="0 0 0"/>
+          </body>
+          <body name="right_pectoral_fin_segment_6" pos="0.31111111111111112 0 0" euler="0 0 0">
+            <geom name="right_pectoral_fin_segment_6_capsule" class="/" type="capsule" size="0.02 0.050089629057448126" rgba="100 0 0 0.5" density="1000" pos="0 -0.07008962905744813 0" euler="1.5707963267948966 0 0"/>
+            <joint name="right_pectoral_fin_segment_6_x_axis" class="/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+            <joint name="right_pectoral_fin_segment_6_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+            <site name="right_pectoral_fin_segment_6_tendon_site" class="/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 -0.07008962905744813 0" euler="0 0 0"/>
+          </body>
+          <body name="right_pectoral_fin_segment_7" pos="0.35555555555555557 0 0" euler="0 0 0">
+            <geom name="right_pectoral_fin_segment_7_capsule" class="/" type="capsule" size="0.02 0.036297771881316554" rgba="100 0 0 0.5" density="1000" pos="0 -0.056297771881316558 0" euler="1.5707963267948966 0 0"/>
+            <joint name="right_pectoral_fin_segment_7_x_axis" class="/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+            <joint name="right_pectoral_fin_segment_7_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+            <site name="right_pectoral_fin_segment_7_tendon_site" class="/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 -0.056297771881316558 0" euler="0 0 0"/>
+          </body>
+          <body name="right_pectoral_fin_segment_8" pos="0.40000000000000002 0 0" euler="0 0 0">
+            <geom name="right_pectoral_fin_segment_8_capsule" class="/" type="capsule" size="0.02 0.023460624222240933" rgba="100 0 0 0.5" density="1000" pos="0 -0.043460624222240937 0" euler="1.5707963267948966 0 0"/>
+            <joint name="right_pectoral_fin_segment_8_x_axis" class="/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+            <joint name="right_pectoral_fin_segment_8_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+            <site name="right_pectoral_fin_segment_8_tendon_site" class="/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 -0.043460624222240937 0" euler="0 0 0"/>
+          </body>
+          <body name="right_pectoral_fin_segment_9" pos="0.44444444444444448 0 0" euler="0 0 0">
+            <geom name="right_pectoral_fin_segment_9_capsule" class="/" type="capsule" size="0.02 0.011403711544330286" rgba="100 0 0 0.5" density="1000" pos="0 -0.03140371154433029 0" euler="1.5707963267948966 0 0"/>
+            <joint name="right_pectoral_fin_segment_9_x_axis" class="/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+            <joint name="right_pectoral_fin_segment_9_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+            <site name="right_pectoral_fin_segment_9_tendon_site" class="/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 -0.03140371154433029 0" euler="0 0 0"/>
+          </body>
+        </body>
+        <body name="left_pectoral_fin" pos="-0.22222222222222224 0.11111111111111112 0" euler="0 0 0">
+          <body name="left_pectoral_fin_segment_0" pos="0.044444444444444446 0 0" euler="0 0 0">
+            <geom name="left_pectoral_fin_segment_0_capsule" class="/" type="capsule" size="0.02 0.22222222222222224" rgba="100 0 0 0.5" density="1000" pos="0 0.24222222222222223 0" euler="1.5707963267948966 0 0"/>
+            <joint name="left_pectoral_fin_segment_0_x_axis" class="/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+            <joint name="left_pectoral_fin_segment_0_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+            <site name="left_pectoral_fin_segment_0_tendon_site" class="/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 0.24222222222222223 0" euler="0 0 0"/>
+          </body>
+          <body name="left_pectoral_fin_segment_1" pos="0.088888888888888892 0 0" euler="0 0 0">
+            <geom name="left_pectoral_fin_segment_1_capsule" class="/" type="capsule" size="0.02 0.15194938532959157" rgba="100 0 0 0.5" density="1000" pos="0 0.17194938532959156 0" euler="1.5707963267948966 0 0"/>
+            <joint name="left_pectoral_fin_segment_1_x_axis" class="/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+            <joint name="left_pectoral_fin_segment_1_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+            <site name="left_pectoral_fin_segment_1_tendon_site" class="/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 0.17194938532959156 0" euler="0 0 0"/>
+          </body>
+          <body name="left_pectoral_fin_segment_2" pos="0.13333333333333333 0 0" euler="0 0 0">
+            <geom name="left_pectoral_fin_segment_2_capsule" class="/" type="capsule" size="0.02 0.12284142322223159" rgba="100 0 0 0.5" density="1000" pos="0 0.14284142322223159 0" euler="1.5707963267948966 0 0"/>
+            <joint name="left_pectoral_fin_segment_2_x_axis" class="/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+            <joint name="left_pectoral_fin_segment_2_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+            <site name="left_pectoral_fin_segment_2_tendon_site" class="/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 0.14284142322223159 0" euler="0 0 0"/>
+          </body>
+          <body name="left_pectoral_fin_segment_3" pos="0.17777777777777778 0 0" euler="0 0 0">
+            <geom name="left_pectoral_fin_segment_3_capsule" class="/" type="capsule" size="0.02 0.10050609833218532" rgba="100 0 0 0.5" density="1000" pos="0 0.12050609833218533 0" euler="1.5707963267948966 0 0"/>
+            <joint name="left_pectoral_fin_segment_3_x_axis" class="/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+            <joint name="left_pectoral_fin_segment_3_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+            <site name="left_pectoral_fin_segment_3_tendon_site" class="/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 0.12050609833218533 0" euler="0 0 0"/>
+          </body>
+          <body name="left_pectoral_fin_segment_4" pos="0.22222222222222224 0 0" euler="0 0 0">
+            <geom name="left_pectoral_fin_segment_4_capsule" class="/" type="capsule" size="0.02 0.081676548436960927" rgba="100 0 0 0.5" density="1000" pos="0 0.10167654843696093 0" euler="1.5707963267948966 0 0"/>
+            <joint name="left_pectoral_fin_segment_4_x_axis" class="/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+            <joint name="left_pectoral_fin_segment_4_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+            <site name="left_pectoral_fin_segment_4_tendon_site" class="/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 0.10167654843696093 0" euler="0 0 0"/>
+          </body>
+          <body name="left_pectoral_fin_segment_5" pos="0.26666666666666666 0 0" euler="0 0 0">
+            <geom name="left_pectoral_fin_segment_5_capsule" class="/" type="capsule" size="0.02 0.065087381958544993" rgba="100 0 0 0.5" density="1000" pos="0 0.085087381958544997 0" euler="1.5707963267948966 0 0"/>
+            <joint name="left_pectoral_fin_segment_5_x_axis" class="/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+            <joint name="left_pectoral_fin_segment_5_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+            <site name="left_pectoral_fin_segment_5_tendon_site" class="/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 0.085087381958544997 0" euler="0 0 0"/>
+          </body>
+          <body name="left_pectoral_fin_segment_6" pos="0.31111111111111112 0 0" euler="0 0 0">
+            <geom name="left_pectoral_fin_segment_6_capsule" class="/" type="capsule" size="0.02 0.050089629057448126" rgba="100 0 0 0.5" density="1000" pos="0 0.07008962905744813 0" euler="1.5707963267948966 0 0"/>
+            <joint name="left_pectoral_fin_segment_6_x_axis" class="/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+            <joint name="left_pectoral_fin_segment_6_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+            <site name="left_pectoral_fin_segment_6_tendon_site" class="/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 0.07008962905744813 0" euler="0 0 0"/>
+          </body>
+          <body name="left_pectoral_fin_segment_7" pos="0.35555555555555557 0 0" euler="0 0 0">
+            <geom name="left_pectoral_fin_segment_7_capsule" class="/" type="capsule" size="0.02 0.036297771881316554" rgba="100 0 0 0.5" density="1000" pos="0 0.056297771881316558 0" euler="1.5707963267948966 0 0"/>
+            <joint name="left_pectoral_fin_segment_7_x_axis" class="/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+            <joint name="left_pectoral_fin_segment_7_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+            <site name="left_pectoral_fin_segment_7_tendon_site" class="/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 0.056297771881316558 0" euler="0 0 0"/>
+          </body>
+          <body name="left_pectoral_fin_segment_8" pos="0.40000000000000002 0 0" euler="0 0 0">
+            <geom name="left_pectoral_fin_segment_8_capsule" class="/" type="capsule" size="0.02 0.023460624222240933" rgba="100 0 0 0.5" density="1000" pos="0 0.043460624222240937 0" euler="1.5707963267948966 0 0"/>
+            <joint name="left_pectoral_fin_segment_8_x_axis" class="/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+            <joint name="left_pectoral_fin_segment_8_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+            <site name="left_pectoral_fin_segment_8_tendon_site" class="/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 0.043460624222240937 0" euler="0 0 0"/>
+          </body>
+          <body name="left_pectoral_fin_segment_9" pos="0.44444444444444448 0 0" euler="0 0 0">
+            <geom name="left_pectoral_fin_segment_9_capsule" class="/" type="capsule" size="0.02 0.011403711544330286" rgba="100 0 0 0.5" density="1000" pos="0 0.03140371154433029 0" euler="1.5707963267948966 0 0"/>
+            <joint name="left_pectoral_fin_segment_9_x_axis" class="/" type="hinge" axis="1 0 0" limited="true" stiffness="0.5" range="-1.5707963267948966 1.5707963267948966" damping="0.5"/>
+            <joint name="left_pectoral_fin_segment_9_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.5" range="-0.078539816339744828 0.078539816339744828" damping="0.5"/>
+            <site name="left_pectoral_fin_segment_9_tendon_site" class="/" type="sphere" size="0.0001 0.0001 0.0001" pos="0 0.03140371154433029 0" euler="0 0 0"/>
+          </body>
+        </body>
+      </body>
+      <body name="tail" pos="0.33333333333333337 0 0" euler="0 0 0">
+        <body name="tail_segment_0" pos="0 0 0" euler="0 0 0">
+          <geom name="tail_segment_0_capsule" class="/" type="capsule" size="0.022222222222222223 0.11111111111111112" rgba="100 0 0 0.5" density="1000" pos="0.13333333333333333 0 0" euler="0 1.5707963267948966 0"/>
+          <joint name="tail_segment_0_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.01" range="-0.78539816339744828 0.78539816339744828" damping="1"/>
+          <joint name="tail_segment_0_y_axis" class="/" type="hinge" axis="0 1 0" limited="true" stiffness="0.01" range="-0.78539816339744828 0.78539816339744828" damping="1"/>
+          <body name="tail_segment_1" pos="0.26666666666666666 0 0" euler="0 0 0">
+            <geom name="tail_segment_1_capsule" class="/" type="capsule" size="0.022222222222222223 0.11111111111111112" rgba="100 0 0 0.5" density="1000" pos="0.13333333333333333 0 0" euler="0 1.5707963267948966 0"/>
+            <joint name="tail_segment_1_z_axis" class="/" type="hinge" axis="0 0 1" limited="true" stiffness="0.01" range="-0.78539816339744828 0.78539816339744828" damping="1"/>
+            <joint name="tail_segment_1_y_axis" class="/" type="hinge" axis="0 1 0" limited="true" stiffness="0.01" range="-0.78539816339744828 0.78539816339744828" damping="1"/>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+  <tendon>
+    <spatial name="right_pectoral_fin_tendon_right" class="/" limited="true" range="-20.871032557111299 21.292669578467084" width="0.0050000000000000001" stiffness="1000" damping="1">
+      <site site="right_pectoral_fin_segment_0_tendon_site"/>
+      <site site="right_pectoral_fin_segment_1_tendon_site"/>
+      <site site="right_pectoral_fin_segment_2_tendon_site"/>
+      <site site="right_pectoral_fin_segment_3_tendon_site"/>
+      <site site="right_pectoral_fin_segment_4_tendon_site"/>
+      <site site="right_pectoral_fin_segment_5_tendon_site"/>
+      <site site="right_pectoral_fin_segment_6_tendon_site"/>
+      <site site="right_pectoral_fin_segment_7_tendon_site"/>
+      <site site="right_pectoral_fin_segment_8_tendon_site"/>
+      <site site="right_pectoral_fin_segment_9_tendon_site"/>
+    </spatial>
+    <spatial name="left_pectoral_fin_tendon_left" class="/" limited="true" range="-20.871032557111299 21.292669578467084" width="0.0050000000000000001" stiffness="1000" damping="1">
+      <site site="left_pectoral_fin_segment_0_tendon_site"/>
+      <site site="left_pectoral_fin_segment_1_tendon_site"/>
+      <site site="left_pectoral_fin_segment_2_tendon_site"/>
+      <site site="left_pectoral_fin_segment_3_tendon_site"/>
+      <site site="left_pectoral_fin_segment_4_tendon_site"/>
+      <site site="left_pectoral_fin_segment_5_tendon_site"/>
+      <site site="left_pectoral_fin_segment_6_tendon_site"/>
+      <site site="left_pectoral_fin_segment_7_tendon_site"/>
+      <site site="left_pectoral_fin_segment_8_tendon_site"/>
+      <site site="left_pectoral_fin_segment_9_tendon_site"/>
+    </spatial>
+  </tendon>
+  <actuator>
+    <position name="tail_segment_0_z_axis_actuator" class="/" ctrllimited="true" ctrlrange="-0.78539816339744828 0.78539816339744828" joint="tail_segment_0_z_axis" kp="100"/>
+    <position name="tail_segment_0_y_axis_actuator" class="/" ctrllimited="true" ctrlrange="-0.78539816339744828 0.78539816339744828" joint="tail_segment_0_y_axis" kp="100"/>
+    <position name="tail_segment_1_z_axis_actuator" class="/" ctrllimited="true" ctrlrange="-0.78539816339744828 0.78539816339744828" joint="tail_segment_1_z_axis" kp="100"/>
+    <position name="tail_segment_1_y_axis_actuator" class="/" ctrllimited="true" ctrlrange="-0.78539816339744828 0.78539816339744828" joint="tail_segment_1_y_axis" kp="100"/>
+    <position name="right_pectoral_fin_actuator_x" class="/" ctrllimited="true" ctrlrange="-1.5707963267948966 1.5707963267948966" joint="right_pectoral_fin_segment_0_x_axis" kp="100"/>
+    <position name="right_pectoral_fin_actuator_z" class="/" ctrllimited="true" ctrlrange="-1.5707963267948966 1.5707963267948966" joint="right_pectoral_fin_segment_0_z_axis" kp="100"/>
+    <position name="left_pectoral_fin_actuator_x" class="/" ctrllimited="true" ctrlrange="-1.5707963267948966 1.5707963267948966" joint="left_pectoral_fin_segment_0_x_axis" kp="100"/>
+    <position name="left_pectoral_fin_actuator_z" class="/" ctrllimited="true" ctrlrange="-1.5707963267948966 1.5707963267948966" joint="left_pectoral_fin_segment_0_z_axis" kp="100"/>
+  </actuator>
+  <sensor>
+    <actuatorfrc name="right_pectoral_fin_force_sensor_x" actuator="right_pectoral_fin_actuator_x"/>
+    <actuatorfrc name="right_pectoral_fin_force_sensor_z" actuator="right_pectoral_fin_actuator_z"/>
+    <actuatorfrc name="left_pectoral_fin_force_sensor_x" actuator="left_pectoral_fin_actuator_x"/>
+    <actuatorfrc name="left_pectoral_fin_force_sensor_z" actuator="left_pectoral_fin_actuator_z"/>
+  </sensor>
+</mujoco>

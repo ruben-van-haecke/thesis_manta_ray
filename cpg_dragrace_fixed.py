@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     observation_spec = dm_env.observation_spec()
     action_spec = dm_env.action_spec()
-    controller_spec = MantaRayCpgControllerSpecification(num_neurons=8)
+    controller_spec = MantaRayCpgControllerSpecification(num_neurons=2)
 
     # set the control_parameters of the oscillators
     tail_segment_0_z = 0
@@ -33,18 +33,18 @@ if __name__ == "__main__":
     left_fin_z = 7
     # controller_spec.x.add_connections(connections=[(0, tail_segment_0_y), (0, tail_segment_1_y), (0, right_fin_x), (0, left_fin_x)],
     #                                   weights=[0., 0., 0., 0])
-    omega = 1
+    omega = 2
     bias = np.pi
-    controller_spec.r.add_connections(connections=[(0, right_fin_x), (0, left_fin_x)],
+    controller_spec.r.add_connections(connections=[(0, 0), (0, 1)],
                                         weights=[1, 1.])
-    controller_spec.omega.add_connections(connections=[(0, right_fin_x), (0, left_fin_x)],
+    controller_spec.omega.add_connections(connections=[(0, 0), (0, 1)],
                                         weights=np.ones(shape=(2, ))*np.pi*2*omega)
     connections = [#(1, 3), (3, 1), # connection between the two out of plane oscillators of the tail
             #    (3, 4), (4, 3),  # connection tail-rigth fin
             #    (3, 6), (6, 3),  # connection tail-left fin
-                (4, 6), (6, 4),], # connection right-left fin
+                (0, 1), (1, 0),], # connection right-left fin
     controller_spec.weights.add_connections(connections=connections,
-                                            weights=[2, 2.],)
+                                            weights=[1, 1.],)
     controller_spec.phase_biases.add_connections(connections=connections,
                                             weights=[-bias, bias])
     cpg = CPG(specification=controller_spec)
@@ -55,10 +55,12 @@ if __name__ == "__main__":
                             duration=task_config.simulation_time,
                             sampling_period=task_config.physics_timestep)
     time = np.arange(0, task_config.simulation_time, task_config.physics_timestep)
-    plt.plot(time, all_actions[left_fin_x, :], label="left fin")
-    plt.plot(time, all_actions[right_fin_x, :], label="right fin")
+    plt.plot(time, all_actions[1, :], label="left fin")
+    plt.plot(time, all_actions[0, :], label="right fin")
     plt.legend()
     plt.show()
+
+    print(cpg)
 
     def oscillator_policy_fn(
             timestep: TimeStep
@@ -71,7 +73,8 @@ if __name__ == "__main__":
 
         num_actuators = action_spec.shape[0]
         actions = np.zeros(num_actuators)
-        actions = all_actions[:, iterator].flatten()
+        actions[4, :] = all_actions[0, iterator].flatten()
+        actions[6, :] = all_actions[1, iterator].flatten()
         iterator = (iterator + 1) % all_actions.shape[1]
 
         # rescale from [-1, 1] to actual joint range
@@ -84,7 +87,7 @@ if __name__ == "__main__":
         return scaled_actions
 
 
-    viewer.launch(
-            environment_loader=dm_env, 
-            policy=oscillator_policy_fn
-            )
+    # viewer.launch(
+    #         environment_loader=dm_env, 
+    #         policy=oscillator_policy_fn
+    #         )

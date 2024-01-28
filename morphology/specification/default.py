@@ -11,7 +11,7 @@ scaling_factor = 1.0/22.5
 # define default values
 # tail
 tail_length = 10*scaling_factor
-tail_radius = 0.5*scaling_factor
+tail_radius = 0.25*scaling_factor
 num_tail_segments = 2
 tail_segment_length = tail_length / num_tail_segments
 

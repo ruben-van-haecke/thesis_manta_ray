@@ -1,23 +1,29 @@
-class Observables:
-    def __init__(self):
-        self.sensors = []
+from typing import List
 
-    def add_sensor(self, sensor):
-        self.sensors.append(sensor)
+from dm_control import composer, mjcf
+from dm_control.composer.observation.observable import MJCFFeature
+from mujoco_utils.observables import ConfinedMJCFFeature
 
-    def remove_sensor(self, sensor):
-        self.sensors.remove(sensor)
+import numpy as np
 
-    def get_sensor_data(self):
-        sensor_data = []
-        for sensor in self.sensors:
-            sensor_data.append(sensor.get_data())
-        return sensor_data
 
-class Sensor:
-    def __init__(self, name):
-        self.name = name
+class Observables(composer.Observables):
+    sensor_actuatorfrc_names = []
+    sensor_actuatorfrc = None
 
-    def get_data(self):
-        # Example implementation of getting sensor data
-        return f"{self.name} data"
+    @property
+    def sencor_actuatorfrc(self) -> List[mjcf.Element]:
+        if self.sensor_actuatorfrc is None:
+            sensors = self._entity.mjcf_model.find_all('sensor')
+            self.sensor_actuatorfrc = list(filter(lambda sensor: sensor.tag == "actuatorfrc", sensors))
+            
+        return self.sensor_actuatorfrc
+    
+    @composer.observable
+    def touch_per_tendon_plate(self) -> MJCFFeature:
+        return ConfinedMJCFFeature(low=-np.inf,
+                                   high=np.inf,
+                                   shape=[len(self.sensor_actuatorfrc_names)],
+                                   kind="sensordata",
+                                   mjcf_element=self.sensor_actuatorfrc,
+                                   )

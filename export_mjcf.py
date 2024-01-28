@@ -12,4 +12,4 @@ from morphology.specification.default import default_morphology_specification
 if __name__ == "__main__":
     morpholoby_specification = default_morphology_specification()
     manta_ray = MJCMantaRayMorphology(specification=morpholoby_specification)
-    manta_ray.export_to_xml_with_assets('morphology/manta_ray.xml')
+    manta_ray.export_to_xml_with_assets('morphology/manta__ray.xml')

@@ -58,7 +58,7 @@ class MantaRayControllerSpecificationParameterizer(ControllerSpecificationParame
             #    (3, 6), (6, 3),  # connection tail-left fin
                 (4, 6), (6, 4),], # connection right-left fin
         specification.weights.add_connections(connections=connections,
-                                                weights=[4, 4.],)
+                                                weights=[1, 1],)
         specification.phase_biases.add_connections(connections=connections,
                                                 weights=[-bias, bias])
         

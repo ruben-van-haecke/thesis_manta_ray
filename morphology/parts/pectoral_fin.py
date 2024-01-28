@@ -28,6 +28,7 @@ class MJCMantaRayPectoralFin(MJCMorphologyPart):
         self._configure_tendons()
         # self._configure_flex()
         self._configure_actuator()
+        self._configure_force_sensor()
     
     def _build_segments(self) -> None:
         self._segments = []
@@ -95,6 +96,18 @@ class MJCMantaRayPectoralFin(MJCMorphologyPart):
             kp=self.morphology_specification.actuation_specification.kp.value,
             ctrllimited=True,
             ctrlrange=[-self._pectoral_fin_specification.joint_specification.range.value, self._pectoral_fin_specification.joint_specification.range.value],
+        )
+    
+    def _configure_force_sensor(self) -> None:
+        self.mjcf_model.sensor.add(
+            "actuatorfrc",
+            name=f"{self.base_name}_force_sensor_x",
+            actuator=f"{self.base_name}_actuator_x",
+        )
+        self.mjcf_model.sensor.add(
+            "actuatorfrc",
+            name=f"{self.base_name}_force_sensor_z",
+            actuator=f"{self.base_name}_actuator_z",
         )
     
     # def _configure_flex(self) -> None:

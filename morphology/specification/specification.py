@@ -82,7 +82,7 @@ class MantaRayPectoralFinSegmentSpecification(Specification):
                  amount_of_segments: int,
                  ) -> None:
         super().__init__()
-        length = max_length - max_length*segment_index/amount_of_segments
+        length = max_length - max_length*((segment_index)/amount_of_segments)**(0.5)
         self.radius = FixedParameter(radius)
         self.length = FixedParameter(length)
         self.joint_specification = joint_specification
