@@ -1,7 +1,0 @@
-/media/ruben/data/documents/unief/thesis/thesis_manta_ray/task/drag_race.py:120: RuntimeWarning: divide by zero encountered in scalar divide
-  return 1/current_distance_from_initial_position
-Generation: 0 , average reward: 1.8535 , best reward: 1.9703
-Generation: 1 , average reward: 1.8756 , best reward: 2.0931
-Generation: 2 , average reward: 1.8508 , best reward: 1.9250
-Generation: 3 , average reward: 1.8803 , best reward: 2.0825
-Generation: 4 , average reward: 1.8626 , best reward: 2.0199
