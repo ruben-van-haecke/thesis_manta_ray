@@ -1,13 +1,15 @@
 from dm_control import composer, mjcf
+import numpy as np
 
-
-class Target(composer.Entity):
+class Target(composer.Entity):    
     def _build(
             self
             ):
         self._mjcf_model = mjcf.RootElement()
         self._geom = self._mjcf_model.worldbody.add(
-                'geom', type='sphere', size=[0.2], rgba=(100, 100, 100, 0.5)
+                'geom', type='sphere', 
+                size=[0.2], 
+                rgba=(100, 100, 100, 0.5),
                 )
 
     @property

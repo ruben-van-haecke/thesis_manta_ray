@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import  matplotlib.pyplot as plt
 
 import numpy as np
 from PIL import Image
@@ -14,6 +15,8 @@ from arena.utils import colors
 from arena.utils.colors import rgba_sand
 from arena.utils.noise import generate_perlin_noise_map
 from arena.entities.target import Target
+
+from fiblat import sphere_lattice
 
 
 class OceanArena(Arena):
@@ -38,8 +41,17 @@ class OceanArena(Arena):
             random_current: bool = False,
             random_friction: bool = False,
             random_obstacles: bool = False,
-            random_target: bool = False,
+            task_mode: str = "no_target",
             ) -> None:
+        """
+        args:
+            task_mode: str, "no_target": no obstacles
+                            "random_target": one random target
+                            "grid": a raster in front of the robot in which a target
+                            "parkour": parkour to follow
+        """
+        assert task_mode in ["no_target", "random_target", "grid", "parkour"], "task_mode is not valid"
+
         super()._build(name=name)
         self._initial_morphology_position = np.array(initial_morphology_position)
         self._dynamic_assets_identifier = env_id
@@ -51,7 +63,7 @@ class OceanArena(Arena):
         self._random_current = random_current
         self._random_friction = random_friction
         self._random_obstacles = random_obstacles
-        self._random_target = random_target
+        self._task_mode = task_mode
 
         self._configure_assets_directory()
         self._generate_random_height_and_light_maps()
@@ -60,8 +72,37 @@ class OceanArena(Arena):
         self._configure_sky()
         self._build_ground()
         self._build_walls()
-        if self._random_target:
+        if self._task_mode == "random_target":    # one random obstacle
             self.target = self._attach_target()
+        elif self._task_mode == "grid":  # raster of obstacles of which one is choosen
+            self.target = self._attach_target()
+            points = 101
+            radius = 5
+            self._grid_coordinates = np.empty((3, points))
+            sphere = sphere_lattice(3, points)
+            self._grid_coordinates = radius * sphere  # x
+            self._grid_coordinates = self._grid_coordinates[self._grid_coordinates[:, 0] < 0]
+            # # Create a figure and a 3D subplot
+            # fig = plt.figure()
+            # ax = fig.add_subplot(111, projection='3d')
+
+            # # Plot the surface
+            # ax.scatter(self._grid_coordinates[:, 0], 
+            #                 self._grid_coordinates[:, 1],
+            #                 self._grid_coordinates[:, 2],
+            #                 marker='o')
+
+            # # Set labels
+            # ax.set_xlabel('X')
+            # ax.set_ylabel('Y')
+            # ax.set_zlabel('Z')
+
+            # # Show the plot
+            # plt.show()
+
+        elif self._task_mode == "parkour":  # parkour
+            raise NotImplementedError
+            # self.target = self._attach_
         # self._build_obstacles()
         # self._build_current_arrow()
         self._configure_water()
@@ -85,6 +126,18 @@ class OceanArena(Arena):
         self.target.set_pose(
             physics=physics, position=position
             )
+    
+    def target_grid_location(
+            self,
+            physics: mjcf.Physics,
+            index: int,
+            ) -> None:
+        position_robot = self._get_entity_xyz_position(entity=self._morphology, physics=physics)
+        pos = position_robot + self._grid_coordinates[index]
+
+        self.target.set_pose(
+                physics=physics, position=pos
+                )
 
     def _configure_assets_directory(
             self

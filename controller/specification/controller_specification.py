@@ -5,6 +5,7 @@ from fprs.specification import ControllerSpecification, Specification
 
 # create np.ndarray parameter
 class NumpyArrayParameter(Parameter):
+    """Inherits from Parameter, the .value attribute can be modified for optimization. Otherwise, use as np.ndarray"""
     def __init__(
             self,
             shape: tuple[int, int],
