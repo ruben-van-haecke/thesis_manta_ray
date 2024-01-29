@@ -68,7 +68,6 @@ phase biases:
 
             out = np.empty(shape=(self._num_neurons*5, ))
             for neuron_index in range(self._num_neurons):
-                # self._omega and self._r are both of type NumpyArrayParameter, defined in controller/specification/controller_specification.py and comes down to a numpy array as indexed below
                 out[neuron_index] = self._omega[0, neuron_index]+np.sum(self._weights[neuron_index, :]*self._r[0, :]*np.sin(phi-phi[neuron_index]-self._phase_biases[neuron_index, :]))  # phi_dot
             out[1*self._num_neurons: 2*self._num_neurons] = r_dot  # r_dot
             out[2*self._num_neurons: 3*self._num_neurons] = x_dot   # x_dot
