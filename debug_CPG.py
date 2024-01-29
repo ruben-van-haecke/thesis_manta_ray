@@ -1,28 +1,13 @@
 import numpy as np
-
-from controller.cmaes_cpg_vectorized import CPG
 from controller.specification.controller_specification import MantaRayCpgControllerSpecification
-from morphology.morphology import MJCMantaRayMorphology
-from morphology.specification.default import default_morphology_specification
-from task.drag_race import Move
 
 import matplotlib.pyplot as plt
-
-import numpy as np
 from scipy.integrate import solve_ivp
-from typing import List
-from morphology.specification.default import default_morphology_specification
-
-from task.drag_race import Move
-from controller.specification.controller_specification import MantaRayCpgControllerSpecification
-from gymnasium.core import ObsType
 
 class CPG():
     """Central Pattern Generator"""
     def __init__(self, 
                 specification: MantaRayCpgControllerSpecification,
-                low: float | None = -1,
-                high: float | None = 1,
                 ) -> None:
         """
         args:
@@ -30,19 +15,14 @@ class CPG():
             low: float, lower bound of the output
             high: float, upper bound of the output
         """
-        # self._neurons = [Neuron(specification=spec) for spec in specification.neuron_specifications]
         self._num_neurons = specification._num_neurons
         self._weights = specification.weights
         self._phase_biases = specification.phase_biases
-        self._low = low
-        self._high = high
         self._r = specification.r   #np.ones(shape=(self._num_neurons, ))
         self._x = specification.x   #np.zeros(shape=(self._num_neurons, ))
         self._omega = specification.omega   #np.ones(shape=(self._num_neurons, ))
         self._a_r = 20  # rad/s
         self._a_x = 20  # rad/s
-        self._last_time = 0.
-        self._last_state = np.zeros(shape=(5*self._num_neurons, ))
     
     def __str__(self):
         string = f"""number of oscillators: {self._num_neurons}
@@ -89,6 +69,7 @@ phase biases:
 
             out = np.empty(shape=(self._num_neurons*5, ))
             for neuron_index in range(self._num_neurons):
+                # self._omega and self._r are both of type NumpyArrayParameter, defined in controller/specification/controller_specification.py and comes down to a numpy array as indexed below
                 out[neuron_index] = self._omega[0, neuron_index]+np.sum(self._weights[neuron_index, :]*self._r[0, :]*np.sin(phi-phi[neuron_index]-self._phase_biases[neuron_index, :]))  # phi_dot
             out[1*self._num_neurons: 2*self._num_neurons] = r_dot  # r_dot
             out[2*self._num_neurons: 3*self._num_neurons] = x_dot   # x_dot
