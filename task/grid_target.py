@@ -1,12 +1,3 @@
-import sys
-import os
-
-# Get the absolute path of the workspace root
-workspace_root = os.path.abspath('path_to_your_workspace_root')
-
-# Add the workspace root to sys.path
-sys.path.append(workspace_root)
-
 from typing import Callable, List, Dict
 from dm_control import composer
 from dm_control.composer import Entity
@@ -14,6 +5,7 @@ from mujoco_utils.environment import MJCEnvironmentConfig
 from mujoco_utils.robot import MJCMorphology
 from mujoco_utils.observables import ConfinedObservable
 from dm_control.mujoco.math import euler2quat
+from dm_control.mjcf import Element
 
 from morphology.morphology import MJCMantaRayMorphology
 from morphology.specification.specification import MantaRayMorphologySpecification 
@@ -23,7 +15,7 @@ from dm_control.composer.observation import observable
 
 import numpy as np
 
-class MoveTask(composer.Task):
+class DragRaceTask(composer.Task):
     def __init__(self,
                  config: MJCEnvironmentConfig,
                  morphology: MJCMantaRayMorphology) -> None:
@@ -34,8 +26,13 @@ class MoveTask(composer.Task):
         # self._configure_camera()
         self._task_observables = self._configure_observables()
 
-        self._previous_distance_to_target = None
+        torso_radius = self._morphology.morphology_specification.torso_specification.radius.value
+        self._initial_position = np.array([0.0, 0.0, 10 * torso_radius])
         self._configure_contacts()
+        self._sensor_actuatorfrc_names = [sensor.name for sensor in self._morphology.mjcf_model.sensor.actuatorfrc]
+        self._sensor_actuatorfrc = [sensor for sensor in self._morphology.mjcf_model.sensor.actuatorfrc]
+
+        self._accumulated_energy = 0
     
     @property
     def root_entity(self) -> OceanArena:
@@ -48,7 +45,7 @@ class MoveTask(composer.Task):
         return self._task_observables
     
     def _build_arena(self) -> OceanArena:
-        arena = OceanArena(task_mode="random_target")
+        arena = OceanArena(task_mode="grid")
         return arena
     
     @staticmethod
@@ -63,15 +60,20 @@ class MoveTask(composer.Task):
                 position
                 )[:3]
     
-    def _get_distance_to_target(
+    def _get_distance_from_initial_position(
             self,
             physics: mjcf.Physics
             ) -> float:
         morphology_position = self._get_entity_xyz_position(entity=self._morphology, physics=physics)
-        target_position = self._get_entity_xyz_position(
-                entity=self._arena.target, physics=physics
-                )
-        distance = np.linalg.norm(morphology_position - target_position)
+        distance = np.linalg.norm(morphology_position-self._initial_position)
+        return distance
+    
+    def _get_x_distance_from_initial_position(
+            self,
+            physics: mjcf.Physics
+            ) -> float:
+        morphology_position = self._get_entity_xyz_position(entity=self._morphology, physics=physics)
+        distance = np.linalg.norm(morphology_position[0]-self._initial_position[0])
         return distance
     
     def _configure_camera(self) -> None:
@@ -95,6 +97,22 @@ class MoveTask(composer.Task):
         self._arena.add_free_entity(morphology)
         return morphology
     
+    def _get_sensor_actuatorfrc(self,
+                                physics: mjcf.Physics,
+                                ) -> float:
+        return physics.data.sensordata
+    
+    def _get_abs_forces_sensors(self,
+                                physics: mjcf.Physics,
+                                ) -> float:
+        return np.sum(np.abs(self._get_sensor_actuatorfrc(physics=physics)))
+    
+    def _get_accumulated_energy_sensors(self,
+                            physics: mjcf.Physics,
+                            ) -> float:
+        self._accumulated_energy += self._get_abs_forces_sensors(physics=physics) * self.config.physics_timestep     # d energy = f * dt
+        return self._accumulated_energy
+    
     def _configure_task_observables(
             self
             ) -> Dict[str, observable.Observable]:
@@ -105,6 +123,12 @@ class MoveTask(composer.Task):
                 shape=[1],
                 raw_observation_callable=lambda
                     physics: physics.time()
+                )
+        task_observables["task/xyz-distance-from-origin"] = ConfinedObservable(
+                low=0, high=np.inf, shape=[1], raw_observation_callable=self._get_distance_from_initial_position
+                )
+        task_observables["task/force"] = ConfinedObservable(
+                low=0, high=np.inf, shape=[4], raw_observation_callable=self._get_sensor_actuatorfrc
                 )
         # task_observables["task/xy-distance-to-target"] = ConfinedObservable(
         #         low=0, high=np.inf, shape=[1], raw_observation_callable=self._get_xy_distance_to_target
@@ -124,23 +148,20 @@ class MoveTask(composer.Task):
         return task_observables
     
     def get_reward(self, physics):
-        current_distance_to_target = self._get_distance_to_target(physics=physics)
-        reward = self._previous_distance_to_target - current_distance_to_target
-        self._previous_distance_to_target = current_distance_to_target
-        return reward
+        "reward to minimize"
+        current_distance_from_initial_position = self._get_x_distance_from_initial_position(physics=physics)
+        if current_distance_from_initial_position == 0:
+            return 1/0.0001
+        return self._get_accumulated_energy_sensors(physics=physics)/current_distance_from_initial_position
     
     def _initialize_morphology_pose(
             self,
             physics: mjcf.Physics
             ) -> None:
-
-        torso_radius = self._morphology.morphology_specification.torso_specification.radius.value
-        initial_position = np.array([0.0, 0.0, 10 * torso_radius])
-
         initial_quaternion = euler2quat(0, 0, 0)
 
         self._morphology.set_pose(
-                physics=physics, position=initial_position, quaternion=initial_quaternion
+                physics=physics, position=self._initial_position, quaternion=initial_quaternion
                 )
 
     def initialize_episode(
@@ -148,10 +169,12 @@ class MoveTask(composer.Task):
             physics: mjcf.Physics,
             random_state: np.random.RandomState
             ) -> None:
+        # set the morphology in the initial position
         self._initialize_morphology_pose(physics)
-        self._arena.randomize_target_location(physics=physics,
-                                              distance_from_origin=self.config.target_distance_from_origin)
-        self._previous_distance_to_target = self._get_distance_to_target(physics=physics)
+
+        # set the target in one of the grid points
+        self._arena.target_grid_location(physics=physics,
+                                         index=0)
     
 
 
@@ -162,14 +185,12 @@ class Move(MJCEnvironmentConfig):
             time_scale: float = 1, 
             control_substeps: int = 1, 
             simulation_time: float = 10,
-            target_distance_from_origin: float = 5,
             camera_ids: List[int] | None = None
             ) -> None:
         super().__init__(
-            task = MoveTask, 
+            task = DragRaceTask, 
             time_scale=time_scale,
             control_substeps=control_substeps,
             simulation_time=simulation_time,
             camera_ids=[0, 1],
         )
-        self.target_distance_from_origin = target_distance_from_origin
