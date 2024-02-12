@@ -1,20 +1,26 @@
+import pickle
+from typing import List
+import os
+import sys
+sys.path.append(os.path.abspath("/media/ruben/data/documents/unief/thesis"))
+
 import gymnasium as gym
 import numpy as np
 import warnings
 import matplotlib.pyplot as plt
 import wandb
 import copy
+import time
 from datetime import datetime
-from typing import List
-
-from controller.cmaes_cpg_vectorized import CPG
 from cmaes import CMA
-from controller.parameters import MantaRayControllerSpecificationParameterizer
-from controller.specification.controller_specification import MantaRayCpgControllerSpecification
-from controller.specification.default import default_controller_dragrace_specification
-from morphology.morphology import MJCMantaRayMorphology
 
-from morphology.specification.default import default_morphology_specification
+from thesis_manta_ray.controller.cmaes_cpg_vectorized import CPG
+from thesis_manta_ray.controller.parameters import MantaRayControllerSpecificationParameterizer
+from thesis_manta_ray.controller.specification.controller_specification import MantaRayCpgControllerSpecification
+from thesis_manta_ray.controller.specification.default import default_controller_dragrace_specification
+from thesis_manta_ray.morphology.morphology import MJCMantaRayMorphology
+
+from thesis_manta_ray.morphology.specification.default import default_morphology_specification
 from parameters import MantaRayMorphologySpecificationParameterizer
 from task.drag_race import Move
 from fprs.specification import RobotSpecification
@@ -67,17 +73,16 @@ class OptimizerSimulation:
         self._num_envs = num_envs
         self._logging = logging
 
-        self._controller_specs = [default_controller_dragrace_specification() for _ in range(self._num_envs)]
+        self._controller_specs = [default_controller_dragrace_specification(action_spec=action_spec) for _ in range(self._num_envs)]
         for controller_spec in self._controller_specs:
             self._parameterizer.parameterize_specification(specification=controller_spec)
         self._morph_specs = [default_morphology_specification() for _ in range(self._num_envs)]
+        time.sleep(5)
         self._controllers: List[CPG] = [controller(specification=controller_spec) for controller_spec in self._controller_specs]
 
         self._gym_env = gym.vector.AsyncVectorEnv([lambda: Move().environment(morphology=MJCMantaRayMorphology(specification=self._morph_specs[env_id]),
                                                                   wrap2gym=True) for env_id in range(self._num_envs)])
 
-        # self._gym_env = self._envs[0]#task_config.environment(morphology=morphology, 
-        #                               #wrap2gym=True)
         self._action_spec = action_spec
         self._morphology_specification = self._robot_specification.morphology_specification
         self._controller_specification = self._robot_specification.controller_specification
@@ -195,7 +200,7 @@ class OptimizerSimulation:
         """
         returns (generation, episode) of the best individual in the population"""
         indices = np.unravel_index(np.argmin(self._outer_rewards, axis=None), self._outer_rewards.shape)
-        print("Best individual: ", indices, " , reward: ", self._outer_rewards[indices], " , action: ", self._control_actions[indices])
+        print("Best individual (gen, episode): ", indices, " , reward: ", self._outer_rewards[indices], " , action: ", self._control_actions[indices])
         for index, value in enumerate(self._control_actions[indices]):
             print(self._parameterizer.get_parameter_labels()[index], ": ", value)
         return indices
@@ -239,6 +244,42 @@ class OptimizerSimulation:
             environment_loader=dm_env, 
             policy=policy
             )
+    def finish(self, store=True, name=None):
+        """
+        args:
+            store: whether to store self in a file
+            name: name of the file to store the results in, if None it is the date
+        """
+        if self._logging:
+            wandb.finish()
+
+        if store == True:
+            if name is None:
+                name = datetime.now().strftime("%Y-%m-%d %H_%M_%S")
+            path = f"results_and_visualization/simulation_objects/{name}.pkl"
+            with open(path, 'wb') as handle:
+                pickle.dump(self, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            print(f"Stored the simulation object in {path}")
+    
+    @staticmethod
+    def load(
+            path: str
+            ) -> 'OptimizerSimulation': # forward referencing
+        with open(path, 'rb') as handle:
+            return pickle.load(handle)
+        
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Remove the unpicklable entries.
+        del state['_gym_env']
+        return state
+
+    def __setstate__(self, state):
+        # Restore instance attributes.
+        self.__dict__.update(state)
+        # Restore the unpicklable entries.
+        self._gym_env = gym.vector.AsyncVectorEnv([lambda: Move().environment(morphology=MJCMantaRayMorphology(specification=self._morph_specs[env_id]),
+                                                                  wrap2gym=True) for env_id in range(self._num_envs)])
     
 
 if __name__ == "__main__":
@@ -260,7 +301,7 @@ if __name__ == "__main__":
     names = action_spec.name.split('\t')
     index_left_pectoral_fin_x = names.index('morphology/left_pectoral_fin_actuator_x')
     index_right_pectoral_fin_x = names.index('morphology/right_pectoral_fin_actuator_x')
-    controller_specification = default_controller_dragrace_specification()
+    controller_specification = default_controller_dragrace_specification(action_spec=action_spec)
     controller_parameterizer = MantaRayControllerSpecificationParameterizer(
         amplitude_fin_out_plane_range=(0, 1),
         frequency_fin_out_plane_range=(0, 1),
@@ -276,35 +317,38 @@ if __name__ == "__main__":
                                     controller_specification=controller_specification)
 
     # morphology_space = parameterizer.get_target_parameters(specification=morphology_specification)
+    bounds = np.zeros(shape=(len(controller_parameterizer.get_parameter_labels()), 2))
+    bounds[:, 1] = 1
     cma = CMA(mean=np.random.uniform(low=0,
                                      high=1,
                                      size=len(controller_parameterizer.get_parameter_labels())),
-              sigma=0.05,
+              sigma=0.005,
+              bounds=bounds,
               population_size=10,    # has to be more than 1
               lr_adapt=True,
               )
     sim = OptimizerSimulation(
-        task_config=Move(simulation_time=20),
+        task_config=Move(simulation_time=10),
         robot_specification=robot_spec,
         parameterizer=controller_parameterizer,
         population_size=10,  # make sure this is a multiple of num_envs
-        num_generations=15,
+        num_generations=1,
         outer_optimalization=cma,
         controller=CPG,
         skip_inner_optimalization=True,
         record_actions=True,
         action_spec=action_spec,
         num_envs=5,
-        logging=True,
+        logging=False,
         )
     
     sim.run()
-    sim.visualize()
+    # sim.visualize()
     best_gen, best_episode = sim.get_best_individual()
-    sim.viewer(generation=best_gen, episode=best_episode)
-    sim.visualize_inner(generation=best_gen, episode=best_episode)
+    # sim.viewer(generation=best_gen, episode=best_episode)
+    # sim.visualize_inner(generation=best_gen, episode=best_episode)
+    sim.finish(store=True, name="test")
 
     # best_solution, best_fitness = cma.search()
 
     # show_video(frame_generator=run_episode())
-    wandb.finish()

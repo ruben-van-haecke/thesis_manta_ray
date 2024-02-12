@@ -98,15 +98,6 @@ phase biases:
 
             out = np.empty(shape=(self._num_neurons*5, ))
             for neuron_index in range(self._num_neurons):
-                # if t>19 and neuron_index==4 and self.b:
-                #     print("t: ", t)
-                #     print("phi: ", phi)
-                #     print("-: ", phi-phi[neuron_index]-self._phase_biases[neuron_index, :])
-                #     print("*: ", self._weights[neuron_index, :]*self._r[0, :])
-                #     print("sin: ", np.sin(phi-phi[neuron_index]-self._phase_biases[neuron_index, :]))
-                #     print("w*r*sin: ", self._weights[neuron_index, :]*self._r[0, :]*np.sin(phi-phi[neuron_index]-self._phase_biases[neuron_index, :]))
-                #     print("sum: ", np.sum(self._weights[neuron_index, :]*self._r[0, :]*np.sin(phi-phi[neuron_index]-self._phase_biases[neuron_index, :])))
-                #     self.b = False
                 out[neuron_index] = self._omega[0, neuron_index]+np.sum(self._weights[neuron_index, :]*self._r[0, :]*np.sin(phi-phi[neuron_index]-self._phase_biases[neuron_index, :]))  # phi_dot
             out[1*self._num_neurons: 2*self._num_neurons] = r_dot  # r_dot
             out[2*self._num_neurons: 3*self._num_neurons] = x_dot   # x_dot
@@ -120,7 +111,8 @@ phase biases:
         # Solve the differential equations using solve_ivp
         if time == 0:   # reset for new episode
             self._last_state = np.empty(shape=(5*self._num_neurons, ))
-            self._last_state[0*self._num_neurons: 1*self._num_neurons] = np.random.uniform(low=0, high=0.2, size=self._num_neurons)
+            self._last_state[0*self._num_neurons: 1*self._num_neurons] = np.sum(self._phase_biases[:, :], axis=0)-self._omega[0, :]#np.random.uniform(low=-2, high=2, size=self._num_neurons)
+            self._last_state[4] = 0
             self._last_state[1*self._num_neurons: 2*self._num_neurons] = self._r[:]   # r
             self._last_state[2*self._num_neurons: 3*self._num_neurons] = self._x[:]  # x
             self._last_state[3*self._num_neurons: 4*self._num_neurons] = np.zeros(shape=(self._num_neurons,))  # r_dot
@@ -133,6 +125,7 @@ phase biases:
                             t_span=[self._last_time, time], 
                             y0=self._last_state,   # Initial conditions
                             t_eval=np.array([time]),
+                            method="Radau",
                             )
             self._last_state = sol.y[:, -1]
             self._last_time = time
@@ -142,8 +135,7 @@ phase biases:
                             t_span=[self._last_time, time+duration],
                             y0=self._last_state,   # Initial conditions
                             t_eval=np.linspace(time, time+duration-sampling_period, int(duration/sampling_period)),
-                            method='DOP853',
-                            dense_output=True,
+                            method='Radau',
                             )
             self._last_state = sol.y[:, -1]
             self._last_time = time

@@ -15,6 +15,7 @@ from arena.utils import colors
 from arena.utils.colors import rgba_sand
 from arena.utils.noise import generate_perlin_noise_map
 from arena.entities.target import Target
+from arena.entities.parkour_obstacles import CilinderParkour
 
 from fiblat import sphere_lattice
 
@@ -101,13 +102,22 @@ class OceanArena(Arena):
             # plt.show()
 
         elif self._task_mode == "parkour":  # parkour
-            raise NotImplementedError
-            # self.target = self._attach_
+            self._obstacles_traject = self._build_obstacle_course()
         # self._build_obstacles()
         # self._build_current_arrow()
         self._configure_water()
 
         self._previous_light_shift_time = 0
+    
+    def _build_obstacle_course(
+            self,
+            ) -> None:
+        # build obstacles
+        obstacle_course = []
+        obstacle_course.append(CilinderParkour())
+        for entity in obstacle_course:
+            self.attach(entity)
+        return obstacle_course
     
     def _attach_target(
             self
@@ -132,11 +142,8 @@ class OceanArena(Arena):
             physics: mjcf.Physics,
             index: int,
             ) -> None:
-        position_robot = self._get_entity_xyz_position(entity=self._morphology, physics=physics)
-        pos = position_robot + self._grid_coordinates[index]
-
         self.target.set_pose(
-                physics=physics, position=pos
+                physics=physics, position=self._grid_coordinates[index]
                 )
 
     def _configure_assets_directory(

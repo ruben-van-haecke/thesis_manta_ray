@@ -39,49 +39,70 @@ class MantaRayControllerSpecificationParameterizer(ControllerSpecificationParame
             self,
             specification: MantaRayCpgControllerSpecification
             ) -> None:
-        omega = 1
+        omega = 4
         bias = np.pi
-        specification.r.add_connections(connections=[(0, self.tail_segment_0_y), 
-                                                     (0, self.tail_segment_1_y), 
-                                                     (0, self.right_fin_x), 
+        specification.r.add_connections(connections=[(0, self.right_fin_x), 
                                                      (0, self.left_fin_x),
                                                      ],
-                                        weights=[0, 0, 1, 1.])
-        specification.omega.add_connections(connections=[(0, self.tail_segment_0_y), 
-                                                         (0, self.tail_segment_1_y), 
-                                                         (0, self.right_fin_x), 
-                                                         (0, self.left_fin_x)
+                                        weights=[1, 1.],
+                                        low=[0, 0], 
+                                        high=[1, 1],
+                                        )
+        specification.omega.add_connections(connections=[(0, self.right_fin_x), 
+                                                         (0, self.left_fin_x),
                                                          ],
-                                                weights=np.ones(shape=(4, ))*np.pi*2*omega)
-        connections = [#(1, 3), (3, 1), # connection between the two out of plane oscillators of the tail
-            #    (3, 4), (4, 3),  # connection tail-rigth fin
-            #    (3, 6), (6, 3),  # connection tail-left fin
-                (4, 6), (6, 4),], # connection right-left fin
-        specification.weights.add_connections(connections=connections,
-                                                weights=[1, 1],)
+                                                weights=np.ones(shape=(2, ))*np.pi*2*omega,
+                                                low=np.zeros(shape=(2, )),
+                                                high=np.ones(shape=(2, ))*2*np.pi*omega)
+        connections = [(4, 6), (6, 4),] # connection right-left fin
+        specification.weights.set_connections(connections=connections,
+                                                weights=[5, 5],
+                                                )
         specification.phase_biases.add_connections(connections=connections,
-                                                weights=[-bias, bias])
+                                                weights=[-bias, bias], 
+                                                low=-np.ones(shape=(2, ))*np.pi,
+                                                high=np.ones(shape=(2, ))*np.pi)
         
         
     def parameter_space(self,
                         specification: MantaRayCpgControllerSpecification,
                         controller_action: np.ndarray,
                         ) -> None:
-        fin_amplitude = controller_action[0]
-        fin_frequency = controller_action[1]*2*np.pi*3  # max 3 Hz
-        fin_offset = controller_action[2]
-        weight = controller_action[3]*10
-        specification.r.value  = [0, 0, fin_amplitude, fin_amplitude]
-        specification.omega.value = [0, 0, fin_frequency, fin_frequency]
-        specification.phase_biases.value = [-fin_offset, fin_offset]
-        specification.weights.value = [weight, weight]
+        """
+            args:
+                controller_action: np.ndarray of shape (num_neurons, ) within range [0, 1]
+
+            scales the controller_action to the range of the parameter
+        """
+        assert np.all(controller_action >= 0) and np.all(controller_action <= 1), f"[MantaRayCpgControllerSpecification] controller_action '{controller_action}' is not within range [0, 1]"
+        # get the right length due to symmetry
+        amplitude = controller_action[0]
+        offset = controller_action[1]
+        frequency = controller_action[2]
+        phase_bias = controller_action[3]
+        
+        # updating specification
+        specification.r.value = specification.r.low + amplitude * (specification.r.high - specification.r.low)
+        specification.x.value = specification.x.low + offset * (specification.x.high - specification.x.low)
+        specification.omega.value = specification.omega.low + frequency * (specification.omega.high - specification.omega.low)
+        specification.phase_biases.value = specification.phase_biases.low + phase_bias * (specification.phase_biases.high - specification.phase_biases.low)
+
+        # fin_amplitude = controller_action[0]
+        # fin_frequency = controller_action[1]*2*np.pi*3  # max 3 Hz
+        # phase_bias = controller_action[2]*np.pi
+        # weight = controller_action[3]*10
+        # specification.r.value  = [0, 0, fin_amplitude, fin_amplitude]
+        # specification.omega.value = [0, 0, fin_frequency, fin_frequency]
+        # specification.phase_biases.value = [-phase_bias, phase_bias]
+        # specification.weights.value = [weight, weight]
+        # specification.scaled_update(update=controller_action)
 
     
 
     def get_parameter_labels(
             self,
             ) -> List[str]:
-        return ["fin_amplitude", "fin_frequency", "fin_offset", "weight"]
+        return ["fin_amplitude", "fin_offset", "frequency", "phase_bias"]
 
 
 

@@ -1,14 +1,13 @@
 from dm_control import composer, mjcf
-import numpy as np
 
-class Target(composer.Entity):    
+class CilinderParkour(composer.Entity):
     def _build(
             self
             ):
         self._mjcf_model = mjcf.RootElement()
         self._geom = self._mjcf_model.worldbody.add(
-                'geom', type='sphere', 
-                size=[0.2], 
+                'geom', type='cylinder', 
+                size=[0.5, 1], 
                 rgba=(100, 100, 100, 0.5),
                 )
 
@@ -17,4 +16,3 @@ class Target(composer.Entity):
             self
             ):
         return self._mjcf_model
-

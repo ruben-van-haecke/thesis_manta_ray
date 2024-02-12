@@ -149,10 +149,13 @@ class DragRaceTask(composer.Task):
     
     def get_reward(self, physics):
         "reward to minimize"
+        # v = 0.5   # velocity in m/s
+        v = self.config.velocity
         current_distance_from_initial_position = self._get_x_distance_from_initial_position(physics=physics)
-        if current_distance_from_initial_position == 0:
-            return 1/0.0001
-        return self._get_accumulated_energy_sensors(physics=physics)/current_distance_from_initial_position
+        if current_distance_from_initial_position == 0.:
+            return 1/0.00001
+        velocity_penalty = np.abs(v*physics.time() - current_distance_from_initial_position)
+        return (self._get_accumulated_energy_sensors(physics=physics)+200*velocity_penalty)/current_distance_from_initial_position
     
     def _initialize_morphology_pose(
             self,
@@ -180,7 +183,8 @@ class Move(MJCEnvironmentConfig):
             time_scale: float = 1, 
             control_substeps: int = 1, 
             simulation_time: float = 10,
-            camera_ids: List[int] | None = None
+            camera_ids: List[int] | None = None,
+            velocity: float = 0.5,
             ) -> None:
         super().__init__(
             task = DragRaceTask, 
@@ -188,4 +192,6 @@ class Move(MJCEnvironmentConfig):
             control_substeps=control_substeps,
             simulation_time=simulation_time,
             camera_ids=[0, 1],
+            # velocity=velocity,
         )
+        self.velocity = velocity

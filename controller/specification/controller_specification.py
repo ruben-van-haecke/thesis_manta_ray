@@ -9,35 +9,55 @@ class NumpyArrayParameter(Parameter):
     def __init__(
             self,
             shape: tuple[int, int],
-            low: float = -1.0,
-            high: float = 1.0,
+            low: List[float] | np.ndarray = [],
+            high: List[float] | np.ndarray = [],
+            initial_value: np.ndarray | None = None, 
             ) -> None:
+        """
+        args:
+            initial_value: instantiate the value on this array and do not make it modifieble.
+        """
         super(NumpyArrayParameter, self).__init__(value=np.zeros(shape))
         self.shape = shape
-        self.low = low
-        self.high = high
+        self._low: np.ndarray = np.array(low)
+        self._high: np.ndarray = np.array(high)
         self._modifiable = []   # list of indices that can be modified
+        if initial_value is not None:
+            assert initial_value.shape == self.shape, f"[NumpyArrayParameter] Given initial_value shape '{initial_value.shape}' does not have shape '{len(self.shape)}'"
+            self._value = initial_value
 
     @property
     def value(
             self
-            ) -> float:
+            ) -> float | np.ndarray:
         if self._value is None:
             self.set_random_value()
 
-        self._value = np.clip(self._value, self.low, self.high)
-        return self._value#[tuple(np.transpose(self._modifiable))]
+        self._value = np.clip(self._value, self._low, self._high)
+        return self._value[tuple(np.transpose(self._modifiable))]
 
     @value.setter
     def value(
             self,
             value: List[float] | np.ndarray
             ) -> None:
+        if value.size == 0:
+            return 
         try:
             value = np.array(value).reshape(self._value[tuple(np.transpose(self._modifiable))].shape)   # TODO: maybe not the cleanest way...
             self._value[tuple(np.transpose(self._modifiable))] = value
         except ValueError:
             raise ValueError(f"[NumpyArrayParameter] Given value '{value}' does not have length '{len(self._modifiable)}'")
+    @property
+    def low(
+            self
+            ) -> np.ndarray:
+        return self._low
+    @property
+    def high(
+            self
+            ) -> np.ndarray:
+        return self._high
         
     def __getitem__(self, index):
         return self._value[index]
@@ -70,37 +90,88 @@ class NumpyArrayParameter(Parameter):
     def __str__(self):
         return str(self._value)
     def __repr__(self):
-        return f"NumpyArrayParameter(shape={self.shape}, low={self.low}, high={self.high}, value={self._value})"
+        return f"NumpyArrayParameter(shape={self.shape}, low={self._low}, high={self._high}, value={self._value})"
 
     def set_random_value(
             self
             ) -> None:
         self._value = np.zeros(self.shape)
-        self._value[tuple(np.transpose(self._modifiable))] = np.random.uniform(low=self.low, high=self.high, size=(len(self._modifiable),))
+        self._value[tuple(np.transpose(self._modifiable))] = np.random.uniform(low=self._low, high=self._high, size=(len(self._modifiable),))
     
     def add_connections(self,
                         connections: List[tuple[int, int]],
+                        low: List[float] | np.ndarray,
+                        high: List[float] | np.ndarray,
                         weights: List[float] | np.ndarray | None = None,
                         ) -> None:
         for connection in connections:
             assert connection not in self._modifiable, f"[NumpyArrayParameter] Connection '{connection}' is already in the list of modifiable connections"
+        
         self._modifiable += connections
+        self._low = np.concatenate((self._low, low))
+        self._high = np.concatenate((self._high, np.array(high)))
         if weights is not None:
             weights = np.array(weights).reshape(self._value[tuple(np.transpose(connections))].shape)    # TODO: maybe not the cleanest way...
             self._value[tuple(np.transpose(connections))] = weights
+
+    def set_connections(self,
+                       connections: List[tuple[int, int]],
+                       weights: List[float] | np.ndarray,
+                       ) -> None:
+        """
+        same as add_connections but fixes the connection to the given weight and can thus not be optimized
+        """
+        weights = np.array(weights).reshape(self._value[tuple(np.transpose(connections))].shape)    # TODO: maybe not the cleanest way...
+        self._value[tuple(np.transpose(connections))] = weights
 
     
 
 class MantaRayCpgControllerSpecification(ControllerSpecification):
     def __init__(self,
-                 #neuron_specifications: List[MantaRayCpgNeuronControllerSpecification],
                  num_neurons: int,
+                 action_spec: np.ndarray,
                  ) -> None:
         super().__init__()
         self._num_neurons = num_neurons
+        self._action_spec = action_spec
+
         self.r = NumpyArrayParameter(shape=(1, self._num_neurons))
         self.x = NumpyArrayParameter(shape=(1, self._num_neurons))
-        self.omega = NumpyArrayParameter(shape=(1, self._num_neurons))
-        self.weights = NumpyArrayParameter(shape=(self._num_neurons, self._num_neurons), low=0, high=10)
-        self.phase_biases = NumpyArrayParameter(shape=(self._num_neurons, self._num_neurons), low=-np.pi, high=np.pi)
+        self.omega = NumpyArrayParameter(shape=(1, self._num_neurons))   # max 4 Hz
+        
+        self.weights = NumpyArrayParameter(shape=(self._num_neurons, self._num_neurons))
+        self.phase_biases = NumpyArrayParameter(shape=(self._num_neurons, self._num_neurons))
+    
+    def scaled_update(self,
+                      update: np.ndarray,
+                      ) -> None:
+        """
+            args:
+                update: np.ndarray of shape (num_neurons, ) within range [0, 1]
+
+            scales the update to the range of the parameter
+        """
+        assert np.all(update >= 0) and np.all(update <= 1), f"[MantaRayCpgControllerSpecification] Update '{update}' is not within range [0, 1]"
+        # get the right length due to symmetry
+        amplitude = update[0]
+        offset = update[1]
+        frequency = update[2]
+        phase_bias = update[3]
+        
+        # updating specification
+        index_begin, index_end = 0, self.r.value.size
+        self.r.value = self.r.low + amplitude * (self.r.high - self.r.low)
+
+        index_begin, index_end = index_end, index_end + self.x.value.shape[1]
+        self.x.value = self.x.low + offset * (self.x.high - self.x.low)
+
+        index_begin, index_end = index_end, index_end + self.omega.value.size
+        self.omega.value = self.omega.low + frequency * (self.omega.high - self.omega.low)
+
+        # index_begin, index_end = index_end, index_end + self.weights.value.size
+        # self.weights.value = self.weights.low + update[index_begin:index_end] * (self.weights.high - self.weights.low)
+
+        index_begin, index_end = index_end, index_end + self.phase_biases.value.size
+        self.phase_biases.value = self.phase_biases.low + phase_bias * (self.phase_biases.high - self.phase_biases.low)
+
     

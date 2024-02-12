@@ -6,7 +6,8 @@ from morphology.morphology import MJCMantaRayMorphology
 from morphology.specification.specification import MantaRayMorphologySpecification
 from morphology.specification.default import default_morphology_specification
 
-from task.grid_target import Move
+from task.parkour import Move
+# from task.grid_target import Move
 # from task.move_to_target import Move
 # from task.drag_race import Move
 
