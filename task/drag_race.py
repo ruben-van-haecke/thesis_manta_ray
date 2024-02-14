@@ -16,6 +16,8 @@ from dm_control.composer.observation import observable
 import numpy as np
 
 class DragRaceTask(composer.Task):
+    reward_functions = ["x_distance", "energy_efficient", "energy_efficient_velocity"]
+
     def __init__(self,
                  config: MJCEnvironmentConfig,
                  morphology: MJCMantaRayMorphology) -> None:
@@ -149,13 +151,19 @@ class DragRaceTask(composer.Task):
     
     def get_reward(self, physics):
         "reward to minimize"
-        # v = 0.5   # velocity in m/s
         v = self.config.velocity
-        current_distance_from_initial_position = self._get_x_distance_from_initial_position(physics=physics)
-        if current_distance_from_initial_position == 0.:
-            return 1/0.00001
-        velocity_penalty = np.abs(v*physics.time() - current_distance_from_initial_position)
-        return (self._get_accumulated_energy_sensors(physics=physics)+200*velocity_penalty)/current_distance_from_initial_position
+        if self.config.reward_fn == "x_distance" or self.config.reward_fn is None:
+            return self._get_x_distance_from_initial_position(physics=physics)
+        elif self.config.reward_fn == "energy_efficient":
+            return self._get_accumulated_energy_sensors(physics=physics)/current_distance_from_initial_position
+        elif self.config.reward_fn == "energy_efficient_velocity":
+            current_distance_from_initial_position = self._get_x_distance_from_initial_position(physics=physics)
+            if current_distance_from_initial_position == 0.:
+                return 1/0.00001
+            velocity_penalty = np.abs(v*physics.time() - current_distance_from_initial_position)
+            return (self._get_accumulated_energy_sensors(physics=physics)+200*velocity_penalty)/current_distance_from_initial_position
+        else:
+            raise ValueError("reward_fn not recognized")
     
     def _initialize_morphology_pose(
             self,
@@ -185,6 +193,7 @@ class Move(MJCEnvironmentConfig):
             simulation_time: float = 10,
             camera_ids: List[int] | None = None,
             velocity: float = 0.5,
+            reward_fn: str | None = None,
             ) -> None:
         super().__init__(
             task = DragRaceTask, 
@@ -192,6 +201,6 @@ class Move(MJCEnvironmentConfig):
             control_substeps=control_substeps,
             simulation_time=simulation_time,
             camera_ids=[0, 1],
-            # velocity=velocity,
         )
         self.velocity = velocity
+        self.reward_fn = reward_fn

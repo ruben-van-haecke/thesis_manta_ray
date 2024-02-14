@@ -17,7 +17,7 @@
   </default>
   <asset>
     <texture name="//unnamed_texture_0" type="skybox" builtin="flat" rgb1="1 1 1" rgb2="1 1 1" width="200" height="200"/>
-    <texture name="light_gradient_ground_plane" type="2d" file="lightmap_0-92bdea9dde17a5a9a86bfb1c3cb7f3db85f75df3.png"/>
+    <texture name="light_gradient_ground_plane" type="2d" file="lightmap_0-b8e641a384d6aa4afcf0106b8e9270a16f20b085.png"/>
     <material name="groundplane" class="/" texture="light_gradient_ground_plane" reflectance="0"/>
     <hfield name="heightmap" file="heightmap_0-91fcc20c0c8c7a3740585df582e9b54536c2b6da.png" size="10 10 1.5 0.5"/>
   </asset>

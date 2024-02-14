@@ -35,11 +35,10 @@ warnings.filterwarnings('ignore', category=DeprecationWarning)
 
 class OptimizerSimulation:
     """
-    This class is responsible for simulating the evolution of a population by means of an evolutionary strategy i.e. by distribution sampling
-    of MantaRay agents. It is responsible for:
+    This class simulates the evolution of a population by means of an evolutionary strategy i.e. by distribution sampling
+    of MantaRay agents. It is parallelized with CPU cores.
+    It is responsible for:
     - running the simulation
-    - saving the results
-    - visualizing the results
     - saving the results
     """
     def __init__(self,
@@ -61,6 +60,7 @@ class OptimizerSimulation:
         :param skip_inner_optimalization: whether to skip the inner optimization i.e. all actions are pre-computed to speed up the simulation
                                         this is a significant speed-up
         """
+        assert population_size % num_envs == 0, "population_size should be a multiple of num_envs"
         self._task_config = task_config
         self._robot_specification = robot_specification
         self._parameterizer = parameterizer
@@ -80,8 +80,16 @@ class OptimizerSimulation:
         time.sleep(5)
         self._controllers: List[CPG] = [controller(specification=controller_spec) for controller_spec in self._controller_specs]
 
-        self._gym_env = gym.vector.AsyncVectorEnv([lambda: Move().environment(morphology=MJCMantaRayMorphology(specification=self._morph_specs[env_id]),
-                                                                  wrap2gym=True) for env_id in range(self._num_envs)])
+        succeed = False
+        while not succeed:
+            try:
+                self._gym_env = gym.vector.AsyncVectorEnv([lambda: Move().environment(morphology=MJCMantaRayMorphology(specification=self._morph_specs[env_id]),
+                                                                        wrap2gym=True) for env_id in range(self._num_envs)])
+                succeed = True
+            except:
+                print("Failed to create the gym environment, retrying...")
+                time.sleep(5)
+
 
         self._action_spec = action_spec
         self._morphology_specification = self._robot_specification.morphology_specification
@@ -112,6 +120,7 @@ class OptimizerSimulation:
                             "control_timestep": self._task_config.control_timestep,
                             "population_size": self._population_size,
                             "sigma_outer_loop": self._outer_optimalization._sigma,
+                            "lr_adapt": self._outer_optimalization._lr_adapt
                         }
                     )
     
@@ -136,6 +145,7 @@ class OptimizerSimulation:
         scaled_action = minimum + normalised_action * (maximum - minimum)
         if self._record_actions and self._skip_inner_optimalization: 
             self._actions[generation, episode, :, :] = scaled_action
+
         elif self._record_actions and not self._skip_inner_optimalization:
             self._actions[generation, episode, :, counter] = scaled_action
 
@@ -248,7 +258,8 @@ class OptimizerSimulation:
         """
         args:
             store: whether to store self in a file
-            name: name of the file to store the results in, if None it is the date
+            name: name of the file to store the results in, relative from the experiments folder, 
+                if None it is the date
         """
         if self._logging:
             wandb.finish()
@@ -256,7 +267,7 @@ class OptimizerSimulation:
         if store == True:
             if name is None:
                 name = datetime.now().strftime("%Y-%m-%d %H_%M_%S")
-            path = f"results_and_visualization/simulation_objects/{name}.pkl"
+            path = f"experiments/{name}.pkl"
             with open(path, 'wb') as handle:
                 pickle.dump(self, handle, protocol=pickle.HIGHEST_PROTOCOL)
             print(f"Stored the simulation object in {path}")
@@ -322,24 +333,24 @@ if __name__ == "__main__":
     cma = CMA(mean=np.random.uniform(low=0,
                                      high=1,
                                      size=len(controller_parameterizer.get_parameter_labels())),
-              sigma=0.005,
+              sigma=0.0005,
               bounds=bounds,
               population_size=10,    # has to be more than 1
-              lr_adapt=True,
+              lr_adapt=False,
               )
     sim = OptimizerSimulation(
-        task_config=Move(simulation_time=10),
+        task_config=Move(simulation_time=10, reward_fn="energy_efficient_velocity"),
         robot_specification=robot_spec,
         parameterizer=controller_parameterizer,
         population_size=10,  # make sure this is a multiple of num_envs
-        num_generations=1,
+        num_generations=500,
         outer_optimalization=cma,
         controller=CPG,
         skip_inner_optimalization=True,
         record_actions=True,
         action_spec=action_spec,
         num_envs=5,
-        logging=False,
+        logging=True,
         )
     
     sim.run()
@@ -347,7 +358,7 @@ if __name__ == "__main__":
     best_gen, best_episode = sim.get_best_individual()
     # sim.viewer(generation=best_gen, episode=best_episode)
     # sim.visualize_inner(generation=best_gen, episode=best_episode)
-    sim.finish(store=True, name="test")
+    sim.finish(store=True, name="long_run_check_convergence")
 
     # best_solution, best_fitness = cma.search()
 
