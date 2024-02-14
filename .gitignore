@@ -6,3 +6,4 @@ thesis_manta_ray.code-workspace
 utils/
 morphology/manta_ray.xml
 *.pyc
+*.pkl
