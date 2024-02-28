@@ -10,12 +10,12 @@ from dm_control.mujoco.wrapper import mjbindings
 from scipy.ndimage import gaussian_filter
 from transforms3d.euler import euler2quat
 
-from arena.obstacle import Obstacle
-from arena.utils import colors
-from arena.utils.colors import rgba_sand
-from arena.utils.noise import generate_perlin_noise_map
-from arena.entities.target import Target
-from arena.entities.parkour_obstacles import CilinderParkour
+from thesis_manta_ray.arena.obstacle import Obstacle
+from thesis_manta_ray.arena.utils import colors
+from thesis_manta_ray.arena.utils.colors import rgba_sand
+from thesis_manta_ray.arena.utils.noise import generate_perlin_noise_map
+from thesis_manta_ray.arena.entities.target import Target
+from thesis_manta_ray.arena.entities.parkour_obstacles import CilinderParkour
 
 from fiblat import sphere_lattice
 
@@ -35,8 +35,8 @@ class OceanArena(Arena):
             name='hilly_light_aquarium',
             env_id: int = 0,
             size=(10, 10, 10),
-            light_texture: bool = True,
-            light_noise: bool = True,
+            light_texture: bool = False,
+            light_noise: bool = False,
             targeted_light: bool = False,
             hilly_terrain: bool = False,
             random_current: bool = False,
@@ -118,6 +118,11 @@ class OceanArena(Arena):
         for entity in obstacle_course:
             self.attach(entity)
         return obstacle_course
+    
+    def _build_path(
+            self,
+            ) -> None:
+        return 
     
     def _attach_target(
             self

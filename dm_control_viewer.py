@@ -2,9 +2,9 @@ import numpy as np
 from dm_control import viewer
 from dm_env import TimeStep
 
-from morphology.morphology import MJCMantaRayMorphology
-from morphology.specification.specification import MantaRayMorphologySpecification
-from morphology.specification.default import default_morphology_specification
+from thesis_manta_ray.morphology.morphology import MJCMantaRayMorphology
+from thesis_manta_ray.morphology.specification.specification import MantaRayMorphologySpecification
+from thesis_manta_ray.morphology.specification.default import default_morphology_specification
 
 from task.parkour import Move
 # from task.grid_target import Move

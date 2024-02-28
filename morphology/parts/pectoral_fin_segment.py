@@ -1,6 +1,6 @@
 from typing import Union
 from mujoco_utils.robot import MJCMorphology, MJCMorphologyPart
-from specification.specification import MantaRayMorphologySpecification, MantaRayPectoralFinJointSpecification
+from thesis_manta_ray.morphology.specification.specification import MantaRayMorphologySpecification, MantaRayPectoralFinJointSpecification
 import numpy as np
 
 class MJCMantaRayPectoralFinSegment(MJCMorphologyPart):

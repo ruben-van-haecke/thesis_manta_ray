@@ -15,13 +15,15 @@ from dm_control.composer.observation import observable
 
 import numpy as np
 
+
 class DragRaceTask(composer.Task):
-    reward_functions = ["x_distance", "energy_efficient", "energy_efficient_velocity"]
+    reward_functions = ["Δx", "E * Δx", "(E + 200*Δx) * (Δx)"]
 
     def __init__(self,
                  config: MJCEnvironmentConfig,
                  morphology: MJCMantaRayMorphology) -> None:
         super().__init__()
+        
         self.config = config
         self._arena = self._build_arena()
         self._morphology: MJCMantaRayMorphology = self._attach_morphology(morphology)
@@ -151,17 +153,20 @@ class DragRaceTask(composer.Task):
     
     def get_reward(self, physics):
         "reward to minimize"
+        assert self.config.reward_fn in DragRaceTask.reward_functions, f"reward_fn not recognized, choose from {DragRaceTask.reward_functions}"
+
         v = self.config.velocity
-        if self.config.reward_fn == "x_distance" or self.config.reward_fn is None:
-            return self._get_x_distance_from_initial_position(physics=physics)
-        elif self.config.reward_fn == "energy_efficient":
-            return self._get_accumulated_energy_sensors(physics=physics)/current_distance_from_initial_position
-        elif self.config.reward_fn == "energy_efficient_velocity":
-            current_distance_from_initial_position = self._get_x_distance_from_initial_position(physics=physics)
+        current_distance_from_initial_position = self._get_x_distance_from_initial_position(physics=physics)
+        velocity_penalty = np.abs(v*physics.time() - current_distance_from_initial_position)
+
+        if self.config.reward_fn == "Δx" or self.config.reward_fn is None:
+            return velocity_penalty
+        elif self.config.reward_fn == "E * Δx":
+            return self._get_accumulated_energy_sensors(physics=physics)*velocity_penalty #/current_distance_from_initial_position
+        elif self.config.reward_fn == "(E + 200*Δx) * (Δx)":
             if current_distance_from_initial_position == 0.:
                 return 1/0.00001
-            velocity_penalty = np.abs(v*physics.time() - current_distance_from_initial_position)
-            return (self._get_accumulated_energy_sensors(physics=physics)+200*velocity_penalty)/current_distance_from_initial_position
+            return (self._get_accumulated_energy_sensors(physics=physics)+200*velocity_penalty)*velocity_penalty #+200*velocity_penalty)/current_distance_from_initial_position
         else:
             raise ValueError("reward_fn not recognized")
     
@@ -181,8 +186,8 @@ class DragRaceTask(composer.Task):
             random_state: np.random.RandomState
             ) -> None:
         self._initialize_morphology_pose(physics)
+        self._accumulated_energy = 0
     
-
 
 class Move(MJCEnvironmentConfig):
     def __init__(
@@ -202,5 +207,5 @@ class Move(MJCEnvironmentConfig):
             simulation_time=simulation_time,
             camera_ids=[0, 1],
         )
-        self.velocity = velocity
-        self.reward_fn = reward_fn
+        self._velocity = velocity
+        self._reward_fn = reward_fn

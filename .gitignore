@@ -7,3 +7,4 @@ utils/
 morphology/manta_ray.xml
 *.pyc
 *.pkl
+.env

@@ -1,13 +1,10 @@
-import sys
-sys.path.insert(0,'/media/ruben/data/documents/unief/thesis/thesis_manta_ray/morphology')
-
 import numpy as np
 from mujoco_utils.robot import MJCMorphology
 
-from parts.torso import MJCMantaRayTorso
-from parts.tail import MJCMantaRayTail
-from parts.pectoral_fin import MJCMantaRayPectoralFin
-from specification.specification import MantaRayMorphologySpecification
+from thesis_manta_ray.morphology.parts.torso import MJCMantaRayTorso
+from thesis_manta_ray.morphology.parts.tail import MJCMantaRayTail
+from thesis_manta_ray.morphology.parts.pectoral_fin import MJCMantaRayPectoralFin
+from thesis_manta_ray.morphology.specification.specification import MantaRayMorphologySpecification
 
 
 

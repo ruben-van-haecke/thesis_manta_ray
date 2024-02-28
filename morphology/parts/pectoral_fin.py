@@ -1,10 +1,10 @@
 from fprs.specification import MorphologySpecification
-from morphology.specification.specification import MantaRayActuationSpecification,\
+from thesis_manta_ray.morphology.specification.specification import MantaRayActuationSpecification,\
       MantaRayMorphologySpecification, MantaRayTailSpecification, MantaRayTorsoSpecification,\
         MantaRayPectoralFinJointSpecification, MantaRayPectoralFinSpecification
 from typing import Union
 from mujoco_utils.robot import MJCMorphology, MJCMorphologyPart
-from parts.pectoral_fin_segment import MJCMantaRayPectoralFinSegment
+from thesis_manta_ray.morphology.parts.pectoral_fin_segment import MJCMantaRayPectoralFinSegment
 import numpy as np
 
 

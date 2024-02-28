@@ -1,8 +1,5 @@
 import pickle
 from typing import List
-import os
-import sys
-sys.path.append(os.path.abspath("/media/ruben/data/documents/unief/thesis"))
 
 import gymnasium as gym
 import numpy as np
@@ -13,6 +10,9 @@ import copy
 import time
 from datetime import datetime
 from cmaes import CMA
+from qdpy import algorithms, containers, benchmarks, plots
+from qdpy.containers.grids import Grid
+from qd import QDWrapper
 
 from thesis_manta_ray.controller.cmaes_cpg_vectorized import CPG
 from thesis_manta_ray.controller.parameters import MantaRayControllerSpecificationParameterizer
@@ -21,7 +21,7 @@ from thesis_manta_ray.controller.specification.default import default_controller
 from thesis_manta_ray.morphology.morphology import MJCMantaRayMorphology
 
 from thesis_manta_ray.morphology.specification.default import default_morphology_specification
-from parameters import MantaRayMorphologySpecificationParameterizer
+from thesis_manta_ray.parameters import MantaRayMorphologySpecificationParameterizer
 from task.drag_race import Move
 from fprs.specification import RobotSpecification
 
@@ -29,6 +29,8 @@ from mujoco_utils.environment import MJCEnvironmentConfig
 from dm_control import viewer
 from dm_env import TimeStep
 from gymnasium.core import ObsType
+from qdpy.phenotype import Individual, IndividualLike, Fitness
+
 
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 
@@ -83,7 +85,7 @@ class OptimizerSimulation:
         succeed = False
         while not succeed:
             try:
-                self._gym_env = gym.vector.AsyncVectorEnv([lambda: Move().environment(morphology=MJCMantaRayMorphology(specification=self._morph_specs[env_id]),
+                self._gym_env = gym.vector.AsyncVectorEnv([lambda: copy.deepcopy(task_config).environment(morphology=MJCMantaRayMorphology(specification=self._morph_specs[env_id]),
                                                                         wrap2gym=True) for env_id in range(self._num_envs)])
                 succeed = True
             except:
@@ -112,7 +114,7 @@ class OptimizerSimulation:
                                                     len(self._parameterizer.get_parameter_labels()),))
         # logging
         if self._logging:
-            wandb.init(project="manta-ray", 
+            wandb.init(project="ruben_van_haecke_thesis", 
                     name=f"""{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}_test_logging""",
                         config={
                             "generations": self._num_generations,
@@ -152,7 +154,7 @@ class OptimizerSimulation:
     def run_episode_parallel(self,
                     generation: int,
                     episode: int,
-                    ) -> float:
+                    ) -> List[float]:
         done = False
         obs, info = self._gym_env.reset()
         counter = 0
@@ -196,15 +198,40 @@ class OptimizerSimulation:
                 self._control_actions[generation, agent+env_id, :] = outer_action[env_id]
         self._outer_optimalization.tell(solutions)
     
+    def evaluate_qd(self, individuals: List[IndividualLike]):
+        reward = self.run_episode_parallel(generation=0, episode=0)
+        for i in range(self._population_size):
+            fitness = Fitness(values=[reward[i]])
+            individuals[i].fitness = fitness
+            print(individuals[i].fitness)
+
+        print(f"individuals: {individuals}")
+        ind_id = [i for i in range(10)]  # episode
+        ind_elapsed = [0 for _ in range(10)] # time
+        ind_res = individuals
+        ind_exc = None
+        print(f"ind_res: {ind_res}")
+        return ind_id, ind_elapsed, ind_res, ind_exc
+    
 
     def run(self):
-        for gen in range(self._num_generations):
-            self.run_generation(generation=gen)
-            if self._logging:    wandb.log({"generation": gen,
-                                       "average": np.mean(self._outer_rewards[gen]),
-                                        "worst": np.max(self._outer_rewards[gen]),
-                                        "best": np.min(self._outer_rewards[gen]),
-                                        })
+        if isinstance(self._outer_optimalization, QDWrapper):
+            best_individual = self._outer_optimalization._alg.optimise(evaluate=self.evaluate_qd,
+                                                                       batch_mode=True,
+                                                                       send_several_suggestions_to_fn=True,
+                                                                       max_nb_suggestions_per_call=20,
+                                                                       budget=10,)
+            print(f"best_individual: {best_individual}")
+        elif isinstance(self._outer_optimalization, CMA):
+            for gen in range(self._num_generations):
+                self.run_generation(generation=gen)
+                if self._logging:    wandb.log({"generation": gen,
+                                        "average": np.mean(self._outer_rewards[gen]),
+                                            "worst": np.max(self._outer_rewards[gen]),
+                                            "best": np.min(self._outer_rewards[gen]),
+                                            })
+        else:
+            raise ValueError("Outer optimization algorithm not recognized")
     
     def get_best_individual(self) -> tuple[int, int]:
         """
@@ -276,6 +303,11 @@ class OptimizerSimulation:
     def load(
             path: str
             ) -> 'OptimizerSimulation': # forward referencing
+        """
+        args: 
+            path: relative from /experiments/
+        """
+        path = f"experiments/{path}.pkl"
         with open(path, 'rb') as handle:
             return pickle.load(handle)
         
@@ -333,32 +365,49 @@ if __name__ == "__main__":
     cma = CMA(mean=np.random.uniform(low=0,
                                      high=1,
                                      size=len(controller_parameterizer.get_parameter_labels())),
-              sigma=0.0005,
+              sigma=0.05,
               bounds=bounds,
               population_size=10,    # has to be more than 1
-              lr_adapt=False,
+              lr_adapt=True,
+              seed=42
               )
+    grid: Grid = containers.Grid(shape=(1,1), 
+                            max_items_per_bin=10, 
+                            fitness_domain=((0., 1e8),),     # default ((0., np.inf),)
+                            features_domain=((0., 1.), (0., 1.), (0., 1.), (0., 1.))) 
+    # qd_obj = algorithms.RandomSearchMutPolyBounded(grid, budget=20, batch_size=10,
+    #         dimension=4, optimisation_task="minimization")
+    qd_obj = QDWrapper(algorithm=algorithms.RandomSearchMutPolyBounded, container=grid, budget=10, batch_size=10,
+            dimension=4, optimisation_task="minimization")
     sim = OptimizerSimulation(
-        task_config=Move(simulation_time=10, reward_fn="energy_efficient_velocity"),
+        task_config=Move(simulation_time=10, 
+                         velocity=1,
+                         reward_fn="(E + 200*Δx) * (Δx)"),
         robot_specification=robot_spec,
         parameterizer=controller_parameterizer,
         population_size=10,  # make sure this is a multiple of num_envs
-        num_generations=500,
-        outer_optimalization=cma,
+        num_generations=3,
+        outer_optimalization=qd_obj,#cma,
         controller=CPG,
         skip_inner_optimalization=True,
         record_actions=True,
         action_spec=action_spec,
-        num_envs=5,
-        logging=True,
+        num_envs=10,
+        logging=False,
         )
     
     sim.run()
     # sim.visualize()
     best_gen, best_episode = sim.get_best_individual()
-    # sim.viewer(generation=best_gen, episode=best_episode)
+    sim.visualize()
+    sim.viewer(generation=best_gen, episode=best_episode)
+    print(qd_obj.results())
+    print(f"grid: {grid}")
+    print(f"grid solutions: {grid.solutions}")
+    print(f"fitness extrema: {grid.fitness_extrema}")
+    print(f"container: {qd_obj.grid}")
     # sim.visualize_inner(generation=best_gen, episode=best_episode)
-    sim.finish(store=True, name="long_run_check_convergence")
+    # sim.finish(store=True, name="long_run_check_convergence")
 
     # best_solution, best_fitness = cma.search()
 

@@ -2,8 +2,8 @@ import numpy as np
 from typing import Union
 
 from mujoco_utils.robot import MJCMorphology, MJCMorphologyPart
-from specification.specification import MantaRayMorphologySpecification
-from parts.tail_segment import MJCMantaRayTailSegment
+from thesis_manta_ray.morphology.specification.specification import MantaRayMorphologySpecification
+from thesis_manta_ray.morphology.parts.tail_segment import MJCMantaRayTailSegment
 
 class MJCMantaRayTail(MJCMorphologyPart):
     def __init__(self, parent: Union[MJCMorphology, MJCMorphologyPart], name: str, pos: np.array, euler: np.array, *args, **kwargs) -> None:
