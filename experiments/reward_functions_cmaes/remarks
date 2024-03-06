@@ -1,0 +1,16 @@
+Remarks:
+1)reward function x_distance only takes inverse distance as minmization function and optimizes such that it swims with a weird motion, i.e. high frequency
+see example: scatter_sim(0.7, "Δx")
+			get_sim(0.7, "Δx").get_best_individual()
+			get_sim(0.7, "Δx").viewer(112, 8)
+
+2) reward function energy_efficient takes energy/distance as a minimization function and optimizes such that it lies dead. see example: scatter_sim(0.7, "E * Δx")
+			get_sim(0.7, "E * Δx").get_best_individual()
+			get_sim(0.7, "E * Δx").viewer(163, 4)
+				
+3) reward function 
+see example: scatter_sim(0.7, "(E + 200*Δx) * (Δx)")
+			get_sim(0.7, "(E + 200*Δx) * (Δx)").get_best_individual()
+			get_sim(0.7, "(E + 200*Δx) * (Δx)").viewer(129, 6)	# still does not seem super 
+			
+Manta ray can swim 6.67 m/s and has a max length of 9m -> 6.67 / 9 = 0.74 times its length per second
