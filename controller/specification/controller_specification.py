@@ -33,7 +33,7 @@ class NumpyArrayParameter(Parameter):
         if self._value is None:
             self.set_random_value()
 
-        self._value = np.clip(self._value, self._low, self._high)
+        # self._value = np.clip(self._value, self._low, self._high)
         return self._value[tuple(np.transpose(self._modifiable))]
 
     @value.setter

@@ -48,6 +48,13 @@ class MantaRayControllerSpecificationParameterizer(ControllerSpecificationParame
                                         low=[0, 0], 
                                         high=[1, 1],
                                         )
+        specification.x.add_connections(connections=[(0, self.right_fin_x), 
+                                                     (0, self.left_fin_x),
+                                                     ],
+                                        weights=[1, 1.],
+                                        low=[0, 0], 
+                                        high=[1, 1],
+                                        )
         specification.omega.add_connections(connections=[(0, self.right_fin_x), 
                                                          (0, self.left_fin_x),
                                                          ],
@@ -76,10 +83,13 @@ class MantaRayControllerSpecificationParameterizer(ControllerSpecificationParame
         """
         assert np.all(controller_action >= 0) and np.all(controller_action <= 1), f"[MantaRayCpgControllerSpecification] controller_action '{controller_action}' is not within range [0, 1]"
         # get the right length due to symmetry
-        amplitude = controller_action[0]
-        offset = controller_action[1]
-        frequency = controller_action[2]
-        phase_bias = controller_action[3]
+        try:
+            amplitude = controller_action[[0, 4]]    # left, right
+        except IndexError:
+            print(controller_action)
+        offset = controller_action[[1, 5]]
+        frequency = controller_action[[2, 6]]
+        phase_bias = controller_action[[3, 7]]
         
         # updating specification
         specification.r.value = specification.r.low + amplitude * (specification.r.high - specification.r.low)
@@ -102,7 +112,8 @@ class MantaRayControllerSpecificationParameterizer(ControllerSpecificationParame
     def get_parameter_labels(
             self,
             ) -> List[str]:
-        return ["fin_amplitude", "fin_offset", "frequency", "phase_bias"]
+        return ["fin_amplitude_left", "fin_offset_left", "frequency_left", "phase_bias_left",
+                "fin_amplitude_right", "fin_offset_right", "frequency_right", "phase_bias_right"]
 
 
 

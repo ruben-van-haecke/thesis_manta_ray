@@ -14,7 +14,32 @@ from dm_control import mjcf
 from dm_control.composer.observation import observable
 
 import numpy as np
+import math
 
+def quat2euler(q):
+    """
+    Convert an array of quaternions into Euler angles (roll, pitch, yaw).
+
+    :param quaternions: NumPy array of shape (4,) containing quaternions.
+    :return: NumPy array of shape (3, ) containing Euler angles.
+    """
+    w, x, y, z = q[0], q[1], q[2], q[3]
+
+    # Roll (x-axis rotation)
+    sinr_cosp = 2 * (w * x + y * z)
+    cosr_cosp = 1 - 2 * (x**2 + y**2)
+    roll = np.arctan2(sinr_cosp, cosr_cosp)
+
+    # Pitch (y-axis rotation)
+    sinp = 2 * (w * y - z * x)
+    pitch = np.arcsin(np.clip(sinp, -1, 1))  # Clip sinp for numerical stability
+
+    # Yaw (z-axis rotation)
+    siny_cosp = 2 * (w * z + x * y)
+    cosy_cosp = 1 - 2 * (y**2 + z**2)
+    yaw = np.arctan2(siny_cosp, cosy_cosp)
+
+    return np.array([roll, pitch, yaw])
 
 class DragRaceTask(composer.Task):
     reward_functions = ["Δx", "E * Δx", "(E + 200*Δx) * (Δx)"]
@@ -106,6 +131,19 @@ class DragRaceTask(composer.Task):
                                 ) -> float:
         return physics.data.sensordata
     
+    def _get_orientation_entity(self,
+                                entity: Entity,
+                                physics: mjcf.Physics,
+                                ) -> float:
+        pose = entity.get_pose(physics=physics)
+        return quat2euler(pose[1])
+    
+    def _get_orientation(self,
+                         physics: mjcf.Physics,
+                         ) -> float:
+        orientation = self._get_orientation_entity(entity=self._morphology, physics=physics)
+        return orientation
+        
     def _get_abs_forces_sensors(self,
                                 physics: mjcf.Physics,
                                 ) -> float:
@@ -133,6 +171,9 @@ class DragRaceTask(composer.Task):
                 )
         task_observables["task/force"] = ConfinedObservable(
                 low=0, high=np.inf, shape=[4], raw_observation_callable=self._get_sensor_actuatorfrc
+                )
+        task_observables["task/orientation"] = ConfinedObservable(
+                low=-np.pi, high=np.pi, shape=[3], raw_observation_callable=self._get_orientation
                 )
         # task_observables["task/xy-distance-to-target"] = ConfinedObservable(
         #         low=0, high=np.inf, shape=[1], raw_observation_callable=self._get_xy_distance_to_target

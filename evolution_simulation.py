@@ -10,9 +10,11 @@ import copy
 import time
 from datetime import datetime
 from cmaes import CMA
-from qdpy import algorithms, containers, benchmarks, plots
-from qdpy.containers.grids import Grid
-from qd import QDWrapper
+from quality_diversity import Solution, Archive, MapElites
+# from qdpy import algorithms, containers, benchmarks, plots
+# from qdpy.containers.grids import Grid
+# from qd import QDWrapper
+# from qdpy.phenotype import Individual, IndividualLike, Fitness
 
 from thesis_manta_ray.controller.cmaes_cpg_vectorized import CPG
 from thesis_manta_ray.controller.parameters import MantaRayControllerSpecificationParameterizer
@@ -29,7 +31,6 @@ from mujoco_utils.environment import MJCEnvironmentConfig
 from dm_control import viewer
 from dm_env import TimeStep
 from gymnasium.core import ObsType
-from qdpy.phenotype import Individual, IndividualLike, Fitness
 
 
 warnings.filterwarnings('ignore', category=DeprecationWarning)
@@ -58,6 +59,7 @@ class OptimizerSimulation:
                 logging: bool = True,
                 ) -> None:
         """
+        :param num_generations: the number of generations to run the simulation, if None keep running untill manually stopped
         :param outer_optimalization: the outer optimization algorithm responsible for 
         :param skip_inner_optimalization: whether to skip the inner optimization i.e. all actions are pre-computed to speed up the simulation
                                         this is a significant speed-up
@@ -121,8 +123,6 @@ class OptimizerSimulation:
                             "duration": self._task_config.simulation_time,
                             "control_timestep": self._task_config.control_timestep,
                             "population_size": self._population_size,
-                            "sigma_outer_loop": self._outer_optimalization._sigma,
-                            "lr_adapt": self._outer_optimalization._lr_adapt
                         }
                     )
     
@@ -155,6 +155,9 @@ class OptimizerSimulation:
                     generation: int,
                     episode: int,
                     ) -> List[float]:
+        """
+        returns the reward and observations of the episode
+        """
         done = False
         obs, info = self._gym_env.reset()
         counter = 0
@@ -176,10 +179,13 @@ class OptimizerSimulation:
                                                             obs=obs,
                                                             env_id=env_id,
                                                             )
+            last_obs = obs  # needed because the last observations are all zeroes 
             obs, reward, terminated, truncated, info = self._gym_env.step(self._actions[generation, episode:episode+self._num_envs, :, counter])  # an action is a row
+            # print(f"obs: {obs}")
+            # print(f"obs.orientation: {obs['task/orientation']}")
             done = np.all(np.logical_or(terminated, truncated))
             counter += 1
-        return reward
+        return reward, last_obs
 
 
     def run_generation(self,
@@ -191,47 +197,34 @@ class OptimizerSimulation:
             for env_id in range(self._num_envs):
                 self._parameterizer.parameter_space(specification=self._controller_specs[env_id],
                                                     controller_action=outer_action[env_id])
-            reward = self.run_episode_parallel(generation=generation, episode=agent)
-            solutions += [(single_action, single_reward) for single_action, single_reward in zip(outer_action, reward)]
+            reward, obs = self.run_episode_parallel(generation=generation, episode=agent)
+
+            if isinstance(self._outer_optimalization, CMA):
+                solutions += [(single_action, single_reward) for single_action, single_reward in zip(outer_action, reward)]
+            elif isinstance(self._outer_optimalization, MapElites):
+                for env_id in range(self._num_envs):
+                    sol = Solution(behaviour=obs['task/orientation'][env_id, :], 
+                                              fitness=reward[env_id], 
+                                              parameters=outer_action[env_id])
+                    solutions.append(sol)
+            else:
+                raise NotImplementedError("This outer_optimalization is not implemented")
+            
+
             for env_id in range(self._num_envs):
                 self._outer_rewards[generation, agent+env_id] = reward[env_id]
                 self._control_actions[generation, agent+env_id, :] = outer_action[env_id]
         self._outer_optimalization.tell(solutions)
     
-    def evaluate_qd(self, individuals: List[IndividualLike]):
-        reward = self.run_episode_parallel(generation=0, episode=0)
-        for i in range(self._population_size):
-            fitness = Fitness(values=[reward[i]])
-            individuals[i].fitness = fitness
-            print(individuals[i].fitness)
-
-        print(f"individuals: {individuals}")
-        ind_id = [i for i in range(10)]  # episode
-        ind_elapsed = [0 for _ in range(10)] # time
-        ind_res = individuals
-        ind_exc = None
-        print(f"ind_res: {ind_res}")
-        return ind_id, ind_elapsed, ind_res, ind_exc
-    
 
     def run(self):
-        if isinstance(self._outer_optimalization, QDWrapper):
-            best_individual = self._outer_optimalization._alg.optimise(evaluate=self.evaluate_qd,
-                                                                       batch_mode=True,
-                                                                       send_several_suggestions_to_fn=True,
-                                                                       max_nb_suggestions_per_call=20,
-                                                                       budget=10,)
-            print(f"best_individual: {best_individual}")
-        elif isinstance(self._outer_optimalization, CMA):
-            for gen in range(self._num_generations):
-                self.run_generation(generation=gen)
-                if self._logging:    wandb.log({"generation": gen,
-                                        "average": np.mean(self._outer_rewards[gen]),
-                                            "worst": np.max(self._outer_rewards[gen]),
-                                            "best": np.min(self._outer_rewards[gen]),
-                                            })
-        else:
-            raise ValueError("Outer optimization algorithm not recognized")
+        for gen in range(self._num_generations):
+            self.run_generation(generation=gen)
+            if self._logging:    wandb.log({"generation": gen,
+                                    "average": np.mean(self._outer_rewards[gen]),
+                                        "worst": np.max(self._outer_rewards[gen]),
+                                        "best": np.min(self._outer_rewards[gen]),
+                                        })
     
     def get_best_individual(self) -> tuple[int, int]:
         """
@@ -371,14 +364,13 @@ if __name__ == "__main__":
               lr_adapt=True,
               seed=42
               )
-    grid: Grid = containers.Grid(shape=(1,1), 
-                            max_items_per_bin=10, 
-                            fitness_domain=((0., 1e8),),     # default ((0., np.inf),)
-                            features_domain=((0., 1.), (0., 1.), (0., 1.), (0., 1.))) 
-    # qd_obj = algorithms.RandomSearchMutPolyBounded(grid, budget=20, batch_size=10,
-    #         dimension=4, optimisation_task="minimization")
-    qd_obj = QDWrapper(algorithm=algorithms.RandomSearchMutPolyBounded, container=grid, budget=10, batch_size=10,
-            dimension=4, optimisation_task="minimization")
+    archive = Archive(parameter_bounds=[(0, 1) for _ in range(len(controller_parameterizer.get_parameter_labels()))],
+                      feature_bounds=[(-np.pi, np.pi), (-np.pi, np.pi), (-np.pi, np.pi)], 
+                      resolutions=[2, 2, 1],
+                      parameter_names=controller_parameterizer.get_parameter_labels(), 
+                      feature_names=["roll", "pitch", "yawn"])
+    map_elites = MapElites(archive)
+
     sim = OptimizerSimulation(
         task_config=Move(simulation_time=10, 
                          velocity=1,
@@ -386,8 +378,8 @@ if __name__ == "__main__":
         robot_specification=robot_spec,
         parameterizer=controller_parameterizer,
         population_size=10,  # make sure this is a multiple of num_envs
-        num_generations=3,
-        outer_optimalization=qd_obj,#cma,
+        num_generations=1,
+        outer_optimalization=map_elites,#cma,
         controller=CPG,
         skip_inner_optimalization=True,
         record_actions=True,
@@ -399,13 +391,9 @@ if __name__ == "__main__":
     sim.run()
     # sim.visualize()
     best_gen, best_episode = sim.get_best_individual()
-    sim.visualize()
+    # sim.visualize()
     sim.viewer(generation=best_gen, episode=best_episode)
-    print(qd_obj.results())
-    print(f"grid: {grid}")
-    print(f"grid solutions: {grid.solutions}")
-    print(f"fitness extrema: {grid.fitness_extrema}")
-    print(f"container: {qd_obj.grid}")
+    archive.plot_grid(x_label="pitch", y_label="roll")
     # sim.visualize_inner(generation=best_gen, episode=best_episode)
     # sim.finish(store=True, name="long_run_check_convergence")
 
