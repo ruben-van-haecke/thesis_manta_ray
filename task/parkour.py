@@ -15,6 +15,31 @@ from dm_control.composer.observation import observable
 
 import numpy as np
 
+def quat2euler(q):
+    """
+    Convert an array of quaternions into Euler angles (roll, pitch, yaw).
+
+    :param quaternions: NumPy array of shape (4,) containing quaternions.
+    :return: NumPy array of shape (3, ) containing Euler angles.
+    """
+    w, x, y, z = q[0], q[1], q[2], q[3]
+
+    # Roll (x-axis rotation)
+    sinr_cosp = 2 * (w * x + y * z)
+    cosr_cosp = 1 - 2 * (x**2 + y**2)
+    roll = np.arctan2(sinr_cosp, cosr_cosp)
+
+    # Pitch (y-axis rotation)
+    sinp = 2 * (w * y - z * x)
+    pitch = np.arcsin(np.clip(sinp, -1, 1))  # Clip sinp for numerical stability
+
+    # Yaw (z-axis rotation)
+    siny_cosp = 2 * (w * z + x * y)
+    cosy_cosp = 1 - 2 * (y**2 + z**2)
+    yaw = np.arctan2(siny_cosp, cosy_cosp)
+
+    return np.array([roll, pitch, yaw])
+
 class ParkourTask(composer.Task):
     def __init__(self,
                  config: MJCEnvironmentConfig,

@@ -12,3 +12,8 @@ pip install -r requirements.txt
 ```
 pip freeze > requirements.txt
 ```
+
+## Connection to the HPC
+```
+ssh -i //home/ruben/.ssh/vsc_hpc vsc45099@login.hpc.ugent.be
+```

@@ -14,7 +14,6 @@ from dm_control import mjcf
 from dm_control.composer.observation import observable
 
 import numpy as np
-import math
 
 def quat2euler(q):
     """
@@ -250,3 +249,10 @@ class Move(MJCEnvironmentConfig):
         )
         self._velocity = velocity
         self._reward_fn = reward_fn
+    @property
+    def velocity(self) -> float:
+        return self._velocity
+    
+    @property
+    def reward_fn(self) -> str | None:
+        return self._reward_fn
