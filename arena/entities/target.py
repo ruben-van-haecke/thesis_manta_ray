@@ -8,7 +8,7 @@ class Target(composer.Entity):
         self._mjcf_model = mjcf.RootElement()
         self._geom = self._mjcf_model.worldbody.add(
                 'geom', type='sphere', 
-                size=[0.2], 
+                size=[0.1], 
                 rgba=(100, 100, 100, 0.5),
                 )
 

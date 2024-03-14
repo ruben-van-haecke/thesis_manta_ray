@@ -1,5 +1,5 @@
 import pickle
-from typing import List
+from typing import List, Type
 
 import gymnasium as gym
 import numpy as np
@@ -11,10 +11,6 @@ import time
 from datetime import datetime
 from cmaes import CMA
 from quality_diversity import Solution, Archive, MapElites
-# from qdpy import algorithms, containers, benchmarks, plots
-# from qdpy.containers.grids import Grid
-# from qd import QDWrapper
-# from qdpy.phenotype import Individual, IndividualLike, Fitness
 
 from thesis_manta_ray.controller.cmaes_cpg_vectorized import CPG
 from thesis_manta_ray.controller.parameters import MantaRayControllerSpecificationParameterizer
@@ -71,7 +67,7 @@ class OptimizerSimulation:
         self._population_size = population_size
         self._num_generations = num_generations
         self._outer_optimalization = outer_optimalization
-        self._controller = controller
+        self._controller: Type = controller
         self._skip_inner_optimalization = skip_inner_optimalization
         self._record_actions = record_actions
         self._num_envs = num_envs
@@ -82,7 +78,7 @@ class OptimizerSimulation:
             self._parameterizer.parameterize_specification(specification=controller_spec)
         self._morph_specs = [default_morphology_specification() for _ in range(self._num_envs)]
         time.sleep(5)
-        self._controllers: List[CPG] = [controller(specification=controller_spec) for controller_spec in self._controller_specs]
+        self._controllers: List[CPG] = [self._controller(specification=controller_spec) for controller_spec in self._controller_specs]
 
         succeed = False
         while not succeed:
@@ -110,7 +106,7 @@ class OptimizerSimulation:
             self._actions = np.zeros(shape=(self._num_generations, 
                                             self._population_size, 
                                             8,  # action space
-                                            int(task_config.simulation_time/task_config.control_timestep)))
+                                            int(np.ceil(task_config.simulation_time/task_config.control_timestep))+1))
             self._control_actions = np.zeros(shape=(self._num_generations, 
                                                     self._population_size, 
                                                     len(self._parameterizer.get_parameter_labels()),))
@@ -160,6 +156,7 @@ class OptimizerSimulation:
         """
         done = False
         obs, info = self._gym_env.reset()
+        self.obs = obs
         counter = 0
         while not done:
             scaled_action = np.zeros(shape=(self._num_envs, 8))
@@ -180,9 +177,7 @@ class OptimizerSimulation:
                                                             env_id=env_id,
                                                             )
             last_obs = obs  # needed because the last observations are all zeroes 
-            obs, reward, terminated, truncated, info = self._gym_env.step(self._actions[generation, episode:episode+self._num_envs, :, counter])  # an action is a row
-            # print(f"obs: {obs}")
-            # print(f"obs.orientation: {obs['task/orientation']}")
+            obs, reward, terminated, truncated, info = self._gym_env.step(self._actions[generation, episode:episode+self._num_envs, :, counter])
             done = np.all(np.logical_or(terminated, truncated))
             counter += 1
         return reward, last_obs
@@ -204,7 +199,7 @@ class OptimizerSimulation:
             elif isinstance(self._outer_optimalization, MapElites):
                 for env_id in range(self._num_envs):
                     sol = Solution(behaviour=obs['task/orientation'][env_id, :], 
-                                              fitness=reward[env_id], 
+                                              fitness=1/reward[env_id], # fitness has to be optimized
                                               parameters=outer_action[env_id])
                     solutions.append(sol)
             else:
@@ -274,6 +269,57 @@ class OptimizerSimulation:
             environment_loader=dm_env, 
             policy=policy
             )
+    
+    def viewer(self,
+               normalised_action: np.ndarray,
+               ) -> None:
+        assert self._record_actions, "Cannot visualize actions if they are not recorded"
+        dm_env = self._task_config.environment(morphology=MJCMantaRayMorphology(specification=self._morphology_specification), wrap2gym=False)
+        controller_spec = default_controller_dragrace_specification(action_spec=self._action_spec)
+        self._parameterizer.parameterize_specification(specification=controller_spec)
+        controller = self._controller(specification=controller_spec)
+        self._parameterizer.parameter_space(specification=controller_spec,
+                                                    controller_action=normalised_action)
+
+        minimum, maximum = self._action_spec.minimum.reshape(-1, 1), self._action_spec.maximum.reshape(-1, 1)   # shapes (n_neurons, 1)
+        normalised_action = (controller.ask(observation=None,
+                                            duration=self._task_config.simulation_time,
+                                            sampling_period=self._task_config.physics_timestep
+                                            )+1)/2
+        scaled_action = minimum + normalised_action * (maximum - minimum)
+
+        def policy(timestep: TimeStep) -> np.ndarray:
+            time = timestep.observation["task/time"][0]
+            return scaled_action[:, int(time/self._task_config.control_timestep)]
+        viewer.launch(
+            environment_loader=dm_env, 
+            policy=policy
+            )
+    
+    def plot_actions(self, 
+                     normalised_action: np.ndarray,
+                     ) -> None:
+        assert self._record_actions, "Cannot visualize actions if they are not recorded"
+        dm_env = self._task_config.environment(morphology=MJCMantaRayMorphology(specification=self._morphology_specification), wrap2gym=False)
+        controller_spec = default_controller_dragrace_specification(action_spec=self._action_spec)
+        self._parameterizer.parameterize_specification(specification=controller_spec)
+        controller = self._controller(specification=controller_spec)
+        self._parameterizer.parameter_space(specification=controller_spec,
+                                                    controller_action=normalised_action)
+
+        minimum, maximum = self._action_spec.minimum.reshape(-1, 1), self._action_spec.maximum.reshape(-1, 1)   # shapes (n_neurons, 1)
+        normalised_action = (controller.ask(observation=self.obs,
+                                            duration=self._task_config.simulation_time,
+                                            sampling_period=self._task_config.physics_timestep
+                                            )+1)/2
+        scaled_action = minimum + normalised_action * (maximum - minimum)
+        plt.plot(scaled_action[4, :], label="left fin", color="blue")
+        plt.plot(scaled_action[6, :], label="right fin", color="orange")
+        plt.xlabel("time [seconds]")
+        plt.ylabel("output")
+        plt.legend()
+        plt.show()
+
     def finish(self, store=True, name=None):
         """
         args:
@@ -364,36 +410,50 @@ if __name__ == "__main__":
               lr_adapt=True,
               seed=42
               )
+    # parameters: ['fin_amplitude_left', 'fin_offset_left', 'frequency_left', 'phase_bias_left', 'fin_amplitude_right', 'fin_offset_right', 'frequency_right', 'phase_bias_right']
     archive = Archive(parameter_bounds=[(0, 1) for _ in range(len(controller_parameterizer.get_parameter_labels()))],
-                      feature_bounds=[(-np.pi, np.pi), (-np.pi, np.pi), (-np.pi, np.pi)], 
-                      resolutions=[2, 2, 1],
+                      feature_bounds=[(-np.pi, np.pi), (-np.pi/2, np.pi/2), (-np.pi, np.pi)], 
+                      resolutions=[6, 6, 6],
                       parameter_names=controller_parameterizer.get_parameter_labels(), 
-                      feature_names=["roll", "pitch", "yawn"])
+                      feature_names=["roll", "pitch", "yawn"],
+                      symmetry = [('phase_bias_right', 'phase_bias_left'), 
+                                ('frequency_right', 'frequency_left'), 
+                                ('fin_offset_right', 'fin_offset_left'), 
+                                ('fin_amplitude_right', 'fin_amplitude_left'),
+                                ],
+                        max_items_per_bin=10
+                      )
     map_elites = MapElites(archive)
 
     sim = OptimizerSimulation(
-        task_config=Move(simulation_time=10, 
-                         velocity=1,
+        task_config=Move(simulation_time=3.2, 
+                         velocity=0.5,
                          reward_fn="(E + 200*Δx) * (Δx)"),
         robot_specification=robot_spec,
         parameterizer=controller_parameterizer,
-        population_size=10,  # make sure this is a multiple of num_envs
-        num_generations=1,
+        population_size=24,  # make sure this is a multiple of num_envs
+        num_generations=400,
         outer_optimalization=map_elites,#cma,
         controller=CPG,
         skip_inner_optimalization=True,
         record_actions=True,
         action_spec=action_spec,
-        num_envs=10,
-        logging=False,
+        num_envs=24,
+        logging=True,
         )
     
     sim.run()
+    sim.visualize()
+    # best_gen, best_episode = sim.get_best_individual()
     # sim.visualize()
-    best_gen, best_episode = sim.get_best_individual()
-    # sim.visualize()
-    sim.viewer(generation=best_gen, episode=best_episode)
+    # sim.viewer(generation=best_gen, episode=best_episode)
     archive.plot_grid(x_label="pitch", y_label="roll")
+    # best_sol_first_bin = archive.get_best_solution(index=(0, 0, 0))
+    # other_sol = archive.get_symmetric_solution(best_sol_first_bin)
+    # sim.viewer(normalised_action=best_sol_first_bin.parameters)
+    # sim.plot_actions(normalised_action=best_sol_first_bin.parameters)
+    # sim.viewer(normalised_action=other_sol.parameters)
+    # sim.plot_actions(normalised_action=other_sol.parameters)
     # sim.visualize_inner(generation=best_gen, episode=best_episode)
     # sim.finish(store=True, name="long_run_check_convergence")
 

@@ -52,6 +52,7 @@ class OceanArena(Arena):
                             "parkour": parkour to follow
         """
         assert task_mode in ["no_target", "random_target", "grid", "parkour"], "task_mode is not valid"
+        # print(f"task_mode: {task_mode}")
 
         super()._build(name=name)
         self._initial_morphology_position = np.array(initial_morphology_position)
@@ -102,19 +103,20 @@ class OceanArena(Arena):
             # plt.show()
 
         elif self._task_mode == "parkour":  # parkour
-            self._obstacles_traject = self._build_obstacle_course()
+            self._obstacles_traject = self._build_parkour_line()
         # self._build_obstacles()
         # self._build_current_arrow()
         self._configure_water()
 
         self._previous_light_shift_time = 0
     
-    def _build_obstacle_course(
+    def _build_parkour_line(
             self,
             ) -> None:
         # build obstacles
         obstacle_course = []
-        obstacle_course.append(CilinderParkour())
+        for _ in range(10):
+            obstacle_course.append(Target())
         for entity in obstacle_course:
             self.attach(entity)
         return obstacle_course

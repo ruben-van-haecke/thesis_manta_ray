@@ -8,3 +8,5 @@ morphology/manta_ray.xml
 *.pyc
 *.pkl
 .env
+hpc_job.sh
+test.py

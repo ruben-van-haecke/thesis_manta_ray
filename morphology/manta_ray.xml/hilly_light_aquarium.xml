@@ -11,9 +11,19 @@
       <geom contype="1" conaffinity="0"/>
     </default>
     <default class="unnamed_model/"/>
+    <default class="unnamed_model_1/"/>
+    <default class="unnamed_model_2/"/>
+    <default class="unnamed_model_3/"/>
+    <default class="unnamed_model_4/"/>
+    <default class="unnamed_model_5/"/>
+    <default class="unnamed_model_6/"/>
+    <default class="unnamed_model_7/"/>
+    <default class="unnamed_model_8/"/>
+    <default class="unnamed_model_9/"/>
     <default class="morphology/">
       <geom contype="1" conaffinity="0"/>
     </default>
+    <default class="unnamed_model_10/"/>
   </default>
   <asset>
     <texture name="//unnamed_texture_0" type="skybox" builtin="flat" rgb1="1 1 1" rgb2="1 1 1" width="200" height="200"/>
@@ -30,7 +40,34 @@
     <geom name="east_wall" class="/" type="box" conaffinity="1" size="0.10000000000000001 10.199999999999999 2.1000000000000001" rgba="0.45098039215686275 0.57647058823529407 0.70196078431372544 0.19607843137254902" pos="-10.1 0 1.6000000000000001"/>
     <geom name="west_wall" class="/" type="box" conaffinity="1" size="0.10000000000000001 10.199999999999999 2.1000000000000001" rgba="0.45098039215686275 0.57647058823529407 0.70196078431372544 0.19607843137254902" pos="10.1 0 1.6000000000000001"/>
     <body name="unnamed_model/">
-      <geom name="unnamed_model//unnamed_geom_0" class="unnamed_model/" type="cylinder" size="0.5 1" rgba="100 100 100 0.5"/>
+      <geom name="unnamed_model//unnamed_geom_0" class="unnamed_model/" type="sphere" size="0.10000000000000001" rgba="100 100 100 0.5"/>
+    </body>
+    <body name="unnamed_model_1/">
+      <geom name="unnamed_model_1//unnamed_geom_0" class="unnamed_model_1/" type="sphere" size="0.10000000000000001" rgba="100 100 100 0.5"/>
+    </body>
+    <body name="unnamed_model_2/">
+      <geom name="unnamed_model_2//unnamed_geom_0" class="unnamed_model_2/" type="sphere" size="0.10000000000000001" rgba="100 100 100 0.5"/>
+    </body>
+    <body name="unnamed_model_3/">
+      <geom name="unnamed_model_3//unnamed_geom_0" class="unnamed_model_3/" type="sphere" size="0.10000000000000001" rgba="100 100 100 0.5"/>
+    </body>
+    <body name="unnamed_model_4/">
+      <geom name="unnamed_model_4//unnamed_geom_0" class="unnamed_model_4/" type="sphere" size="0.10000000000000001" rgba="100 100 100 0.5"/>
+    </body>
+    <body name="unnamed_model_5/">
+      <geom name="unnamed_model_5//unnamed_geom_0" class="unnamed_model_5/" type="sphere" size="0.10000000000000001" rgba="100 100 100 0.5"/>
+    </body>
+    <body name="unnamed_model_6/">
+      <geom name="unnamed_model_6//unnamed_geom_0" class="unnamed_model_6/" type="sphere" size="0.10000000000000001" rgba="100 100 100 0.5"/>
+    </body>
+    <body name="unnamed_model_7/">
+      <geom name="unnamed_model_7//unnamed_geom_0" class="unnamed_model_7/" type="sphere" size="0.10000000000000001" rgba="100 100 100 0.5"/>
+    </body>
+    <body name="unnamed_model_8/">
+      <geom name="unnamed_model_8//unnamed_geom_0" class="unnamed_model_8/" type="sphere" size="0.10000000000000001" rgba="100 100 100 0.5"/>
+    </body>
+    <body name="unnamed_model_9/">
+      <geom name="unnamed_model_9//unnamed_geom_0" class="unnamed_model_9/" type="sphere" size="0.10000000000000001" rgba="100 100 100 0.5"/>
     </body>
     <body name="morphology/">
       <freejoint name="morphology/"/>
@@ -175,6 +212,9 @@
           </body>
         </body>
       </body>
+    </body>
+    <body name="unnamed_model_10/">
+      <geom name="unnamed_model_10//unnamed_geom_0" class="unnamed_model_10/" type="sphere" size="0.10000000000000001" rgba="100 100 100 0.5"/>
     </body>
   </worldbody>
   <tendon>

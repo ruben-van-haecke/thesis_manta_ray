@@ -6,6 +6,7 @@ from mujoco_utils.robot import MJCMorphology
 from mujoco_utils.observables import ConfinedObservable
 from dm_control.mujoco.math import euler2quat
 from dm_control.mjcf import Element
+from arena.entities.target import Target
 
 from morphology.morphology import MJCMantaRayMorphology
 from morphology.specification.specification import MantaRayMorphologySpecification 
@@ -40,17 +41,55 @@ def quat2euler(q):
 
     return np.array([roll, pitch, yaw])
 
+
+class Move(MJCEnvironmentConfig):
+    def __init__(
+            self, 
+            seed: int = 42, 
+            time_scale: float = 1, 
+            control_substeps: int = 1, 
+            simulation_time: float = 10,
+            camera_ids: List[int] | None = None,
+            velocity: float = 0.5,
+            reward_fn: str | None = None,
+            task_mode: str = "parkour"
+            ) -> None:
+        super().__init__(
+            task = DragRaceTask, 
+            time_scale=time_scale,
+            control_substeps=control_substeps,
+            simulation_time=simulation_time,
+            camera_ids=[0, 1],
+        )
+        self._velocity = velocity
+        self._reward_fn = reward_fn
+        self._task_mode = task_mode
+    @property
+    def velocity(self) -> float:
+        return self._velocity
+    
+    @property
+    def reward_fn(self) -> str | None:
+        return self._reward_fn
+    
+    @property
+    def task_mode(self) -> str:
+        return self._task_mode
+    
+
 class DragRaceTask(composer.Task):
     reward_functions = ["Δx", "E * Δx", "(E + 200*Δx) * (Δx)"]
 
     def __init__(self,
-                 config: MJCEnvironmentConfig,
+                 config: Move,#MJCEnvironmentConfig,
                  morphology: MJCMantaRayMorphology) -> None:
         super().__init__()
         
-        self.config = config
+        self._config = config
         self._arena = self._build_arena()
         self._morphology: MJCMantaRayMorphology = self._attach_morphology(morphology)
+        if self._config.task_mode == "parkour":
+            self._parkour = self._attach_parkour()
         # self._configure_camera()
         self._task_observables = self._configure_observables()
 
@@ -73,7 +112,7 @@ class DragRaceTask(composer.Task):
         return self._task_observables
     
     def _build_arena(self) -> OceanArena:
-        arena = OceanArena()
+        arena = OceanArena(task_mode=self._config.task_mode)
         return arena
     
     @staticmethod
@@ -125,6 +164,13 @@ class DragRaceTask(composer.Task):
         self._arena.add_free_entity(morphology)
         return morphology
     
+    def _attach_parkour(self) -> List[Element]:
+        parkour = []
+        t = Target()
+        parkour.append(t)
+        self._arena.attach(t)
+        return parkour
+    
     def _get_sensor_actuatorfrc(self,
                                 physics: mjcf.Physics,
                                 ) -> float:
@@ -151,7 +197,7 @@ class DragRaceTask(composer.Task):
     def _get_accumulated_energy_sensors(self,
                             physics: mjcf.Physics,
                             ) -> float:
-        self._accumulated_energy += self._get_abs_forces_sensors(physics=physics) * self.config.physics_timestep     # d energy = f * dt
+        self._accumulated_energy += self._get_abs_forces_sensors(physics=physics) * self._config.physics_timestep     # d energy = f * dt
         return self._accumulated_energy
     
     def _configure_task_observables(
@@ -160,7 +206,7 @@ class DragRaceTask(composer.Task):
         task_observables = dict()
         task_observables["task/time"] = ConfinedObservable(
                 low=0,
-                high=self.config.simulation_time,
+                high=self._config.simulation_time,
                 shape=[1],
                 raw_observation_callable=lambda
                     physics: physics.time()
@@ -193,17 +239,17 @@ class DragRaceTask(composer.Task):
     
     def get_reward(self, physics):
         "reward to minimize"
-        assert self.config.reward_fn in DragRaceTask.reward_functions, f"reward_fn not recognized, choose from {DragRaceTask.reward_functions}"
+        assert self._config.reward_fn in DragRaceTask.reward_functions, f"reward_fn not recognized, choose from {DragRaceTask.reward_functions}"
 
-        v = self.config.velocity
-        current_distance_from_initial_position = self._get_x_distance_from_initial_position(physics=physics)
+        v = self._config.velocity
+        current_distance_from_initial_position = self._get_distance_from_initial_position(physics=physics)
         velocity_penalty = np.abs(v*physics.time() - current_distance_from_initial_position)
 
-        if self.config.reward_fn == "Δx" or self.config.reward_fn is None:
+        if self._config.reward_fn == "Δx" or self._config.reward_fn is None:
             return velocity_penalty
-        elif self.config.reward_fn == "E * Δx":
+        elif self._config.reward_fn == "E * Δx":
             return self._get_accumulated_energy_sensors(physics=physics)*velocity_penalty #/current_distance_from_initial_position
-        elif self.config.reward_fn == "(E + 200*Δx) * (Δx)":
+        elif self._config.reward_fn == "(E + 200*Δx) * (Δx)":
             if current_distance_from_initial_position == 0.:
                 return 1/0.00001
             return (self._get_accumulated_energy_sensors(physics=physics)+200*velocity_penalty)*velocity_penalty #+200*velocity_penalty)/current_distance_from_initial_position
@@ -227,32 +273,5 @@ class DragRaceTask(composer.Task):
             ) -> None:
         self._initialize_morphology_pose(physics)
         self._accumulated_energy = 0
+        
     
-
-class Move(MJCEnvironmentConfig):
-    def __init__(
-            self, 
-            seed: int = 42, 
-            time_scale: float = 1, 
-            control_substeps: int = 1, 
-            simulation_time: float = 10,
-            camera_ids: List[int] | None = None,
-            velocity: float = 0.5,
-            reward_fn: str | None = None,
-            ) -> None:
-        super().__init__(
-            task = DragRaceTask, 
-            time_scale=time_scale,
-            control_substeps=control_substeps,
-            simulation_time=simulation_time,
-            camera_ids=[0, 1],
-        )
-        self._velocity = velocity
-        self._reward_fn = reward_fn
-    @property
-    def velocity(self) -> float:
-        return self._velocity
-    
-    @property
-    def reward_fn(self) -> str | None:
-        return self._reward_fn

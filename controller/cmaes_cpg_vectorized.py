@@ -68,13 +68,13 @@ phase biases:
     
     
     def ask(self,
-            observation: ObsType,
+            observation: ObsType | None = None,
             duration: float | None = None,
             sampling_period: float | None = None,
             ) -> np.ndarray:
         """
         args:
-            observation: ObsType, the observation of the environment
+            observation: ObsType, the observation of the environment, if None, then time is considered to be 0
             duration: float, duration of the integration, if None, only the value from the time_step is used
             sampling_period: float, time step of the integration, if None, only the value from the time_step is used
         returns:
@@ -106,7 +106,7 @@ phase biases:
             return out
         
 
-        time = observation["task/time"][0][0]
+        time = 0 if observation is None else observation["task/time"][0][0]
         np.random.seed(0)
         # Solve the differential equations using solve_ivp
         if time == 0:   # reset for new episode
@@ -134,7 +134,7 @@ phase biases:
             sol = solve_ivp(fun=dynamics,
                             t_span=[self._last_time, time+duration],
                             y0=self._last_state,   # Initial conditions
-                            t_eval=np.linspace(time, time+duration-sampling_period, int(duration/sampling_period)),
+                            t_eval=np.linspace(time, time+duration-sampling_period, int(np.ceil(duration/sampling_period))+1),
                             method='Radau',
                             )
             self._last_state = sol.y[:, -1]
