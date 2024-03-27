@@ -142,36 +142,52 @@ class MantaRayCpgControllerSpecification(ControllerSpecification):
         self.weights = NumpyArrayParameter(shape=(self._num_neurons, self._num_neurons))
         self.phase_biases = NumpyArrayParameter(shape=(self._num_neurons, self._num_neurons))
     
-    def scaled_update(self,
-                      update: np.ndarray,
-                      ) -> None:
-        """
-            args:
-                update: np.ndarray of shape (num_neurons, ) within range [0, 1]
+    def __str__(self):
+        overview = f"MantaRayCpgControllerSpecification:\n"
+        overview += f"  num_neurons: {self._num_neurons}\n"
+        overview += f"  action_spec: {self._action_spec}\n"
+        overview += f"  r: {self.r.value}\n"
+        overview += f"    low: {self.r.low}\n"
+        overview += f"    high: {self.r.high}\n"
+        overview += f"  x: {self.x.value}\n"
+        overview += f"    low: {self.x.low}\n"
+        overview += f"    high: {self.x.high}\n"
+        overview += f"  omega:{self.omega.value}\n"
+        overview += f"    low: {self.omega.low}\n"
+        overview += f"    high: {self.omega.high}\n"
+        overview += f"  weights: {self.weights.value}\n"
+        overview += f"    low: {self.weights.low}\n"
+        overview += f"    high: {self.weights.high}\n"
+        overview += f"  phase_biases: {self.phase_biases.value}\n"
+        overview += f"    low: {self.phase_biases.low}\n"
+        overview += f"    high: {self.phase_biases.high}\n"
+        return overview
 
-            scales the update to the range of the parameter
-        """
-        assert np.all(update >= 0) and np.all(update <= 1), f"[MantaRayCpgControllerSpecification] Update '{update}' is not within range [0, 1]"
-        # get the right length due to symmetry
-        amplitude = update[0]
-        offset = update[1]
-        frequency = update[2]
-        phase_bias = update[3]
+    
+    # def scaled_update(self,
+    #                   update: np.ndarray,
+    #                   ) -> None:
+    #     """
+    #         args:
+    #             update: np.ndarray of shape (num_neurons, ) within range [0, 1]
+
+    #         scales the update to the range of the parameter
+    #     """
+    #     assert np.all(update >= 0) and np.all(update <= 1), f"[MantaRayCpgControllerSpecification] Update '{update}' is not within range [0, 1]"
+    #     # get the right length due to symmetry
+    #     amplitude = update[0]
+    #     offset = update[1]
+    #     frequency = update[2]
+    #     phase_bias = update[3]
         
-        # updating specification
-        index_begin, index_end = 0, self.r.value.size
-        self.r.value = self.r.low + amplitude * (self.r.high - self.r.low)
+    #     # updating specification
+    #     self.r.value = self.r.low + amplitude * (self.r.high - self.r.low)
 
-        index_begin, index_end = index_end, index_end + self.x.value.shape[1]
-        self.x.value = self.x.low + offset * (self.x.high - self.x.low)
+    #     self.x.value = self.x.low + offset * (self.x.high - self.x.low)
 
-        index_begin, index_end = index_end, index_end + self.omega.value.size
-        self.omega.value = self.omega.low + frequency * (self.omega.high - self.omega.low)
+    #     self.omega.value = self.omega.low + frequency * (self.omega.high - self.omega.low)
 
-        # index_begin, index_end = index_end, index_end + self.weights.value.size
-        # self.weights.value = self.weights.low + update[index_begin:index_end] * (self.weights.high - self.weights.low)
-
-        index_begin, index_end = index_end, index_end + self.phase_biases.value.size
-        self.phase_biases.value = self.phase_biases.low + phase_bias * (self.phase_biases.high - self.phase_biases.low)
+    #     self.phase_biases.value = self.phase_biases.low + phase_bias * (self.phase_biases.high - self.phase_biases.low)
+    #     print("scaled update =================================================")
 
     

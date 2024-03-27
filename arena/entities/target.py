@@ -11,6 +11,8 @@ class Target(composer.Entity):
                 size=[0.1], 
                 rgba=(100, 100, 100, 0.5),
                 )
+        # self.option.contact = 'disable'
+        pass
 
     @property
     def mjcf_model(

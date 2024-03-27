@@ -46,6 +46,17 @@ class BezierParkour:
         for control_points in self._segments:
             points.append(self.bezier_curve_segment(control_points, num_points))
         return np.concatenate(points, axis=0)
+    
+    def allign_points(self, 
+                      vector: np.ndarray,
+                      points: np.ndarray) -> np.ndarray:
+        """Allign points to the same plane"""
+        assert vector.shape[0] == 3, "Vector must be 3D"
+        assert points.shape[1] == 3, "Points must be 3D"
+        assert points.shape[0] == 4, "At least 4 points are needed for the qubiq bezier curve"
+        
+        raise NotImplementedError
+    
 
     def plot(self) -> None:
         # Compute the curve points
@@ -70,22 +81,28 @@ class BezierParkour:
 
 if __name__ == "__main__":
     parkour = BezierParkour()
-    control_points1 = np.array([
+    points0 = np.array([
+        [0.0, 0.0, 0.],  # P0
+        [1.0, 0.0, 0.],  # P1
+        [2.0, 0.0, 0.],  # P2
+        [3.0, 0.0, 0.]   # P3
+    ])
+    points1 = np.array([
         [0.0, 0.0, 0.],  # P0
         [0.0, 1.0, 0.],  # P1
         [1.0, 1.0, 0.5],  # P2
         [1.0, 0.0, 0.]   # P3
     ])
 
-    control_points2 = np.array([
+    points2 = np.array([
         [1.0, 0.0, 0.],  # P0
         [1.0, -1.0, -0.5],  # P1
         [0.0, -1.0, 0.],  # P2
         [0.0, 0.0, 0.]   # P3
     ])
 
-    parkour.add_qubic_bezier(control_points=control_points1)
-    parkour.add_qubic_bezier(control_points=control_points2)
+    parkour.add_qubic_bezier(control_points=points1)
+    parkour.add_qubic_bezier(control_points=points2)
     parkour.plot()
 
 

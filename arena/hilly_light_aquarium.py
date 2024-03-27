@@ -52,7 +52,6 @@ class OceanArena(Arena):
                             "parkour": parkour to follow
         """
         assert task_mode in ["no_target", "random_target", "grid", "parkour"], "task_mode is not valid"
-        # print(f"task_mode: {task_mode}")
 
         super()._build(name=name)
         self._initial_morphology_position = np.array(initial_morphology_position)
@@ -132,6 +131,15 @@ class OceanArena(Arena):
         target = Target()
         self.attach(target)
         return target
+    
+    def set_target_location(self, 
+                            physics: mjcf.Physics, 
+                            position: np.ndarray,
+                            ) -> None:
+        if self._task_mode == "random_target":
+            self.target.set_pose(physics=physics, position=position)
+        else:
+            raise ValueError("This method is not available for this task mode")
     
     def randomize_target_location(
             self,
@@ -429,6 +437,7 @@ class OceanArena(Arena):
         self.mjcf_model.option.viscosity = 0.0009   # 0. is default
         self.mjcf_model.option.gravity = np.array([0, 0, 0])    # [0, 0, -9.81] is default
         self.mjcf_model.option.integrator = "implicit"   # "Euler" is default
+        self.mjcf_model.option.flag.contact = 'disable'
         # self.mjcf_model.option.flag.energy = "enable"    # "disable" is default, used for monitoring energy for reward function? -> no, only kinetic energy
         # self.mjcf_model.option.timestep = 0.01    # 0.02 is default
 

@@ -12,7 +12,7 @@ from morphology.morphology import MJCMantaRayMorphology
 
 from morphology.specification.default import default_morphology_specification
 from parameters import MantaRayMorphologySpecificationParameterizer
-from task.drag_race import Move
+from task.drag_race import MoveConfig
 from cmaes import CMA
 
 from dm_control.mjcf import export_with_assets
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     manta_ray.export_to_xml_with_assets('morphology/manta_ray.xml') #just to be sure
 
     # task
-    task_config = Move()
+    task_config = MoveConfig()
     dm_env = task_config.environment(morphology=manta_ray, wrap2gym=False)
 
     observation_spec = dm_env.observation_spec()

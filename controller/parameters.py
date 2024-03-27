@@ -52,8 +52,8 @@ class MantaRayControllerSpecificationParameterizer(ControllerSpecificationParame
                                                      (0, self.left_fin_x),
                                                      ],
                                         weights=[1, 1.],
-                                        low=[0, 0], 
-                                        high=[1, 1],
+                                        low=[-np.pi/2, -np.pi/2], 
+                                        high=[np.pi/2, np.pi/2],
                                         )
         specification.omega.add_connections(connections=[(0, self.right_fin_x), 
                                                          (0, self.left_fin_x),
@@ -90,23 +90,13 @@ class MantaRayControllerSpecificationParameterizer(ControllerSpecificationParame
         offset = controller_action[[1, 5]]
         frequency = controller_action[[2, 6]]
         phase_bias = controller_action[[3, 7]]
+        phase_bias[1] = -phase_bias[0]  # loops should sum to a multiple of 2*pi, in this case sum to 0
         
         # updating specification
-        specification.r.value = specification.r.low + amplitude * (specification.r.high - specification.r.low)
         specification.x.value = specification.x.low + offset * (specification.x.high - specification.x.low)
+        specification.r.value = specification.r.low + amplitude * (specification.r.high - specification.r.low) - np.abs(specification.x.value)
         specification.omega.value = specification.omega.low + frequency * (specification.omega.high - specification.omega.low)
         specification.phase_biases.value = specification.phase_biases.low + phase_bias * (specification.phase_biases.high - specification.phase_biases.low)
-
-        # fin_amplitude = controller_action[0]
-        # fin_frequency = controller_action[1]*2*np.pi*3  # max 3 Hz
-        # phase_bias = controller_action[2]*np.pi
-        # weight = controller_action[3]*10
-        # specification.r.value  = [0, 0, fin_amplitude, fin_amplitude]
-        # specification.omega.value = [0, 0, fin_frequency, fin_frequency]
-        # specification.phase_biases.value = [-phase_bias, phase_bias]
-        # specification.weights.value = [weight, weight]
-        # specification.scaled_update(update=controller_action)
-
     
 
     def get_parameter_labels(

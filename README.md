@@ -17,3 +17,8 @@ pip freeze > requirements.txt
 ```
 ssh -i //home/ruben/.ssh/vsc_hpc vsc45099@login.hpc.ugent.be
 ```
+
+```
+module swap cluster/doduo
+qsub hpc_job.sh
+```

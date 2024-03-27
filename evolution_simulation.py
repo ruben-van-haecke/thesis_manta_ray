@@ -8,9 +8,10 @@ import matplotlib.pyplot as plt
 import wandb
 import copy
 import time
+import thesis_manta_ray
 from datetime import datetime
 from cmaes import CMA
-from quality_diversity import Solution, Archive, MapElites
+from controller.quality_diversity import Solution, Archive, MapElites
 
 from thesis_manta_ray.controller.cmaes_cpg_vectorized import CPG
 from thesis_manta_ray.controller.parameters import MantaRayControllerSpecificationParameterizer
@@ -20,7 +21,7 @@ from thesis_manta_ray.morphology.morphology import MJCMantaRayMorphology
 
 from thesis_manta_ray.morphology.specification.default import default_morphology_specification
 from thesis_manta_ray.parameters import MantaRayMorphologySpecificationParameterizer
-from task.drag_race import Move
+from task.drag_race import MoveConfig
 from fprs.specification import RobotSpecification
 
 from mujoco_utils.environment import MJCEnvironmentConfig
@@ -79,11 +80,12 @@ class OptimizerSimulation:
         self._morph_specs = [default_morphology_specification() for _ in range(self._num_envs)]
         time.sleep(5)
         self._controllers: List[CPG] = [self._controller(specification=controller_spec) for controller_spec in self._controller_specs]
+        self._configs: List[MoveConfig] = [copy.deepcopy(task_config) for _ in range(self._num_envs)]
 
         succeed = False
         while not succeed:
             try:
-                self._gym_env = gym.vector.AsyncVectorEnv([lambda: copy.deepcopy(task_config).environment(morphology=MJCMantaRayMorphology(specification=self._morph_specs[env_id]),
+                self._gym_env = gym.vector.AsyncVectorEnv([lambda: self._configs[env_id].environment(morphology=MJCMantaRayMorphology(specification=self._morph_specs[env_id]),
                                                                         wrap2gym=True) for env_id in range(self._num_envs)])
                 succeed = True
             except:
@@ -196,14 +198,14 @@ class OptimizerSimulation:
 
             if isinstance(self._outer_optimalization, CMA):
                 solutions += [(single_action, single_reward) for single_action, single_reward in zip(outer_action, reward)]
-            elif isinstance(self._outer_optimalization, MapElites):
+            elif isinstance(self._outer_optimalization, thesis_manta_ray.controller.quality_diversity.MapElites):
                 for env_id in range(self._num_envs):
                     sol = Solution(behaviour=obs['task/orientation'][env_id, :], 
                                               fitness=1/reward[env_id], # fitness has to be optimized
                                               parameters=outer_action[env_id])
                     solutions.append(sol)
             else:
-                raise NotImplementedError("This outer_optimalization is not implemented")
+                raise NotImplementedError(f"This outer_optimalization is not implemented, type: {type(self._outer_optimalization)}")
             
 
             for env_id in range(self._num_envs):
@@ -254,7 +256,7 @@ class OptimizerSimulation:
         plt.legend()
         plt.show()
 
-    def viewer(self,
+    def viewer_gen_episode(self,
                generation: int,
                episode: int,
                ) -> None:
@@ -360,7 +362,7 @@ class OptimizerSimulation:
         # Restore instance attributes.
         self.__dict__.update(state)
         # Restore the unpicklable entries.
-        self._gym_env = gym.vector.AsyncVectorEnv([lambda: Move().environment(morphology=MJCMantaRayMorphology(specification=self._morph_specs[env_id]),
+        self._gym_env = gym.vector.AsyncVectorEnv([lambda: MoveConfig().environment(morphology=MJCMantaRayMorphology(specification=self._morph_specs[env_id]),
                                                                   wrap2gym=True) for env_id in range(self._num_envs)])
     
 
@@ -376,7 +378,7 @@ if __name__ == "__main__":
     
 
     # controller
-    simple_env = Move().environment(morphology=MJCMantaRayMorphology(specification=morphology_specification), # TODO: remove this, ask Dries
+    simple_env = MoveConfig().environment(morphology=MJCMantaRayMorphology(specification=morphology_specification), # TODO: remove this, ask Dries
                                                 wrap2gym=False)
     observation_spec = simple_env.observation_spec()
     action_spec = simple_env.action_spec()
@@ -390,6 +392,7 @@ if __name__ == "__main__":
         offset_fin_out_plane_range=(0, np.pi),
     )
     controller_parameterizer.parameterize_specification(specification=controller_specification)
+    print(f"controller: {controller_specification}")
     cpg = CPG(specification=controller_specification,
               low=-1,
               high=1,
@@ -413,7 +416,7 @@ if __name__ == "__main__":
     # parameters: ['fin_amplitude_left', 'fin_offset_left', 'frequency_left', 'phase_bias_left', 'fin_amplitude_right', 'fin_offset_right', 'frequency_right', 'phase_bias_right']
     archive = Archive(parameter_bounds=[(0, 1) for _ in range(len(controller_parameterizer.get_parameter_labels()))],
                       feature_bounds=[(-np.pi, np.pi), (-np.pi/2, np.pi/2), (-np.pi, np.pi)], 
-                      resolutions=[6, 6, 6],
+                      resolutions=[8, 8, 8],
                       parameter_names=controller_parameterizer.get_parameter_labels(), 
                       feature_names=["roll", "pitch", "yawn"],
                       symmetry = [('phase_bias_right', 'phase_bias_left'), 
@@ -421,37 +424,43 @@ if __name__ == "__main__":
                                 ('fin_offset_right', 'fin_offset_left'), 
                                 ('fin_amplitude_right', 'fin_amplitude_left'),
                                 ],
-                        max_items_per_bin=10
+                        max_items_per_bin=1
                       )
     map_elites = MapElites(archive)
 
     sim = OptimizerSimulation(
-        task_config=Move(simulation_time=3.2, 
+        task_config=MoveConfig(simulation_time=1, 
                          velocity=0.5,
-                         reward_fn="(E + 200*Δx) * (Δx)"),
+                         reward_fn="(E + 200*Δx) * (Δx)",
+                         task_mode="random_target",),
         robot_specification=robot_spec,
         parameterizer=controller_parameterizer,
-        population_size=24,  # make sure this is a multiple of num_envs
-        num_generations=400,
+        population_size=10,  # make sure this is a multiple of num_envs
+        num_generations=2,
         outer_optimalization=map_elites,#cma,
         controller=CPG,
         skip_inner_optimalization=True,
         record_actions=True,
         action_spec=action_spec,
-        num_envs=24,
-        logging=True,
+        num_envs=10,
+        logging=False,
         )
     
     sim.run()
-    sim.visualize()
     # best_gen, best_episode = sim.get_best_individual()
-    # sim.visualize()
-    # sim.viewer(generation=best_gen, episode=best_episode)
-    archive.plot_grid(x_label="pitch", y_label="roll")
+    # # sim.visualize()
+    # sim.viewer_gen_episode(generation=best_gen, episode=best_episode)
+    map_elites.optimization_info()
+    archive.plot_grid_3d(x_label="roll", y_label="pitch", z_label="yawn")
     # best_sol_first_bin = archive.get_best_solution(index=(0, 0, 0))
+    # first_solution = next(iter(archive))
     # other_sol = archive.get_symmetric_solution(best_sol_first_bin)
     # sim.viewer(normalised_action=best_sol_first_bin.parameters)
-    # sim.plot_actions(normalised_action=best_sol_first_bin.parameters)
+    # sim.plot_actions(normalised_action=first_solution.parameters)
+#     action = np.array([0.9736032, 0.75782657, 0.25533115, 0.04304449, 0.95805741, 0.73478035,
+#  0.73896048, 0.504163  ])
+#     sim.plot_actions(normalised_action=action)  # offset is index 1 and 5, amplitude 0 and 4
+#     sim.viewer(normalised_action=action)
     # sim.viewer(normalised_action=other_sol.parameters)
     # sim.plot_actions(normalised_action=other_sol.parameters)
     # sim.visualize_inner(generation=best_gen, episode=best_episode)

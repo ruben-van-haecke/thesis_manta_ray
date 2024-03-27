@@ -1,4 +1,6 @@
-from typing import Callable, List, Dict
+from copy import deepcopy
+import math
+from typing import List, Dict
 from dm_control import composer
 from dm_control.composer import Entity
 from mujoco_utils.environment import MJCEnvironmentConfig
@@ -13,6 +15,7 @@ from morphology.specification.specification import MantaRayMorphologySpecificati
 from arena.hilly_light_aquarium import OceanArena
 from dm_control import mjcf
 from dm_control.composer.observation import observable
+from scipy.spatial.transform import Rotation
 
 import numpy as np
 
@@ -22,6 +25,9 @@ def quat2euler(q):
 
     :param quaternions: NumPy array of shape (4,) containing quaternions.
     :return: NumPy array of shape (3, ) containing Euler angles.
+    x (roll) is in the range -pi to pi
+    y (pitch) is in the range -pi/2 to pi/2
+    z (yaw) is in the range -pi to pi
     """
     w, x, y, z = q[0], q[1], q[2], q[3]
 
@@ -42,7 +48,7 @@ def quat2euler(q):
     return np.array([roll, pitch, yaw])
 
 
-class Move(MJCEnvironmentConfig):
+class MoveConfig(MJCEnvironmentConfig):
     def __init__(
             self, 
             seed: int = 42, 
@@ -52,10 +58,10 @@ class Move(MJCEnvironmentConfig):
             camera_ids: List[int] | None = None,
             velocity: float = 0.5,
             reward_fn: str | None = None,
-            task_mode: str = "parkour"
+            task_mode: str = "parkour",
             ) -> None:
         super().__init__(
-            task = DragRaceTask, 
+            task = Task, 
             time_scale=time_scale,
             control_substeps=control_substeps,
             simulation_time=simulation_time,
@@ -64,6 +70,20 @@ class Move(MJCEnvironmentConfig):
         self._velocity = velocity
         self._reward_fn = reward_fn
         self._task_mode = task_mode
+        self._location_target = None
+        self._initial_position = np.array([0.0, 0.0, 15 * 0.1])
+    
+    def __deepcopy__(self, memo) -> 'MoveConfig':
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, deepcopy(v, memo))
+        return result
+    @property
+    def initial_position(self) -> np.ndarray:
+        return self._initial_position
+    
     @property
     def velocity(self) -> float:
         return self._velocity
@@ -76,25 +96,41 @@ class Move(MJCEnvironmentConfig):
     def task_mode(self) -> str:
         return self._task_mode
     
+    @property
+    def target_location(self):
+        if self._task_mode == "random_target":
+            return self._location_target
+        else:
+            raise ValueError("task_mode is not random_target")
+    @target_location.setter
+    def target_location(self, location: np.ndarray):
+        if self._task_mode == "random_target":
+            self._location_target = location
+        else:
+            raise ValueError("task_mode is not random_target")
+    
 
-class DragRaceTask(composer.Task):
+class Task(composer.Task):
     reward_functions = ["Δx", "E * Δx", "(E + 200*Δx) * (Δx)"]
 
     def __init__(self,
-                 config: Move,#MJCEnvironmentConfig,
-                 morphology: MJCMantaRayMorphology) -> None:
+                 config: MoveConfig,#MJCEnvironmentConfig,
+                 morphology: MJCMantaRayMorphology, 
+                 ) -> None:
         super().__init__()
         
         self._config = config
-        self._arena = self._build_arena()
+        self._arena: OceanArena = self._build_arena()
         self._morphology: MJCMantaRayMorphology = self._attach_morphology(morphology)
         if self._config.task_mode == "parkour":
             self._parkour = self._attach_parkour()
+        elif self._config.task_mode == "random_target":
+            pass
         # self._configure_camera()
         self._task_observables = self._configure_observables()
 
         torso_radius = self._morphology.morphology_specification.torso_specification.radius.value
-        self._initial_position = np.array([0.0, 0.0, 10 * torso_radius])
+        self._initial_position = self._config.initial_position  #np.array([0.0, 0.0, 10 * torso_radius])
         self._configure_contacts()
         self._sensor_actuatorfrc_names = [sensor.name for sensor in self._morphology.mjcf_model.sensor.actuatorfrc]
         self._sensor_actuatorfrc = [sensor for sensor in self._morphology.mjcf_model.sensor.actuatorfrc]
@@ -180,8 +216,17 @@ class DragRaceTask(composer.Task):
                                 entity: Entity,
                                 physics: mjcf.Physics,
                                 ) -> float:
-        pose = entity.get_pose(physics=physics)
-        return quat2euler(pose[1])
+        pose = entity.get_pose(physics=physics) # (position, quaternion) with quaternion [w, x, y, z]
+        # quaternion [y, x, z, w] x because x is in the range -90 to 90, which corresponds to the roll
+        # quaternion = np.zeros(4)
+        # quaternion[3] = pose[1][0]
+        # quaternion[0] = pose[1][2]
+        # quaternion[1] = pose[1][1]
+        # quaternion[2] = pose[1][3]
+        # euler = Rotation.from_quat(pose[1]).as_euler("xyz", degrees=False)
+        # new_euler = np.zeros_like(euler)
+        # new_euler[[0, 1, 2]] = euler[[1, 0, 2]]
+        return quat2euler(pose[1])#new_euler
     
     def _get_orientation(self,
                          physics: mjcf.Physics,
@@ -239,7 +284,7 @@ class DragRaceTask(composer.Task):
     
     def get_reward(self, physics):
         "reward to minimize"
-        assert self._config.reward_fn in DragRaceTask.reward_functions, f"reward_fn not recognized, choose from {DragRaceTask.reward_functions}"
+        assert self._config.reward_fn in Task.reward_functions, f"reward_fn not recognized, choose from {Task.reward_functions}"
 
         v = self._config.velocity
         current_distance_from_initial_position = self._get_distance_from_initial_position(physics=physics)
@@ -273,5 +318,27 @@ class DragRaceTask(composer.Task):
             ) -> None:
         self._initialize_morphology_pose(physics)
         self._accumulated_energy = 0
+        if self._config.task_mode == "random_target":
+            self._arena.set_target_location(physics=physics, position=self._config.target_location)
         
     
+if __name__ == '__main__':
+    # roll = np.linspace(-np.pi, np.pi, 100)
+    # pitch = np.linspace(-np.pi, np.pi, 100)
+    # yaw = np.linspace(-np.pi, np.pi, 100)
+    # for r in roll:
+    #     for p in pitch:
+    #         for y in yaw:
+    #             q = euler2quat(np.degrees(r), np.degrees(p), np.degrees(y))
+    #             e = quat2euler(q)
+    #             rpy = np.array([r, p, y])
+    #             for i in range(3):
+    #                 assert np.allclose(rpy[i], e[i]) or \
+    #                     np.allclose(min(rpy[i], e[i]), max(rpy[i], e[i])-np.pi), f"original: {rpy}, q: {q}, e: {e}"
+    from scipy.spatial.transform import Rotation
+    angle = Rotation.from_quat([0, 0, 0, 1]).as_euler('xyz', degrees=False)
+    print(f"angle: {angle}")
+    quaternion = Rotation.from_euler('xyz', angle, degrees=True).as_quat()
+    print(f"quaternion: {quaternion}")
+    angle = Rotation.from_quat(quaternion).as_euler('xyz', degrees=False)
+    print(f"angle: {angle}")
