@@ -6,7 +6,7 @@ from thesis_manta_ray.morphology.morphology import MJCMantaRayMorphology
 from thesis_manta_ray.morphology.specification.specification import MantaRayMorphologySpecification
 from thesis_manta_ray.morphology.specification.default import default_morphology_specification
 
-from task.drag_race import Move
+from task.drag_race import MoveConfig
 # from task.grid_target import Move
 # from task.move_to_target import Move
 # from task.drag_race import Move
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     manta_ray = MJCMantaRayMorphology(specification=morpholoby_specification)
     manta_ray.export_to_xml_with_assets('morphology/manta_ray.xml') #just to be sure
 
-    task_config = Move(velocity=0.5, 
+    task_config = MoveConfig(velocity=0.5, 
                        reward_fn="(E + 200*Δx) * (Δx)",
                        task_mode="parkour")
     dm_env = task_config.environment(morphology=manta_ray, wrap2gym=False)

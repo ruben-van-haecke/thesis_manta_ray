@@ -53,9 +53,9 @@ cma = CMA(mean=np.random.uniform(low=0,
             seed=42
             )
 
-archive: Archive = Archive.load("experiments/qd_v0.5_t3/sim_objects/archive.pkl")
+archive: Archive = Archive.load("experiments/qd_v0.5_differential/sim_objects/archive.pkl")
 map_elites = MapElites(archive)
-simulation_time = 3
+simulation_time = 4
 velocity = 0.5
 config = MoveConfig(simulation_time=simulation_time, 
                         velocity=velocity,
@@ -64,7 +64,7 @@ config = MoveConfig(simulation_time=simulation_time,
 
 
 if True:    # verify the point
-    sol = archive.solutions[(3, 5, 0)][0]
+    sol = archive.solutions[(3, 3, 4)][0]
     pitch, yawn = sol.behaviour[[1, 2]]
     parameters = sol.parameters
 else:   # try a chosen point

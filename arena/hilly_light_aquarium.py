@@ -16,6 +16,7 @@ from thesis_manta_ray.arena.utils.colors import rgba_sand
 from thesis_manta_ray.arena.utils.noise import generate_perlin_noise_map
 from thesis_manta_ray.arena.entities.target import Target
 from thesis_manta_ray.arena.entities.parkour_obstacles import CilinderParkour
+from thesis_manta_ray.task.bezier_parkour import BezierParkour
 
 from fiblat import sphere_lattice
 
@@ -43,10 +44,11 @@ class OceanArena(Arena):
             random_friction: bool = False,
             random_obstacles: bool = False,
             task_mode: str = "no_target",
+            initial_position: np.ndarray = np.array([0, 0, 0]),
             ) -> None:
         """
         args:
-            task_mode: str, "no_target": no obstacles
+            task_mode: str, "no_target": no obstacles, ground and wall gone as well
                             "random_target": one random target
                             "grid": a raster in front of the robot in which a target
                             "parkour": parkour to follow
@@ -54,7 +56,7 @@ class OceanArena(Arena):
         assert task_mode in ["no_target", "random_target", "grid", "parkour"], "task_mode is not valid"
 
         super()._build(name=name)
-        self._initial_morphology_position = np.array(initial_morphology_position)
+        # self._initial_morphology_position = np.array(initial_morphology_position)
         self._dynamic_assets_identifier = env_id
         self.size = np.array(size)
         self._light_texture = light_texture
@@ -65,14 +67,16 @@ class OceanArena(Arena):
         self._random_friction = random_friction
         self._random_obstacles = random_obstacles
         self._task_mode = task_mode
+        self._initial_position = initial_position
 
         self._configure_assets_directory()
-        self._generate_random_height_and_light_maps()
         self._configure_cameras()
         self._configure_lights()
+        self._generate_random_height_and_light_maps()
         self._configure_sky()
-        self._build_ground()
-        self._build_walls()
+        if self._task_mode != "no_target":
+            self._build_ground()
+            self._build_walls()
         if self._task_mode == "random_target":    # one random obstacle
             self.target = self._attach_target()
         elif self._task_mode == "grid":  # raster of obstacles of which one is choosen
@@ -83,24 +87,6 @@ class OceanArena(Arena):
             sphere = sphere_lattice(3, points)
             self._grid_coordinates = radius * sphere  # x
             self._grid_coordinates = self._grid_coordinates[self._grid_coordinates[:, 0] < 0]
-            # # Create a figure and a 3D subplot
-            # fig = plt.figure()
-            # ax = fig.add_subplot(111, projection='3d')
-
-            # # Plot the surface
-            # ax.scatter(self._grid_coordinates[:, 0], 
-            #                 self._grid_coordinates[:, 1],
-            #                 self._grid_coordinates[:, 2],
-            #                 marker='o')
-
-            # # Set labels
-            # ax.set_xlabel('X')
-            # ax.set_ylabel('Y')
-            # ax.set_zlabel('Z')
-
-            # # Show the plot
-            # plt.show()
-
         elif self._task_mode == "parkour":  # parkour
             self._obstacles_traject = self._build_parkour_line()
         # self._build_obstacles()
@@ -111,19 +97,26 @@ class OceanArena(Arena):
     
     def _build_parkour_line(
             self,
+            parkour_file: str = "task/parkours/slight_curve.pkl"
             ) -> None:
-        # build obstacles
-        obstacle_course = []
-        for _ in range(10):
-            obstacle_course.append(Target())
-        for entity in obstacle_course:
-            self.attach(entity)
-        return obstacle_course
+        # get parkour
+        self._parkour = BezierParkour.load(parkour_file)
+        # get points to build target
+        points = self._parkour.bezier_curve(10)
+        # build the line
+        parkour_line = []
+        for index in range(points.shape[0]):
+            pos = points[index, :] + self._initial_position
+            parkour_line.append(self._mjcf_root.worldbody.add(
+                        'geom',
+                        type='sphere',
+                        name=f'target_parkour_{index}',
+                        size=[0.05], 
+                        rgba=(100, 100, 100, 0.5),
+                        pos=pos,
+                        ))
+        return parkour_line
     
-    def _build_path(
-            self,
-            ) -> None:
-        return 
     
     def _attach_target(
             self
@@ -168,6 +161,10 @@ class OceanArena(Arena):
         self.mjcf_model.compiler.meshdir = self.assets_directory
         self.mjcf_model.compiler.assetdir = self.assets_directory
 
+    @property
+    def get_parkour(self) -> BezierParkour:
+        return self._parkour
+    
     @property
     def _light_map_asset_path(
             self

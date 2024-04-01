@@ -19,6 +19,8 @@ from scipy.spatial.transform import Rotation
 
 import numpy as np
 
+from task.bezier_parkour import BezierParkour
+
 def quat2euler(q):
     """
     Convert an array of quaternions into Euler angles (roll, pitch, yaw).
@@ -123,7 +125,8 @@ class Task(composer.Task):
         self._arena: OceanArena = self._build_arena()
         self._morphology: MJCMantaRayMorphology = self._attach_morphology(morphology)
         if self._config.task_mode == "parkour":
-            self._parkour = self._attach_parkour()
+            # self._parkour_entities = self._arena._build_parkour_line()
+            pass
         elif self._config.task_mode == "random_target":
             pass
         # self._configure_camera()
@@ -136,6 +139,9 @@ class Task(composer.Task):
         self._sensor_actuatorfrc = [sensor for sensor in self._morphology.mjcf_model.sensor.actuatorfrc]
 
         self._accumulated_energy = 0
+        time_window = 2 # number of seconds to calculate the delta orientation
+        self._previous_orientations = np.zeros((4, int(time_window/self._config.control_timestep)))
+        self._orientation_iterator = 0
     
     @property
     def root_entity(self) -> OceanArena:
@@ -148,7 +154,7 @@ class Task(composer.Task):
         return self._task_observables
     
     def _build_arena(self) -> OceanArena:
-        arena = OceanArena(task_mode=self._config.task_mode)
+        arena = OceanArena(task_mode=self._config.task_mode, initial_position=self._config.initial_position)
         return arena
     
     @staticmethod
@@ -200,13 +206,6 @@ class Task(composer.Task):
         self._arena.add_free_entity(morphology)
         return morphology
     
-    def _attach_parkour(self) -> List[Element]:
-        parkour = []
-        t = Target()
-        parkour.append(t)
-        self._arena.attach(t)
-        return parkour
-    
     def _get_sensor_actuatorfrc(self,
                                 physics: mjcf.Physics,
                                 ) -> float:
@@ -217,22 +216,23 @@ class Task(composer.Task):
                                 physics: mjcf.Physics,
                                 ) -> float:
         pose = entity.get_pose(physics=physics) # (position, quaternion) with quaternion [w, x, y, z]
-        # quaternion [y, x, z, w] x because x is in the range -90 to 90, which corresponds to the roll
-        # quaternion = np.zeros(4)
-        # quaternion[3] = pose[1][0]
-        # quaternion[0] = pose[1][2]
-        # quaternion[1] = pose[1][1]
-        # quaternion[2] = pose[1][3]
-        # euler = Rotation.from_quat(pose[1]).as_euler("xyz", degrees=False)
-        # new_euler = np.zeros_like(euler)
-        # new_euler[[0, 1, 2]] = euler[[1, 0, 2]]
-        return quat2euler(pose[1])#new_euler
+        return quat2euler(pose[1])  # new_euler
     
     def _get_orientation(self,
                          physics: mjcf.Physics,
                          ) -> float:
         orientation = self._get_orientation_entity(entity=self._morphology, physics=physics)
         return orientation
+    
+    def _get_delta_orientation(self, 
+                              physics: mjcf.Physics,
+                              ) -> float:
+        pose = self._morphology.get_pose(physics=physics) # (position, quaternion) with quaternion [w, x, y, z]
+        self._previous_orientations[:, self._orientation_iterator] = pose[1]
+        delta_orientation_quat = self._previous_orientations[:, self._orientation_iterator] - self._previous_orientations[:, (self._orientation_iterator+1)%self._previous_orientations.shape[1]]
+        delta_orientation_eul = quat2euler(delta_orientation_quat)
+        self._orientation_iterator = (self._orientation_iterator+1) % self._previous_orientations.shape[1]
+        return delta_orientation_eul
         
     def _get_abs_forces_sensors(self,
                                 physics: mjcf.Physics,
@@ -264,6 +264,9 @@ class Task(composer.Task):
                 )
         task_observables["task/orientation"] = ConfinedObservable(
                 low=-np.pi, high=np.pi, shape=[3], raw_observation_callable=self._get_orientation
+                )
+        task_observables["task/delta_orientation"] = ConfinedObservable(
+                low=-np.pi, high=np.pi, shape=[3], raw_observation_callable=self._get_delta_orientation
                 )
         # task_observables["task/xy-distance-to-target"] = ConfinedObservable(
         #         low=0, high=np.inf, shape=[1], raw_observation_callable=self._get_xy_distance_to_target
@@ -320,6 +323,8 @@ class Task(composer.Task):
         self._accumulated_energy = 0
         if self._config.task_mode == "random_target":
             self._arena.set_target_location(physics=physics, position=self._config.target_location)
+        elif self._config.task_mode == "parkour":
+            pass
         
     
 if __name__ == '__main__':
