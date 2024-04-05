@@ -112,6 +112,11 @@ class OptimizerSimulation:
             self._control_actions = np.zeros(shape=(self._num_generations, 
                                                     self._population_size, 
                                                     len(self._parameterizer.get_parameter_labels()),))
+        # record observations
+        self._observations = np.zeros(shape=(self._num_generations, 
+                                            self._population_size, 
+                                            3,  # observation space
+                                            int(np.ceil(task_config.simulation_time/task_config.control_timestep))+1))
         # logging
         if self._logging:
             wandb.init(project="ruben_van_haecke_thesis", 
@@ -180,6 +185,7 @@ class OptimizerSimulation:
                                                             )
             last_obs = obs  # needed because the last observations are all zeroes 
             obs, reward, terminated, truncated, info = self._gym_env.step(self._actions[generation, episode:episode+self._num_envs, :, counter])
+            self._observations[generation, episode:episode+self._num_envs, :, counter] = obs['task/delta_orientation']
             done = np.all(np.logical_or(terminated, truncated))
             counter += 1
         return reward, last_obs
@@ -302,15 +308,14 @@ class OptimizerSimulation:
             )
     
     def plot_actions(self, 
-                     normalised_action: np.ndarray,
+                     normalised_controller_action: np.ndarray,
                      ) -> None:
-        assert self._record_actions, "Cannot visualize actions if they are not recorded"
         dm_env = self._task_config.environment(morphology=MJCMantaRayMorphology(specification=self._morphology_specification), wrap2gym=False)
         controller_spec = default_controller_dragrace_specification(action_spec=self._action_spec)
         self._parameterizer.parameterize_specification(specification=controller_spec)
         controller = self._controller(specification=controller_spec)
         self._parameterizer.parameter_space(specification=controller_spec,
-                                                    controller_action=normalised_action)
+                                                    controller_action=normalised_controller_action)
 
         minimum, maximum = self._action_spec.minimum.reshape(-1, 1), self._action_spec.maximum.reshape(-1, 1)   # shapes (n_neurons, 1)
         normalised_action = (controller.ask(observation=self.obs,
@@ -320,6 +325,44 @@ class OptimizerSimulation:
         scaled_action = minimum + normalised_action * (maximum - minimum)
         plt.plot(scaled_action[4, :], label="left fin", color="blue")
         plt.plot(scaled_action[6, :], label="right fin", color="orange")
+        plt.xlabel("time [seconds]")
+        plt.ylabel("output")
+        plt.legend()
+        plt.show()
+    
+    def plot_observations(self, 
+                     normalised_action: np.ndarray,
+                     ) -> None:
+        dm_env = self._task_config.environment(morphology=MJCMantaRayMorphology(specification=self._morphology_specification), wrap2gym=False)
+        controller_spec = default_controller_dragrace_specification(action_spec=self._action_spec)
+        self._parameterizer.parameterize_specification(specification=controller_spec)
+        controller = self._controller(specification=controller_spec)
+        self._parameterizer.parameter_space(specification=controller_spec,
+                                                    controller_action=normalised_action)
+
+        minimum, maximum = self._action_spec.minimum.reshape(-1, 1), self._action_spec.maximum.reshape(-1, 1)   # shapes (n_neurons, 1)
+        normalised_action = (controller.ask(observation=None,
+                                            duration=self._task_config.simulation_time,
+                                            sampling_period=self._task_config.physics_timestep
+                                            )+1)/2
+        scaled_action = minimum + normalised_action * (maximum - minimum)
+        observations = np.zeros(shape=(3, int(np.ceil(self._task_config.simulation_time/self._task_config.control_timestep))+1))
+
+        def policy(timestep: TimeStep) -> np.ndarray:
+            time = timestep.observation["task/time"][0]
+            observations[:, int(time/self._task_config.control_timestep)] = timestep.observation["task/delta_orientation"][0]
+            return scaled_action[:, int(time/self._task_config.control_timestep)]
+        viewer.launch(
+            environment_loader=dm_env, 
+            policy=policy
+            )
+        t = np.linspace(0, self._task_config.simulation_time, len(observations[0]))
+        plt.plot(t, observations[0], label="roll")
+        plt.plot(t, np.ones_like(t)*np.average(observations[0]), label="average roll")
+        plt.plot(t, observations[1], label="pitch")
+        plt.plot(t, np.ones_like(t)*np.average(observations[1]), label="average pitch")
+        plt.plot(t, observations[2], label="yawn")
+        plt.plot(t, np.ones_like(t)*np.average(observations[2]), label="average yawn")
         plt.xlabel("time [seconds]")
         plt.ylabel("output")
         plt.legend()
@@ -433,7 +476,7 @@ if __name__ == "__main__":
     map_elites = MapElites(archive)
 
     sim = OptimizerSimulation(
-        task_config=MoveConfig(simulation_time=3, 
+        task_config=MoveConfig(simulation_time=10, 
                          velocity=0.5,
                          reward_fn="(E + 200*Δx) * (Δx)",
                          task_mode="no_target",),

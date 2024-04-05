@@ -7,7 +7,7 @@ from typing import List
 from fprs.parameters import ContinuousParameter
 from fprs.specification_parameterizer import ControllerSpecificationParameterizer
 
-from controller.specification.default import default_controller_dragrace_specification
+from controller.specification.default import default_controller_specification
 from controller.specification.controller_specification import MantaRayCpgControllerSpecification
 
 

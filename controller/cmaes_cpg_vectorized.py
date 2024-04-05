@@ -2,7 +2,7 @@ from __future__ import annotations
 import sys
 sys.path.insert(0,'/media/ruben/data/documents/unief/thesis/thesis_manta_ray/')
 from controller.parameters import MantaRayControllerSpecificationParameterizer
-from controller.specification.default import default_controller_dragrace_specification
+from controller.specification.default import default_controller_specification
 
 import numpy as np
 from numpy import ndarray

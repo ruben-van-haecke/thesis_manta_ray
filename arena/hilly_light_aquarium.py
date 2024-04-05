@@ -45,6 +45,7 @@ class OceanArena(Arena):
             random_obstacles: bool = False,
             task_mode: str = "no_target",
             initial_position: np.ndarray = np.array([0, 0, 0]),
+            parkour: BezierParkour = None,
             ) -> None:
         """
         args:
@@ -68,6 +69,7 @@ class OceanArena(Arena):
         self._random_obstacles = random_obstacles
         self._task_mode = task_mode
         self._initial_position = initial_position
+        self._parkour = parkour
 
         self._configure_assets_directory()
         self._configure_cameras()
@@ -88,7 +90,7 @@ class OceanArena(Arena):
             self._grid_coordinates = radius * sphere  # x
             self._grid_coordinates = self._grid_coordinates[self._grid_coordinates[:, 0] < 0]
         elif self._task_mode == "parkour":  # parkour
-            self._obstacles_traject = self._build_parkour_line()
+            self._obstacles_traject = self._build_parkour_line(self._parkour)
         # self._build_obstacles()
         # self._build_current_arrow()
         self._configure_water()
@@ -97,10 +99,10 @@ class OceanArena(Arena):
     
     def _build_parkour_line(
             self,
-            parkour_file: str = "task/parkours/slight_curve.pkl"
+            parkour: BezierParkour,
             ) -> None:
         # get parkour
-        self._parkour = BezierParkour.load(parkour_file)
+        self._parkour = parkour
         # get points to build target
         points = self._parkour.bezier_curve(10)
         # build the line

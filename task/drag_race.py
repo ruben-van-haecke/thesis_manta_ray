@@ -61,6 +61,7 @@ class MoveConfig(MJCEnvironmentConfig):
             velocity: float = 0.5,
             reward_fn: str | None = None,
             task_mode: str = "parkour",
+            parkour: BezierParkour | None = None,
             ) -> None:
         super().__init__(
             task = Task, 
@@ -69,9 +70,12 @@ class MoveConfig(MJCEnvironmentConfig):
             simulation_time=simulation_time,
             camera_ids=[0, 1],
         )
+        if task_mode != 'parkour' and (parkour is not None):
+            raise ValueError("parkour may only be defined if task_mode is parkour")
         self._velocity = velocity
         self._reward_fn = reward_fn
         self._task_mode = task_mode
+        self._parkour = parkour
         self._location_target = None
         self._initial_position = np.array([0.0, 0.0, 15 * 0.1])
     
@@ -97,6 +101,10 @@ class MoveConfig(MJCEnvironmentConfig):
     @property
     def task_mode(self) -> str:
         return self._task_mode
+    
+    @property
+    def parkour(self) -> BezierParkour | None:
+        return self._parkour
     
     @property
     def target_location(self):
@@ -139,8 +147,12 @@ class Task(composer.Task):
         self._sensor_actuatorfrc = [sensor for sensor in self._morphology.mjcf_model.sensor.actuatorfrc]
 
         self._accumulated_energy = 0
+        self._accumulated_distance = 0
         time_window = 2 # number of seconds to calculate the delta orientation
-        self._previous_orientations = np.zeros((4, int(time_window/self._config.control_timestep)))
+        # self._previous_orientations = np.zeros((4, int(time_window/self._config.control_timestep)))
+        self._previous_position = self._initial_position
+        self._angular_velocity_sum = np.zeros(3)
+        self._angular_velocity_num = 0
         self._orientation_iterator = 0
     
     @property
@@ -154,7 +166,9 @@ class Task(composer.Task):
         return self._task_observables
     
     def _build_arena(self) -> OceanArena:
-        arena = OceanArena(task_mode=self._config.task_mode, initial_position=self._config.initial_position)
+        arena = OceanArena(task_mode=self._config.task_mode, 
+                           initial_position=self._config.initial_position,
+                           parkour=self._config.parkour)
         return arena
     
     @staticmethod
@@ -169,6 +183,15 @@ class Task(composer.Task):
                 position
                 )[:3]
     
+    def _get_distance_travelled(
+            self,
+            physics: mjcf.Physics
+            ) -> float:
+        morphology_position = self._get_entity_xyz_position(entity=self._morphology, physics=physics)
+        self._accumulated_distance += np.linalg.norm(morphology_position-self._previous_position)
+        self._previous_position = morphology_position
+        return self._accumulated_distance
+
     def _get_distance_from_initial_position(
             self,
             physics: mjcf.Physics
@@ -224,15 +247,22 @@ class Task(composer.Task):
         orientation = self._get_orientation_entity(entity=self._morphology, physics=physics)
         return orientation
     
+    def _get_position(self,
+                      physics: mjcf.Physics,
+                      ) -> float:
+        return self._get_entity_xyz_position(entity=self._morphology, physics=physics)
+    
     def _get_delta_orientation(self, 
                               physics: mjcf.Physics,
                               ) -> float:
-        pose = self._morphology.get_pose(physics=physics) # (position, quaternion) with quaternion [w, x, y, z]
-        self._previous_orientations[:, self._orientation_iterator] = pose[1]
-        delta_orientation_quat = self._previous_orientations[:, self._orientation_iterator] - self._previous_orientations[:, (self._orientation_iterator+1)%self._previous_orientations.shape[1]]
-        delta_orientation_eul = quat2euler(delta_orientation_quat)
-        self._orientation_iterator = (self._orientation_iterator+1) % self._previous_orientations.shape[1]
-        return delta_orientation_eul
+        velocity = self._morphology.get_velocity(physics=physics) # (position, quaternion) with quaternion [w, x, y, z]
+        self._angular_velocity_sum += velocity[1]
+        self._angular_velocity_num += 1
+        return self._angular_velocity_sum/self._angular_velocity_num
+
+        # quat = pose[1]
+        # quat_per_sec = quat/self._config.simulation_time
+        # return quat2euler(quat_per_sec)
         
     def _get_abs_forces_sensors(self,
                                 physics: mjcf.Physics,
@@ -265,6 +295,9 @@ class Task(composer.Task):
         task_observables["task/orientation"] = ConfinedObservable(
                 low=-np.pi, high=np.pi, shape=[3], raw_observation_callable=self._get_orientation
                 )
+        task_observables["task/position"] = ConfinedObservable(
+                low=-np.inf, high=np.inf, shape=[3], raw_observation_callable=self._get_position
+                )
         task_observables["task/delta_orientation"] = ConfinedObservable(
                 low=-np.pi, high=np.pi, shape=[3], raw_observation_callable=self._get_delta_orientation
                 )
@@ -290,7 +323,7 @@ class Task(composer.Task):
         assert self._config.reward_fn in Task.reward_functions, f"reward_fn not recognized, choose from {Task.reward_functions}"
 
         v = self._config.velocity
-        current_distance_from_initial_position = self._get_distance_from_initial_position(physics=physics)
+        current_distance_from_initial_position = self._get_distance_travelled(physics=physics)
         velocity_penalty = np.abs(v*physics.time() - current_distance_from_initial_position)
 
         if self._config.reward_fn == "Δx" or self._config.reward_fn is None:
@@ -321,6 +354,7 @@ class Task(composer.Task):
             ) -> None:
         self._initialize_morphology_pose(physics)
         self._accumulated_energy = 0
+        self._accumulated_distance = 0
         if self._config.task_mode == "random_target":
             self._arena.set_target_location(physics=physics, position=self._config.target_location)
         elif self._config.task_mode == "parkour":

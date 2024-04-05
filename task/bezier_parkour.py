@@ -77,7 +77,7 @@ class BezierParkour:
         Get the distance to the closest point on the parkour, given a position. 
         Followed by the distance from the start of the parkour.
         """
-        distance, point = min(self._lut.items(), key=lambda dist, point: np.linalg.norm(point - position))
+        distance, point = min(self._lut.items(), key=lambda pair: np.linalg.norm(pair[1] - position))    # pair = (distance, point)
         return np.linalg.norm(position - point), distance
     
     def get_rotation(self, distance: float) -> np.ndarray:
@@ -87,7 +87,9 @@ class BezierParkour:
         second_closest_distance = min(self._lut.keys(), key=lambda dist: dist - closest_distance if dist - closest_distance > 0 else np.inf)
         # Compute the direction vector between the two points
         direction = self._lut[second_closest_distance] - self._lut[closest_distance]
-        return Rotation.align_vectors(direction, np.array([-1, 0, 0])).as_euler('xyz')   # transforms the negative x-axis to the direction vector
+        direction = direction.reshape((1, 3))
+        rot, rssd = Rotation.align_vectors(direction, np.array([-1, 0, 0]).reshape((1, 3)))
+        return rot.as_euler('xyz')   # transforms the negative x-axis to the direction vector
     
     def _create_lookup_table(self, num_points=1000):
         lookup_table = dict()
