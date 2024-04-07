@@ -16,7 +16,7 @@ from thesis_manta_ray.controller.quality_diversity import Solution, Archive, Map
 from thesis_manta_ray.controller.cmaes_cpg_vectorized import CPG
 from thesis_manta_ray.controller.parameters import MantaRayControllerSpecificationParameterizer
 from thesis_manta_ray.controller.specification.controller_specification import MantaRayCpgControllerSpecification
-from thesis_manta_ray.controller.specification.default import default_controller_dragrace_specification
+from thesis_manta_ray.controller.specification.default import default_controller_specification
 from thesis_manta_ray.morphology.morphology import MJCMantaRayMorphology
 
 from thesis_manta_ray.morphology.specification.default import default_morphology_specification
@@ -74,7 +74,7 @@ class OptimizerSimulation:
         self._num_envs = num_envs
         self._logging = logging
 
-        self._controller_specs = [default_controller_dragrace_specification(action_spec=action_spec) for _ in range(self._num_envs)]
+        self._controller_specs = [default_controller_specification(action_spec=action_spec) for _ in range(self._num_envs)]
         for controller_spec in self._controller_specs:
             self._parameterizer.parameterize_specification(specification=controller_spec)
         self._morph_specs = [default_morphology_specification() for _ in range(self._num_envs)]
@@ -136,6 +136,9 @@ class OptimizerSimulation:
                            obs: ObsType,
                            env_id: int,
                            ):
+        """
+        returns the scaled action for 1 environment, shape ()
+        """
         minimum, maximum = self._action_spec.minimum.reshape(-1, 1), self._action_spec.maximum.reshape(-1, 1)   # shapes (n_neurons, 1)
         if self._skip_inner_optimalization:
             normalised_action = (self._controllers[env_id].ask(observation=obs,
@@ -153,38 +156,39 @@ class OptimizerSimulation:
 
         elif self._record_actions and not self._skip_inner_optimalization:
             self._actions[generation, episode, :, counter] = scaled_action
+        return scaled_action
 
     def run_episode_parallel(self,
                     generation: int,
                     episode: int,
                     ) -> List[float]:
         """
-        returns the reward and observations of the episode
+        returns the reward and last observations of the episode
         """
         done = False
         obs, info = self._gym_env.reset()
         self.obs = obs
         counter = 0
+        scaled_actions_env = np.zeros(shape=(self._num_envs, 8, int(np.ceil(self._task_config.simulation_time/self._task_config.control_timestep))+1))
         while not done:
-            scaled_action = np.zeros(shape=(self._num_envs, 8))
             for env_id in range(self._num_envs):
-                # scaled_action[env_id, :] = 
-                if not self._skip_inner_optimalization:
-                    self.run_episode_single(generation=generation,
-                                                            episode=episode+env_id,
-                                                            counter=counter,
-                                                            obs=obs,
-                                                            env_id=env_id,
-                                                            )
+                
+                if not self._skip_inner_optimalization: #TODO: change
+                    scaled_actions_env[env_id, :, counter] =  self.run_episode_single(generation=generation,
+                                                                                    episode=episode+env_id,
+                                                                                    counter=counter,
+                                                                                    obs=obs,
+                                                                                    env_id=env_id,
+                                                                                    )
                 elif obs["task/time"][0][0] == 0:
-                    self.run_episode_single(generation=generation,
-                                                            episode=episode+env_id,
-                                                            counter=counter,
-                                                            obs=obs,
-                                                            env_id=env_id,
-                                                            )
+                    scaled_actions_env[env_id, :, :] = self.run_episode_single(generation=generation,
+                                                                                    episode=episode+env_id,
+                                                                                    counter=counter,
+                                                                                    obs=obs,
+                                                                                    env_id=env_id,
+                                                                                    )
             last_obs = obs  # needed because the last observations are all zeroes 
-            obs, reward, terminated, truncated, info = self._gym_env.step(self._actions[generation, episode:episode+self._num_envs, :, counter])
+            obs, reward, terminated, truncated, info = self._gym_env.step(scaled_actions_env[:, :, counter])
             self._observations[generation, episode:episode+self._num_envs, :, counter] = obs['task/delta_orientation']
             done = np.all(np.logical_or(terminated, truncated))
             counter += 1
@@ -219,7 +223,8 @@ class OptimizerSimulation:
 
             for env_id in range(self._num_envs):
                 self._outer_rewards[generation, agent+env_id] = reward[env_id]
-                self._control_actions[generation, agent+env_id, :] = outer_action[env_id]
+                if self._record_actions:
+                    self._control_actions[generation, agent+env_id, :] = outer_action[env_id]
         self._outer_optimalization.tell(solutions)
     
 
@@ -286,7 +291,7 @@ class OptimizerSimulation:
                ) -> None:
         assert self._record_actions, "Cannot visualize actions if they are not recorded"
         dm_env = self._task_config.environment(morphology=MJCMantaRayMorphology(specification=self._morphology_specification), wrap2gym=False)
-        controller_spec = default_controller_dragrace_specification(action_spec=self._action_spec)
+        controller_spec = default_controller_specification(action_spec=self._action_spec)
         self._parameterizer.parameterize_specification(specification=controller_spec)
         controller = self._controller(specification=controller_spec)
         self._parameterizer.parameter_space(specification=controller_spec,
@@ -311,7 +316,7 @@ class OptimizerSimulation:
                      normalised_controller_action: np.ndarray,
                      ) -> None:
         dm_env = self._task_config.environment(morphology=MJCMantaRayMorphology(specification=self._morphology_specification), wrap2gym=False)
-        controller_spec = default_controller_dragrace_specification(action_spec=self._action_spec)
+        controller_spec = default_controller_specification(action_spec=self._action_spec)
         self._parameterizer.parameterize_specification(specification=controller_spec)
         controller = self._controller(specification=controller_spec)
         self._parameterizer.parameter_space(specification=controller_spec,
@@ -334,7 +339,7 @@ class OptimizerSimulation:
                      normalised_action: np.ndarray,
                      ) -> None:
         dm_env = self._task_config.environment(morphology=MJCMantaRayMorphology(specification=self._morphology_specification), wrap2gym=False)
-        controller_spec = default_controller_dragrace_specification(action_spec=self._action_spec)
+        controller_spec = default_controller_specification(action_spec=self._action_spec)
         self._parameterizer.parameterize_specification(specification=controller_spec)
         controller = self._controller(specification=controller_spec)
         self._parameterizer.parameter_space(specification=controller_spec,
@@ -346,7 +351,7 @@ class OptimizerSimulation:
                                             sampling_period=self._task_config.physics_timestep
                                             )+1)/2
         scaled_action = minimum + normalised_action * (maximum - minimum)
-        observations = np.zeros(shape=(3, int(np.ceil(self._task_config.simulation_time/self._task_config.control_timestep))+1))
+        observations = np.zeros(shape=(3, int(np.ceil(self._task_config.simulation_time/self._task_config.control_timestep))))
 
         def policy(timestep: TimeStep) -> np.ndarray:
             time = timestep.observation["task/time"][0]
@@ -357,12 +362,12 @@ class OptimizerSimulation:
             policy=policy
             )
         t = np.linspace(0, self._task_config.simulation_time, len(observations[0]))
-        plt.plot(t, observations[0], label="roll")
-        plt.plot(t, np.ones_like(t)*np.average(observations[0]), label="average roll")
-        plt.plot(t, observations[1], label="pitch")
-        plt.plot(t, np.ones_like(t)*np.average(observations[1]), label="average pitch")
-        plt.plot(t, observations[2], label="yawn")
-        plt.plot(t, np.ones_like(t)*np.average(observations[2]), label="average yawn")
+        plt.plot(t, observations[0], label="roll", color="blue")
+        plt.plot(t, np.ones_like(t)*np.average(observations[0]), label="average roll", color="blue")
+        plt.plot(t, observations[1], label="pitch", color="green")
+        plt.plot(t, np.ones_like(t)*np.average(observations[1]), label="average pitch", color="green")
+        plt.plot(t, observations[2], label="yawn", color="red")
+        plt.plot(t, np.ones_like(t)*np.average(observations[2]), label="average yawn", color="red")
         plt.xlabel("time [seconds]")
         plt.ylabel("output")
         plt.legend()
@@ -422,16 +427,21 @@ if __name__ == "__main__":
     #     )
     # parameterizer.parameterize_specification(specification=morphology_specification)
     
+    # task
+    task_config = MoveConfig(simulation_time=6, 
+                         velocity=0.5,
+                         reward_fn="(E + 200*Δx) * (Δx)",
+                         task_mode="no_target",)
 
     # controller
-    simple_env = MoveConfig().environment(morphology=MJCMantaRayMorphology(specification=morphology_specification), # TODO: remove this, ask Dries
+    simple_env = task_config.environment(morphology=MJCMantaRayMorphology(specification=morphology_specification), # TODO: remove this, ask Dries
                                                 wrap2gym=False)
     observation_spec = simple_env.observation_spec()
     action_spec = simple_env.action_spec()
     names = action_spec.name.split('\t')
     index_left_pectoral_fin_x = names.index('morphology/left_pectoral_fin_actuator_x')
     index_right_pectoral_fin_x = names.index('morphology/right_pectoral_fin_actuator_x')
-    controller_specification = default_controller_dragrace_specification(action_spec=action_spec)
+    controller_specification = default_controller_specification(action_spec=action_spec)
     controller_parameterizer = MantaRayControllerSpecificationParameterizer(
         amplitude_fin_out_plane_range=(0, 1),
         frequency_fin_out_plane_range=(0, 1),
@@ -462,8 +472,8 @@ if __name__ == "__main__":
     denomenator = 2
     # parameters: ['fin_amplitude_left', 'fin_offset_left', 'frequency_left', 'phase_bias_left', 'fin_amplitude_right', 'fin_offset_right', 'frequency_right', 'phase_bias_right']
     archive = Archive(parameter_bounds=[(0, 1) for _ in range(len(controller_parameterizer.get_parameter_labels()))],
-                      feature_bounds=[(-np.pi/denomenator, np.pi/denomenator), (-np.pi/2/denomenator, np.pi/2/denomenator), (-np.pi/denomenator, np.pi/denomenator)], 
-                      resolutions=[8, 8, 8],
+                      feature_bounds=[(-0.7, 0.7), (-0.7, 0.7), (-0.35, 0.35)], 
+                      resolutions=[12, 12, 6],
                       parameter_names=controller_parameterizer.get_parameter_labels(), 
                       feature_names=["roll", "pitch", "yawn"],
                       symmetry = [('phase_bias_right', 'phase_bias_left'), 
@@ -476,18 +486,15 @@ if __name__ == "__main__":
     map_elites = MapElites(archive)
 
     sim = OptimizerSimulation(
-        task_config=MoveConfig(simulation_time=10, 
-                         velocity=0.5,
-                         reward_fn="(E + 200*Δx) * (Δx)",
-                         task_mode="no_target",),
+        task_config=task_config,
         robot_specification=robot_spec,
         parameterizer=controller_parameterizer,
         population_size=10,  # make sure this is a multiple of num_envs
-        num_generations=4,
+        num_generations=2,
         outer_optimalization=map_elites,#cma,
         controller=CPG,
         skip_inner_optimalization=True,
-        record_actions=True,
+        record_actions=False,#True,
         action_spec=action_spec,
         num_envs=10,
         logging=False,

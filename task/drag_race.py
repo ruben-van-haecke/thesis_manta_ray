@@ -258,11 +258,8 @@ class Task(composer.Task):
         velocity = self._morphology.get_velocity(physics=physics) # (position, quaternion) with quaternion [w, x, y, z]
         self._angular_velocity_sum += velocity[1]
         self._angular_velocity_num += 1
+        # print(f"angular_velocity: {self._angular_velocity_sum/self._angular_velocity_num}")
         return self._angular_velocity_sum/self._angular_velocity_num
-
-        # quat = pose[1]
-        # quat_per_sec = quat/self._config.simulation_time
-        # return quat2euler(quat_per_sec)
         
     def _get_abs_forces_sensors(self,
                                 physics: mjcf.Physics,

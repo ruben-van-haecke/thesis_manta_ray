@@ -1,7 +1,7 @@
 import numpy as np
 from controller.cmaes_cpg_vectorized import CPG
 from controller.parameters import MantaRayControllerSpecificationParameterizer
-from controller.specification.default import default_controller_dragrace_specification
+from controller.specification.default import default_controller_specification
 from evolution_simulation import OptimizerSimulation
 from morphology.morphology import MJCMantaRayMorphology
 from morphology.specification.default import default_morphology_specification
@@ -17,15 +17,23 @@ from scipy.spatial.transform import Rotation
 morphology_specification = default_morphology_specification()
 morphology = MJCMantaRayMorphology(specification=morphology_specification)
 
+# task
+simulation_time = 6
+velocity = 0.5
+config = MoveConfig(simulation_time=simulation_time, 
+                        velocity=velocity,
+                        reward_fn="(E + 200*Δx) * (Δx)",
+                        task_mode="random_target")
+
 # controller
-simple_env = MoveConfig().environment(morphology=MJCMantaRayMorphology(specification=morphology_specification), # TODO: remove this, ask Dries
+simple_env = config.environment(morphology=MJCMantaRayMorphology(specification=morphology_specification), # TODO: remove this, ask Dries
                                             wrap2gym=False)
 observation_spec = simple_env.observation_spec()
 action_spec = simple_env.action_spec()
 names = action_spec.name.split('\t')
 index_left_pectoral_fin_x = names.index('morphology/left_pectoral_fin_actuator_x')
 index_right_pectoral_fin_x = names.index('morphology/right_pectoral_fin_actuator_x')
-controller_specification = default_controller_dragrace_specification(action_spec=action_spec)
+controller_specification = default_controller_specification(action_spec=action_spec)
 controller_parameterizer = MantaRayControllerSpecificationParameterizer(
     amplitude_fin_out_plane_range=(0, 1),
     frequency_fin_out_plane_range=(0, 1),
@@ -40,31 +48,11 @@ cpg = CPG(specification=controller_specification,
 robot_spec = RobotSpecification(morphology_specification=morphology_specification,
                                 controller_specification=controller_specification)
 
-# morphology_space = parameterizer.get_target_parameters(specification=morphology_specification)
-bounds = np.zeros(shape=(len(controller_parameterizer.get_parameter_labels()), 2))
-bounds[:, 1] = 1
-cma = CMA(mean=np.random.uniform(low=0,
-                                    high=1,
-                                    size=len(controller_parameterizer.get_parameter_labels())),
-            sigma=0.05,
-            bounds=bounds,
-            population_size=10,    # has to be more than 1
-            lr_adapt=True,
-            seed=42
-            )
-
 archive: Archive = Archive.load("experiments/qd_v0.5_differential/sim_objects/archive.pkl")
 map_elites = MapElites(archive)
-simulation_time = 10
-velocity = 0.5
-config = MoveConfig(simulation_time=simulation_time, 
-                        velocity=velocity,
-                        reward_fn="(E + 200*Δx) * (Δx)",
-                        task_mode="random_target")
-
 
 if True:    # verify the point
-    sol = archive.solutions[(4, 3, 5)][0]
+    sol = archive.solutions[(6, 6, 3)][0]
     pitch, yawn = sol.behaviour[[1, 2]]
     parameters = sol.parameters
 else:   # try a chosen point
@@ -105,3 +93,4 @@ sim = OptimizerSimulation(
 # print(f"parameters: {parameters}")
 # sim.viewer(parameters)
 sim.viewer(parameters)
+sim.plot_observations(parameters)

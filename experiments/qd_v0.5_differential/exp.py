@@ -5,10 +5,11 @@ import shutil
 from thesis_manta_ray.controller.quality_diversity import Archive, MapElites
 from thesis_manta_ray.morphology.specification.default import default_morphology_specification
 from thesis_manta_ray.morphology.morphology import MJCMantaRayMorphology
-from thesis_manta_ray.controller.specification.default import default_controller_dragrace_specification 
+from thesis_manta_ray.controller.specification.default import default_controller_specification 
 from thesis_manta_ray.controller.specification.controller_specification import MantaRayCpgControllerSpecification
 from thesis_manta_ray.controller.parameters import MantaRayControllerSpecificationParameterizer
 from thesis_manta_ray.controller.cmaes_cpg_vectorized import CPG
+from thesis_manta_ray.task.bezier_parkour import BezierParkour
 
 from thesis_manta_ray.task.drag_race import MoveConfig, Task
 from fprs.specification import RobotSpecification
@@ -38,14 +39,19 @@ if __name__ == "__main__":
     morphology = MJCMantaRayMorphology(specification=morphology_specification)    
 
     # controller
-    simple_env = MoveConfig().environment(morphology=MJCMantaRayMorphology(specification=morphology_specification), # TODO: remove this, ask Dries
+    # parkour = BezierParkour.load("task/parkours/slight_curve.pkl")
+    task_config = MoveConfig(simulation_time=6, 
+                         velocity=0.5,
+                         reward_fn="(E + 200*Δx) * (Δx)",
+                         task_mode="no_target",)
+    simple_env = task_config.environment(morphology=MJCMantaRayMorphology(specification=morphology_specification), # TODO: remove this, ask Dries
                                                 wrap2gym=False)
     observation_spec = simple_env.observation_spec()
     action_spec = simple_env.action_spec()
     names = action_spec.name.split('\t')
     index_left_pectoral_fin_x = names.index('morphology/left_pectoral_fin_actuator_x')
     index_right_pectoral_fin_x = names.index('morphology/right_pectoral_fin_actuator_x')
-    controller_specification = default_controller_dragrace_specification(action_spec=action_spec)
+    controller_specification = default_controller_specification(action_spec=action_spec)
     controller_parameterizer = MantaRayControllerSpecificationParameterizer(
         amplitude_fin_out_plane_range=(0, 1),
         frequency_fin_out_plane_range=(0, 1),
@@ -65,10 +71,13 @@ if __name__ == "__main__":
     bounds = np.zeros(shape=(len(controller_parameterizer.get_parameter_labels()), 2))
     bounds[:, 1] = 1
     denomenator = 4
+    roll = 1.
+    pitch = 0.8
+    yawn = np.pi
     # parameters: ['fin_amplitude_left', 'fin_offset_left', 'frequency_left', 'phase_bias_left', 'fin_amplitude_right', 'fin_offset_right', 'frequency_right', 'phase_bias_right']
     archive = Archive(parameter_bounds=[(0, 1) for _ in range(len(controller_parameterizer.get_parameter_labels()))],
-                      feature_bounds=[(-0.6, 0.6), (-0.6, 0.6), (-0.3, 0.3)], 
-                      resolutions=[10, 10, 5],
+                      feature_bounds=[(-roll, roll), (-pitch, pitch), (-np.pi/2/denomenator, np.pi/2/denomenator)], 
+                      resolutions=[12, 12, 8],
                       parameter_names=controller_parameterizer.get_parameter_labels(), 
                       feature_names=["roll", "pitch", "yawn"],
                       symmetry = [('phase_bias_right', 'phase_bias_left'), 
@@ -81,18 +90,15 @@ if __name__ == "__main__":
     map_elites = MapElites(archive, archive_file="experiments/qd_v0.5_differential/sim_objects/archive.pkl")
 
     sim = OptimizerSimulation(
-        task_config=MoveConfig(simulation_time=10, 
-                         velocity=0.5,
-                         reward_fn="(E + 200*Δx) * (Δx)",
-                         task_mode="no_target",),
+        task_config=task_config,
         robot_specification=robot_spec,
         parameterizer=controller_parameterizer,
         population_size=10,  # make sure this is a multiple of num_envs
-        num_generations=500,
-        outer_optimalization=map_elites,#cma,
+        num_generations=2000,
+        outer_optimalization=map_elites,
         controller=CPG,
         skip_inner_optimalization=True,
-        record_actions=True,
+        record_actions=False,#True,
         action_spec=action_spec,
         num_envs=10,
         logging=False,
