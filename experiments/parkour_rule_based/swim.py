@@ -26,11 +26,12 @@ morphology = MJCMantaRayMorphology(specification=morphology_specification)
 simulation_time = 10
 velocity = 0.5
 parkour = BezierParkour.load("task/parkours/slight_curve.pkl")
-config = MoveConfig(simulation_time=simulation_time, 
-                        velocity=velocity,
-                        reward_fn="(E + 200*Δx) * (Δx)",
-                        task_mode="parkour",
-                        parkour=parkour)
+config = MoveConfig(control_substeps=4,
+                    simulation_time=simulation_time, 
+                    velocity=velocity,
+                    reward_fn="(E + 200*Δx) * (Δx)",
+                    task_mode="parkour",
+                    parkour=parkour)
 dm_env = config.environment(morphology=MJCMantaRayMorphology(specification=morphology_specification), wrap2gym=False)
 observation_spec = dm_env.observation_spec()
 action_spec = dm_env.action_spec()
@@ -41,9 +42,6 @@ index_right_pectoral_fin_x = names.index('morphology/right_pectoral_fin_actuator
 # controller
 controller_specification = default_controller_specification(action_spec=action_spec)
 controller_parameterizer = MantaRayControllerSpecificationParameterizer(
-    amplitude_fin_out_plane_range=(0, 1),
-    frequency_fin_out_plane_range=(0, 1),
-    offset_fin_out_plane_range=(0, np.pi),
 )
 controller_parameterizer.parameterize_specification(specification=controller_specification)
 cpg = CPG(specification=controller_specification,
@@ -66,10 +64,15 @@ def policy(timestep: TimeStep) -> np.ndarray:
     obs = timestep.observation
     # update the controller modulation
     scaled_action = rule_based_layer.select_parameters(current_angular_positions=obs["task/orientation"][0],
+                                                       current_xyz_velocities=obs["task/xyz_velocity"][0],
                                                        current_position=obs["task/position"][0],
                                                        parkour=parkour)
-    controller_parameterizer.parameter_space(specification=controller_specification,
-                                             controller_action=scaled_action,)
+    # if time < 5:
+    #     scaled_action = archive.solutions[(6, 11, 3)][0].parameters
+    # else:
+    #     scaled_action = archive.solutions[(6, 1, 3)][0].parameters
+    # controller_parameterizer.parameter_space(specification=controller_specification,
+    #                                          controller_action=scaled_action,)
 
     # actuation
     normalised_action = (cpg.ask(observation=timestep.observation,

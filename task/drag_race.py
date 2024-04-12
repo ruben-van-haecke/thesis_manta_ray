@@ -252,13 +252,27 @@ class Task(composer.Task):
                       ) -> float:
         return self._get_entity_xyz_position(entity=self._morphology, physics=physics)
     
-    def _get_delta_orientation(self, 
+    def _get_xyz_velocity(self,
+                          physics: mjcf.Physics,
+                        ) -> float:
+        lin_vel, angular_velocity = self._morphology.get_velocity(physics=physics)
+        return lin_vel
+    
+    def _get_angular_velocity(self,
                               physics: mjcf.Physics,
                               ) -> float:
-        velocity = self._morphology.get_velocity(physics=physics) # (position, quaternion) with quaternion [w, x, y, z]
-        self._angular_velocity_sum += velocity[1]
+        angular_velocity = np.array(self._morphology.get_velocity(physics=physics)[1])
+        return angular_velocity
+    
+    def _get_avg_angular_velocity(self, 
+                              physics: mjcf.Physics,
+                              ) -> float:
+        # if physics.time() < 2:
+        #     return np.nan
+        lin_vel, angular_velocity = self._morphology.get_velocity(physics=physics) # (position, quaternion) with quaternion [w, x, y, z]
+        angular_vel = np.array(angular_velocity)
+        self._angular_velocity_sum += angular_vel
         self._angular_velocity_num += 1
-        # print(f"angular_velocity: {self._angular_velocity_sum/self._angular_velocity_num}")
         return self._angular_velocity_sum/self._angular_velocity_num
         
     def _get_abs_forces_sensors(self,
@@ -295,8 +309,17 @@ class Task(composer.Task):
         task_observables["task/position"] = ConfinedObservable(
                 low=-np.inf, high=np.inf, shape=[3], raw_observation_callable=self._get_position
                 )
-        task_observables["task/delta_orientation"] = ConfinedObservable(
-                low=-np.pi, high=np.pi, shape=[3], raw_observation_callable=self._get_delta_orientation
+        task_observables["task/xyz_velocity"] = ConfinedObservable(
+                low=-np.inf, high=np.inf, shape=[3], raw_observation_callable=self._get_xyz_velocity
+                )
+        task_observables["task/angular_velocity"] = ConfinedObservable(
+                low=-np.inf, high=np.inf, shape=[3], raw_observation_callable=self._get_angular_velocity
+                )
+        task_observables["task/avg_angular_velocity"] = ConfinedObservable(
+                low=-np.inf, high=np.inf, shape=[3], raw_observation_callable=self._get_avg_angular_velocity
+                )
+        task_observables["task/accumulated_energy"] = ConfinedObservable(
+                low=0, high=np.inf, shape=[1], raw_observation_callable=self._get_accumulated_energy_sensors
                 )
         # task_observables["task/xy-distance-to-target"] = ConfinedObservable(
         #         low=0, high=np.inf, shape=[1], raw_observation_callable=self._get_xy_distance_to_target
@@ -352,6 +375,8 @@ class Task(composer.Task):
         self._initialize_morphology_pose(physics)
         self._accumulated_energy = 0
         self._accumulated_distance = 0
+        self._angular_velocity_sum = 0
+        self._angular_velocity_num = 0
         if self._config.task_mode == "random_target":
             self._arena.set_target_location(physics=physics, position=self._config.target_location)
         elif self._config.task_mode == "parkour":

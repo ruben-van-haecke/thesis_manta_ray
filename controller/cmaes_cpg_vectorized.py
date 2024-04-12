@@ -81,7 +81,6 @@ phase biases:
             an (N, T) -dimensional vector, where N is the number of neurons, T is the number of time steps
         """
         # Define the differential equations that govern the dynamics
-        self.b = True
         def dynamics(t, y):
             """
             args:
@@ -89,7 +88,6 @@ phase biases:
                 y: state, np.ndarray [phi, r, x, r_dot, x_dot]
                 phi, r, x: phase, amplitude, and offset of the oscillator
             """
-            global b
             phi = y[0: self._num_neurons]
             r = y[1*self._num_neurons: 2*self._num_neurons]
             x = y[2*self._num_neurons: 3*self._num_neurons]
@@ -164,7 +162,7 @@ if __name__ == "__main__":
     export_with_assets(mjcf_model=dm_env.task.root_entity.mjcf_model, out_dir="morphology/manta_ray.xml")
 
     # controller
-    controller_specification = default_controller_dragrace_specification()
+    controller_specification = default_controller_specification()
     action_spec = dm_env.action_spec()
     names = action_spec.name.split('\t')
     index_left_pectoral_fin_x = names.index('morphology/left_pectoral_fin_actuator_x')

@@ -20,20 +20,8 @@ class MantaRayControllerSpecificationParameterizer(ControllerSpecificationParame
     right_fin_z = 5
     left_fin_x = 6
     left_fin_z = 7
-    def __init__(
-            self,
-            amplitude_fin_out_plane_range: tuple[float, float],
-            frequency_fin_out_plane_range: tuple[float, float],
-            offset_fin_out_plane_range: tuple[float, float],
-            ) -> None:
+    def __init__(self,) -> None:
         super().__init__()
-        self._amplitude_fin_out_plane_l_range = amplitude_fin_out_plane_range
-        self._frequency_fin_out_plane_l_range = frequency_fin_out_plane_range
-        self._offset_fin_out_plane_l_range = offset_fin_out_plane_range
-        self._amplitude_fin_out_plane_r_range = amplitude_fin_out_plane_range
-        self._frequency_fin_out_plane_r_range = frequency_fin_out_plane_range
-        self._offset_fin_out_plane_r_range = offset_fin_out_plane_range
-
 
     def parameterize_specification(
             self,
@@ -90,7 +78,7 @@ class MantaRayControllerSpecificationParameterizer(ControllerSpecificationParame
         offset = controller_action[[1, 5]]
         frequency = controller_action[[2, 6]]
         phase_bias = controller_action[[3, 7]]
-        phase_bias[1] = -phase_bias[0]  # loops should sum to a multiple of 2*pi, in this case sum to 0
+        phase_bias[1] = 1-phase_bias[0]  # loops should sum to a multiple of 2*pi, in this case sum to 0
         
         # updating specification
         specification.x.value = specification.x.low + offset * (specification.x.high - specification.x.low)
@@ -108,7 +96,7 @@ class MantaRayControllerSpecificationParameterizer(ControllerSpecificationParame
 
 
 if __name__ == '__main__':
-    controller_specification = default_controller_dragrace_specification()
+    controller_specification = default_controller_specification()
 
     parameterizer = MantaRayControllerSpecificationParameterizer(
         amplitude_fin_out_plane_range=(0, 1),

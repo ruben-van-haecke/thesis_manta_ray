@@ -34,11 +34,7 @@ names = action_spec.name.split('\t')
 index_left_pectoral_fin_x = names.index('morphology/left_pectoral_fin_actuator_x')
 index_right_pectoral_fin_x = names.index('morphology/right_pectoral_fin_actuator_x')
 controller_specification = default_controller_specification(action_spec=action_spec)
-controller_parameterizer = MantaRayControllerSpecificationParameterizer(
-    amplitude_fin_out_plane_range=(0, 1),
-    frequency_fin_out_plane_range=(0, 1),
-    offset_fin_out_plane_range=(0, np.pi),
-)
+controller_parameterizer = MantaRayControllerSpecificationParameterizer()
 controller_parameterizer.parameterize_specification(specification=controller_specification)
 cpg = CPG(specification=controller_specification,
             low=-1,
@@ -52,13 +48,17 @@ archive: Archive = Archive.load("experiments/qd_v0.5_differential/sim_objects/ar
 map_elites = MapElites(archive)
 
 if True:    # verify the point
-    sol = archive.solutions[(6, 6, 3)][0]
-    pitch, yawn = sol.behaviour[[1, 2]]
+    sol = archive.solutions[(11, 11, 0)][0]
+    roll, pitch, yaw = sol.behaviour
+    print(f"roll: {roll}, pitch: {pitch}, yaw: {yaw}")
     parameters = sol.parameters
 else:   # try a chosen point
+    roll = np.pi/4
     pitch = 0
-    yawn = np.pi/4
-    parameters = archive.interpolate(np.array([0, pitch, yawn]), k=5)
+    yaw = 0
+    parameters = archive.interpolate(np.array([roll, pitch, yaw]).reshape(1, -1))
+    parameters = np.clip(parameters, 0, 1)
+
 
 # pitch = np.pi/4
 # yawn = np.pi/4
@@ -68,7 +68,7 @@ target_location = np.array([1, 0, 0])*simulation_time*velocity
 # # pitch
 # target_location[[0, 2]] = np.array([np.cos(pitch), np.sin(pitch), -np.sin(pitch), np.cos(pitch)]).reshape(2, 2) @ target_location[[0, 2]]
 # config.target_location = target_location + config.initial_position
-r = Rotation.from_euler('xyz', [0, -pitch, yawn+np.pi])
+r = Rotation.from_euler('xyz', [0, -pitch, yaw+np.pi])
 config.target_location = r.apply(target_location) + config.initial_position
 
 
@@ -92,5 +92,11 @@ sim = OptimizerSimulation(
 # parameters = a.interpolate(np.array([0, pitch, yawn]), k=10)
 # print(f"parameters: {parameters}")
 # sim.viewer(parameters)
+# sim.check_archive(archive)
+sim.plot_observations(parameters,
+                      observation_name="task/orientation")
+sim.plot_observations(parameters,
+                      observation_name="task/angular_velocity")
+sim.plot_observations(parameters,
+                      observation_name="task/avg_angular_velocity")
 sim.viewer(parameters)
-sim.plot_observations(parameters)

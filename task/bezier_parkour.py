@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.special import comb
 from scipy.spatial.transform import Rotation
-from typing import List
+from typing import List, Tuple
 import pickle
 
 class BezierSegment:
@@ -14,6 +14,7 @@ class BezierSegment:
         assert control_points.shape[1] == 3, "Control points must be 3D"
         self._control_points = control_points
         self._lut = self.create_lookup_table()
+        self._lut_tangent = self.create_tangent_lookup_table()
 
     def __getitem__(self, index):
         return self.control_points[index]
@@ -32,6 +33,7 @@ class BezierSegment:
         assert value.shape[1] == 3, "Control points must be 3D"
         self._control_points = value
 
+    # see https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/Bezier/bezier-der.html
     def bezier_curve(self, num_points=1000):
         n = len(self._control_points) - 1
         t = np.linspace(0, 1, num_points)
@@ -41,8 +43,49 @@ class BezierSegment:
             curve += np.outer(binom * (t ** i) * ((1 - t) ** (n - i)), self._control_points[i])
         return curve
     
+    def bezier_curve_derivative(self, num_points=1000):
+        """
+        Compute the derivative of the Bézier curve ie. the tangent vector
+        returns: np.ndarray of shape (num_points, 3)
+        """
+        n = len(self._control_points) - 1
+        t = np.linspace(0, 1, num_points)
+        curve = np.zeros((num_points, 3))
+        for i in range(n):
+            binom = comb(n - 1, i)
+            curve += np.outer(binom * (t ** i) * ((1 - t) ** (n - 1 - i)), self._control_points[i + 1] - self._control_points[i])
+        return curve
+    
+    def bezier_curve_second_derivative(self, num_points=1000):
+        """
+        Compute the second derivative of the Bézier curve ie. the curvature vector
+        returns: np.ndarray of shape (num_points, 3)
+        """
+        n = len(self._control_points) - 1
+        t = np.linspace(0, 1, num_points)
+        curve = np.zeros((num_points, 3))
+        for i in range(n - 1):
+            binom = comb(n - 2, i)
+            curve += np.outer(binom * (t ** i) * ((1 - t) ** (n - 2 - i)), self._control_points[i + 2] - 2 * self._control_points[i + 1] + self._control_points[i])
+        return curve
+    
     def create_lookup_table(self, num_points=1000):
+        """
+        Create a lookup table for the Bézier curve
+        returns: dict with keys as distances and values as points
+        """
         curve = self.bezier_curve(num_points)
+        lengths = np.linalg.norm(curve[1:] - curve[:-1], axis=1)
+        cumulative_lengths = np.cumsum(lengths)
+        lookup_table = dict(zip(cumulative_lengths, curve))
+        return lookup_table
+
+    def create_tangent_lookup_table(self, num_points=1000):
+        """
+        Create a lookup table for the tangent vector of the Bézier curve
+        returns: dict with keys as distances and values as tangent vectors
+        """
+        curve = self.bezier_curve_derivative(num_points)
         lengths = np.linalg.norm(curve[1:] - curve[:-1], axis=1)
         cumulative_lengths = np.cumsum(lengths)
         lookup_table = dict(zip(cumulative_lengths, curve))
@@ -71,11 +114,12 @@ class BezierParkour:
     def __init__(self) -> None:
         self._segments: List[BezierSegment] = []
         self._lut = self._create_lookup_table()
+        self._lut_tangent = self._create_tangent_lookup_table()
     
-    def get_distance(self, position: np.ndarray) -> float:
+    def get_distance(self, position: np.ndarray) -> Tuple[float, float]:
         """
         Get the distance to the closest point on the parkour, given a position. 
-        Followed by the distance from the start of the parkour.
+        Followed by the distance from the start of the parkour, to that point.
         """
         distance, point = min(self._lut.items(), key=lambda pair: np.linalg.norm(pair[1] - position))    # pair = (distance, point)
         return np.linalg.norm(position - point), distance
@@ -86,12 +130,21 @@ class BezierParkour:
         closest_distance = min(self._lut.keys(), key=lambda x: abs(x - distance))
         second_closest_distance = min(self._lut.keys(), key=lambda dist: dist - closest_distance if dist - closest_distance > 0 else np.inf)
         # Compute the direction vector between the two points
-        direction = self._lut[second_closest_distance] - self._lut[closest_distance]
+        direction = self._lut[closest_distance] - self._lut[second_closest_distance]
         direction = direction.reshape((1, 3))
-        rot, rssd = Rotation.align_vectors(direction, np.array([-1, 0, 0]).reshape((1, 3)))
-        return rot.as_euler('xyz')   # transforms the negative x-axis to the direction vector
+        rot, rssd = Rotation.align_vectors(direction, np.array([-1, 0, 0]).reshape((1, 3))) # transforms the negative x-axis to the direction vector
+        return rot.as_euler('xyz')   
     
     def _create_lookup_table(self, num_points=1000):
+        lookup_table = dict()
+        max_distance = 0
+        for segment in self._segments:
+            for key, value in segment.lut.items():
+                lookup_table[max_distance + key] = value
+            max_distance += max(segment.lut.keys())
+        return lookup_table
+    
+    def _create_tangent_lookup_table(self, num_points=1000):
         lookup_table = dict()
         max_distance = 0
         for segment in self._segments:
@@ -117,6 +170,7 @@ class BezierParkour:
                 # TODO: adjust control points
             self._segments.append(new_segment)
         self._lut = self._create_lookup_table()
+        self._lut_tangent = self._create_tangent_lookup_table()
     
     def bezier_curve(self, num_points=1000):
         """
@@ -136,6 +190,12 @@ class BezierParkour:
         closest_distance = min(self._lut.keys(), key=lambda x: abs(x - distance))
         # Return the corresponding point
         return self._lut[closest_distance]
+    
+    def get_tangent(self, distance: float) -> np.ndarray:
+        # Find the closest distance in the lookup table
+        closest_distance = min(self._lut_tangent.keys(), key=lambda x: abs(x - distance))
+        # Return the corresponding tangent
+        return self._lut_tangent[closest_distance]
     
     def allign_points(self, 
                       vector: np.ndarray,

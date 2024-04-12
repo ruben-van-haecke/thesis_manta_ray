@@ -52,11 +52,7 @@ if __name__ == "__main__":
     index_left_pectoral_fin_x = names.index('morphology/left_pectoral_fin_actuator_x')
     index_right_pectoral_fin_x = names.index('morphology/right_pectoral_fin_actuator_x')
     controller_specification = default_controller_specification(action_spec=action_spec)
-    controller_parameterizer = MantaRayControllerSpecificationParameterizer(
-        amplitude_fin_out_plane_range=(0, 1),
-        frequency_fin_out_plane_range=(0, 1),
-        offset_fin_out_plane_range=(0, np.pi),
-    )
+    controller_parameterizer = MantaRayControllerSpecificationParameterizer()
     controller_parameterizer.parameterize_specification(specification=controller_specification)
     print(f"controller: {controller_specification}")
     cpg = CPG(specification=controller_specification,
@@ -73,13 +69,13 @@ if __name__ == "__main__":
     denomenator = 4
     roll = 1.
     pitch = 0.8
-    yawn = np.pi
+    yaw = np.pi/8
     # parameters: ['fin_amplitude_left', 'fin_offset_left', 'frequency_left', 'phase_bias_left', 'fin_amplitude_right', 'fin_offset_right', 'frequency_right', 'phase_bias_right']
     archive = Archive(parameter_bounds=[(0, 1) for _ in range(len(controller_parameterizer.get_parameter_labels()))],
-                      feature_bounds=[(-roll, roll), (-pitch, pitch), (-np.pi/2/denomenator, np.pi/2/denomenator)], 
+                      feature_bounds=[(-roll, roll), (-pitch, pitch), (-yaw, yaw)], 
                       resolutions=[12, 12, 8],
                       parameter_names=controller_parameterizer.get_parameter_labels(), 
-                      feature_names=["roll", "pitch", "yawn"],
+                      feature_names=["roll", "pitch", "yaw"],
                       symmetry = [('phase_bias_right', 'phase_bias_left'), 
                                 ('frequency_right', 'frequency_left'), 
                                 ('fin_offset_right', 'fin_offset_left'), 
@@ -94,7 +90,7 @@ if __name__ == "__main__":
         robot_specification=robot_spec,
         parameterizer=controller_parameterizer,
         population_size=10,  # make sure this is a multiple of num_envs
-        num_generations=2000,
+        num_generations=70,
         outer_optimalization=map_elites,
         controller=CPG,
         skip_inner_optimalization=True,
@@ -109,5 +105,5 @@ if __name__ == "__main__":
     # # sim.visualize()
     # sim.viewer_gen_episode(generation=best_gen, episode=best_episode)
     map_elites.optimization_info(store="experiments/qd_v0.5_differential/plots/opt_info.html")
-    archive.plot_grid_3d(x_label="roll", y_label="pitch", z_label="yawn", store="experiments/qd_v0.5_differential/plots/grid.html")
+    archive.plot_grid_3d(x_label="roll", y_label="pitch", z_label="yaw", store="experiments/qd_v0.5_differential/plots/grid.html")
     sim.finish(store=True, name="qd_v0.5_differential/sim_objects/sim")

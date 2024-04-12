@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import wandb
 import copy
 import time
-import thesis_manta_ray
 from datetime import datetime
 from cmaes import CMA
 from thesis_manta_ray.controller.quality_diversity import Solution, Archive, MapElites
@@ -189,7 +188,7 @@ class OptimizerSimulation:
                                                                                     )
             last_obs = obs  # needed because the last observations are all zeroes 
             obs, reward, terminated, truncated, info = self._gym_env.step(scaled_actions_env[:, :, counter])
-            self._observations[generation, episode:episode+self._num_envs, :, counter] = obs['task/delta_orientation']
+            self._observations[generation, episode:episode+self._num_envs, :, counter] = obs['task/avg_angular_velocity']
             done = np.all(np.logical_or(terminated, truncated))
             counter += 1
         return reward, last_obs
@@ -213,7 +212,7 @@ class OptimizerSimulation:
                     # sol = Solution(behaviour=obs['task/orientation'][env_id, :], 
                     #                           fitness=1/reward[env_id], # fitness has to be optimized
                     #                           parameters=outer_action[env_id])
-                    sol = Solution(behaviour=obs['task/delta_orientation'][env_id, :], 
+                    sol = Solution(behaviour=obs['task/avg_angular_velocity'][env_id, :], 
                                               fitness=1/reward[env_id], # fitness has to be optimized
                                               parameters=outer_action[env_id])
                     solutions.append(sol)
@@ -289,7 +288,6 @@ class OptimizerSimulation:
     def viewer(self,
                normalised_action: np.ndarray,
                ) -> None:
-        assert self._record_actions, "Cannot visualize actions if they are not recorded"
         dm_env = self._task_config.environment(morphology=MJCMantaRayMorphology(specification=self._morphology_specification), wrap2gym=False)
         controller_spec = default_controller_specification(action_spec=self._action_spec)
         self._parameterizer.parameterize_specification(specification=controller_spec)
@@ -337,7 +335,13 @@ class OptimizerSimulation:
     
     def plot_observations(self, 
                      normalised_action: np.ndarray,
+                     observation_name: str = "task/angular_velocity",
                      ) -> None:
+        """
+        args:
+            normalised_action: the action of the controller
+            observation_name: the observation to plot, should be of shape (3,) with names (roll, pitch, yaw)
+        """
         dm_env = self._task_config.environment(morphology=MJCMantaRayMorphology(specification=self._morphology_specification), wrap2gym=False)
         controller_spec = default_controller_specification(action_spec=self._action_spec)
         self._parameterizer.parameterize_specification(specification=controller_spec)
@@ -353,25 +357,81 @@ class OptimizerSimulation:
         scaled_action = minimum + normalised_action * (maximum - minimum)
         observations = np.zeros(shape=(3, int(np.ceil(self._task_config.simulation_time/self._task_config.control_timestep))))
 
-        def policy(timestep: TimeStep) -> np.ndarray:
+        timestep, reward, discount, obs = dm_env.reset()
+        done = False
+        time = 0
+        while not done:
+            timestep: TimeStep = dm_env.step(scaled_action[:, int(time/self._task_config.control_timestep)])
             time = timestep.observation["task/time"][0]
-            observations[:, int(time/self._task_config.control_timestep)] = timestep.observation["task/delta_orientation"][0]
-            return scaled_action[:, int(time/self._task_config.control_timestep)]
-        viewer.launch(
-            environment_loader=dm_env, 
-            policy=policy
-            )
+            observations[:, int(time/self._task_config.control_timestep)] = timestep.observation[observation_name][0]
+            if int(time/self._task_config.control_timestep) == len(observations[0])-1:
+                done = True
+
+  
         t = np.linspace(0, self._task_config.simulation_time, len(observations[0]))
-        plt.plot(t, observations[0], label="roll", color="blue")
-        plt.plot(t, np.ones_like(t)*np.average(observations[0]), label="average roll", color="blue")
-        plt.plot(t, observations[1], label="pitch", color="green")
-        plt.plot(t, np.ones_like(t)*np.average(observations[1]), label="average pitch", color="green")
-        plt.plot(t, observations[2], label="yawn", color="red")
-        plt.plot(t, np.ones_like(t)*np.average(observations[2]), label="average yawn", color="red")
-        plt.xlabel("time [seconds]")
-        plt.ylabel("output")
-        plt.legend()
-        plt.show()
+        import plotly.graph_objects as go
+
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=t, y=observations[0], name="roll", line=dict(color="blue")))
+        fig.add_trace(go.Scatter(x=t, y=observations[1], name="pitch", line=dict(color="green")))
+        fig.add_trace(go.Scatter(x=t, y=observations[2], name="yaw", line=dict(color="red")))
+
+        fig.update_layout(
+            xaxis_title="time [seconds]",
+            yaxis_title="output",
+            title=observation_name
+        )
+
+        fig.show()
+    
+    def check_archive(self,
+                      archive: Archive,
+                      remove_invalid: bool = False,
+                      ) -> None:
+        """
+        args:
+            archive: the archive to check
+            remove_invalid: whether to remove the invalid solutions from the archive
+        """
+        dm_env = self._task_config.environment(morphology=MJCMantaRayMorphology(specification=self._morphology_specification), wrap2gym=False)
+        controller_spec = default_controller_specification(action_spec=self._action_spec)
+        self._parameterizer.parameterize_specification(specification=controller_spec)
+        controller = self._controller(specification=controller_spec)
+        observations = np.zeros(shape=(3, int(np.ceil(self._task_config.simulation_time/self._task_config.control_timestep))+1))
+        num_wrong_sol = 0
+        for index, solution in enumerate(archive):
+            self._parameterizer.parameter_space(specification=controller_spec,
+                                                    controller_action=solution.parameters)
+            minimum, maximum = self._action_spec.minimum.reshape(-1, 1), self._action_spec.maximum.reshape(-1, 1)   # shapes (n_neurons, 1)
+            normalised_action = (controller.ask(observation=None,
+                                                duration=self._task_config.simulation_time,
+                                                sampling_period=self._task_config.physics_timestep
+                                                )+1)/2
+            scaled_action = minimum + normalised_action * (maximum - minimum)
+
+            timestep, reward, discount, obs = dm_env.reset()
+            # dm_env = self._task_config.environment(morphology=MJCMantaRayMorphology(specification=self._morphology_specification), wrap2gym=False)
+            done = False
+            time = 0
+            while not done:
+                timestep: TimeStep = dm_env.step(scaled_action[:, int(time/self._task_config.control_timestep)])
+                time = timestep.observation["task/time"][0]
+                observations[:, int(time/self._task_config.control_timestep)] = timestep.observation["task/avg_angular_velocity"][0]
+                if int(time/self._task_config.control_timestep) == len(observations[0])-1:
+                    done = True
+            if not np.allclose(solution.behaviour, observations[:, int(time/self._task_config.control_timestep)], atol=0.05):
+                print("The archive is not correct")
+                print(f"stored behaviour: {solution.behaviour}")
+                print(f"observed behaviour: {observations[:, int(time/self._task_config.control_timestep)]}")
+                print(f"index: {index}")
+                num_wrong_sol += 1
+                if remove_invalid:
+                    archive.remove(index)
+            else:
+                print(f"Correct solution, bin index: {archive.get_bin_index(solution.behaviour)}")
+
+        print(f"Number of wrong solutions: {num_wrong_sol}, total number of solutions: {len(archive)}")
+            
 
     def finish(self, store=True, name=None):
         """
@@ -427,14 +487,16 @@ if __name__ == "__main__":
     #     )
     # parameterizer.parameterize_specification(specification=morphology_specification)
     
+
     # task
-    task_config = MoveConfig(simulation_time=6, 
+    task_config = MoveConfig(simulation_time=10, 
                          velocity=0.5,
                          reward_fn="(E + 200*Δx) * (Δx)",
                          task_mode="no_target",)
 
+
     # controller
-    simple_env = task_config.environment(morphology=MJCMantaRayMorphology(specification=morphology_specification), # TODO: remove this, ask Dries
+    simple_env = task_config.environment(morphology=MJCMantaRayMorphology(specification=morphology_specification), 
                                                 wrap2gym=False)
     observation_spec = simple_env.observation_spec()
     action_spec = simple_env.action_spec()
@@ -442,11 +504,7 @@ if __name__ == "__main__":
     index_left_pectoral_fin_x = names.index('morphology/left_pectoral_fin_actuator_x')
     index_right_pectoral_fin_x = names.index('morphology/right_pectoral_fin_actuator_x')
     controller_specification = default_controller_specification(action_spec=action_spec)
-    controller_parameterizer = MantaRayControllerSpecificationParameterizer(
-        amplitude_fin_out_plane_range=(0, 1),
-        frequency_fin_out_plane_range=(0, 1),
-        offset_fin_out_plane_range=(0, np.pi),
-    )
+    controller_parameterizer = MantaRayControllerSpecificationParameterizer()
     controller_parameterizer.parameterize_specification(specification=controller_specification)
     print(f"controller: {controller_specification}")
     cpg = CPG(specification=controller_specification,
@@ -458,8 +516,8 @@ if __name__ == "__main__":
                                     controller_specification=controller_specification)
 
     # morphology_space = parameterizer.get_target_parameters(specification=morphology_specification)
-    bounds = np.zeros(shape=(len(controller_parameterizer.get_parameter_labels()), 2))    # minus 1 for the phase bias
-    bounds[:, 1] = 1
+    # bounds = np.zeros(shape=(len(controller_parameterizer.get_parameter_labels()), 2))    # minus 1 for the phase bias
+    # bounds[:, 1] = 1
     # cma = CMA(mean=np.random.uniform(low=0,
     #                                  high=1,
     #                                  size=len(controller_parameterizer.get_parameter_labels())),
@@ -469,13 +527,15 @@ if __name__ == "__main__":
     #           lr_adapt=True,
     #           seed=42
     #           )
-    denomenator = 2
+    roll = 1.
+    pitch = 0.8
+    yaw = np.pi/8
     # parameters: ['fin_amplitude_left', 'fin_offset_left', 'frequency_left', 'phase_bias_left', 'fin_amplitude_right', 'fin_offset_right', 'frequency_right', 'phase_bias_right']
     archive = Archive(parameter_bounds=[(0, 1) for _ in range(len(controller_parameterizer.get_parameter_labels()))],
-                      feature_bounds=[(-0.7, 0.7), (-0.7, 0.7), (-0.35, 0.35)], 
+                      feature_bounds=[(-roll, roll), (-pitch, pitch), (-yaw, yaw)], 
                       resolutions=[12, 12, 6],
                       parameter_names=controller_parameterizer.get_parameter_labels(), 
-                      feature_names=["roll", "pitch", "yawn"],
+                      feature_names=["roll", "pitch", "yaw"],
                       symmetry = [('phase_bias_right', 'phase_bias_left'), 
                                 ('frequency_right', 'frequency_left'), 
                                 ('fin_offset_right', 'fin_offset_left'), 
@@ -490,7 +550,7 @@ if __name__ == "__main__":
         robot_specification=robot_spec,
         parameterizer=controller_parameterizer,
         population_size=10,  # make sure this is a multiple of num_envs
-        num_generations=2,
+        num_generations=1,
         outer_optimalization=map_elites,#cma,
         controller=CPG,
         skip_inner_optimalization=True,
@@ -501,25 +561,18 @@ if __name__ == "__main__":
         )
     
     sim.run()
+    for sol in archive:
+        pass
+    sim.plot_observations(normalised_action=sol.parameters,
+                          observation_name="task/avg_angular_velocity")
+    sim.plot_observations(normalised_action=sol.parameters,
+                            observation_name="task/angular_velocity")
+    sim.plot_observations(normalised_action=sol.parameters,
+                            observation_name="task/orientation")
+    sim.viewer(normalised_action=sol.parameters)
     # best_gen, best_episode = sim.get_best_individual()
     # # sim.visualize()
     # sim.viewer_gen_episode(generation=best_gen, episode=best_episode)
-    map_elites.optimization_info()
-    archive.plot_grid_3d(x_label="roll", y_label="pitch", z_label="yawn")
-    # best_sol_first_bin = archive.get_best_solution(index=(0, 0, 0))
-    # first_solution = next(iter(archive))
-    # other_sol = archive.get_symmetric_solution(best_sol_first_bin)
-    # sim.viewer(normalised_action=best_sol_first_bin.parameters)
-    # sim.plot_actions(normalised_action=first_solution.parameters)
-#     action = np.array([0.9736032, 0.75782657, 0.25533115, 0.04304449, 0.95805741, 0.73478035,
-#  0.73896048, 0.504163  ])
-#     sim.plot_actions(normalised_action=action)  # offset is index 1 and 5, amplitude 0 and 4
-#     sim.viewer(normalised_action=action)
-    # sim.viewer(normalised_action=other_sol.parameters)
-    # sim.plot_actions(normalised_action=other_sol.parameters)
-    # sim.visualize_inner(generation=best_gen, episode=best_episode)
-    # sim.finish(store=True, name="long_run_check_convergence")
-
-    # best_solution, best_fitness = cma.search()
-
+    # map_elites.optimization_info()
+    # archive.plot_grid_3d(x_label="roll", y_label="pitch", z_label="yaw")
     # show_video(frame_generator=run_episode())

@@ -104,7 +104,7 @@ class OceanArena(Arena):
         # get parkour
         self._parkour = parkour
         # get points to build target
-        points = self._parkour.bezier_curve(10)
+        points = self._parkour.bezier_curve(20)
         # build the line
         parkour_line = []
         for index in range(points.shape[0]):

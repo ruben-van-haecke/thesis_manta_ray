@@ -5,7 +5,7 @@ from typing import List, Tuple, Dict
 import pandas as pd
 import plotly.graph_objects as go
 import itertools
-from scipy.interpolate import LinearNDInterpolator
+from scipy.interpolate import LinearNDInterpolator, RBFInterpolator
 import plotly.io as pio
 import plotly.express as px
 
@@ -107,6 +107,8 @@ class Archive:
         self._solutions: Dict[Tuple[int, ...], List[Solution]] = {}
         for combination in itertools.product(*[range(res) for res in self._resolutions]):
             self._solutions[tuple(combination)] = []
+        self._interpolator = None
+
     @property
     def max_items_per_bin(self) -> int:
         return self._max_items_per_bin
@@ -172,9 +174,9 @@ class Archive:
         returns a tuple with the indices of the bin corresponding to the features. If invalid features i.e. outside of the defined space return None
         """
         indices = []
-        for res, bound, feature in zip(self._resolutions, self._feature_bounds, features):
+        for res, bound, feature, feature_name in zip(self._resolutions, self._feature_bounds, features, self._feature_names):
             if feature < bound[0] or feature > bound[1]:
-                print(f"Warning: Solution ignored because it falls outside of the cells, feature: {feature}")
+                print(f"Warning: Solution ignored because it falls outside of the cells, {feature_name}: {feature}")
                 return None
             comparator = np.linspace(bound[0], bound[1], res+1)
             index = np.argmax(feature < comparator)-1
@@ -223,29 +225,19 @@ class Archive:
                     features: np.ndarray, 
                     k:int = 4,
                     ) -> np.ndarray:
-        closest_solutions = self.get_closest_solutions(features, k=k)
-        if len(closest_solutions) < k:
-            return np.zeros_like(features)
-        solutions = [closest_solutions[j][0] for j in range(k)]
-        features_ = np.array([sol.behaviour for sol in solutions])
-        parameters = np.array([sol.parameters for sol in solutions])
-        interpolated_parameters = np.zeros_like(parameters[0])
-        interpolator = LinearNDInterpolator(points=features_, values=parameters)
-        interpolated_parameters = interpolator(features)    # rows are the parameter samples, nan this means that the values are outside of the convex hull
-        while np.isnan(interpolated_parameters).any():
-            k += 5
-            if k > len(self):
-                print("no suitable parameters are found by the interpolator, returning the closest one.")
-                return self.get_closest_solutions(features, k=1)[0][0].parameters
-            closest_solutions = self.get_closest_solutions(features, k=k)
-            solutions = [closest_solutions[j][0] for j in range(k)]
-            features_ = np.array([sol.behaviour for sol in solutions])
-            parameters = np.array([sol.parameters for sol in solutions])
-            interpolated_parameters = np.zeros_like(parameters[0])
-            interpolator = LinearNDInterpolator(points=features_, values=parameters)
-            interpolated_parameters = interpolator(features)
-        assert np.all(interpolated_parameters >= 0) and np.all(interpolated_parameters <= 1), f"not between 0 and 1, interpolated_parameters: {interpolated_parameters}"
-        return interpolated_parameters[0]
+        if not hasattr(self, "_interpolator") or self._interpolator == None:
+            features_ = np.array([sol.behaviour for sol in self])
+            parameters = np.array([sol.parameters for sol in self])
+            self._interpolator = LinearNDInterpolator(points=features_, values=parameters)
+            self._interpolator = RBFInterpolator(y=features_, d=parameters)
+
+        interpolated_parameters = np.zeros_like(self._parameter_bounds[0])
+        interpolated_parameters = self._interpolator(features)    # rows are the parameter samples, nan this means that the values are outside of the convex hull
+        if np.isnan(interpolated_parameters).any():
+            print("no suitable parameters are found by the interpolator, returning the closest one.")
+            return self.get_closest_solutions(features, k=1)[0][0].parameters
+        else:
+            return interpolated_parameters[0]
     
     def get_symmetric_solution(self, 
                                 sol: Solution,
@@ -274,8 +266,8 @@ class Archive:
     def add_solution(self, solution: Solution):
         all_solutions = [solution]
         # get the other solution
-        other_solution = self.get_symmetric_solution(solution)
-        all_solutions.append(other_solution)
+        # other_solution = self.get_symmetric_solution(solution)
+        # all_solutions.append(other_solution)
 
         # Add all solutions to the archive
         for sol in all_solutions:
@@ -284,6 +276,14 @@ class Archive:
             self._solutions[index].append(sol)
             if len(self._solutions[index]) > self._max_items_per_bin:
                 self._solutions[index].remove(min(self._solutions[index]))
+    
+    def remove(self,
+               index: Tuple[int, ...],
+               ) -> None:
+        """
+        Remove the solution in the specified bin.
+        """
+        self._solutions[index].pop()
 
     
     def plot_grid(self,
