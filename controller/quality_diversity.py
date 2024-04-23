@@ -508,7 +508,7 @@ class MapElites:
             bin_index = bins[bin_index]
             bin: List[Solution] = self._archive.solutions[bin_index]
             # choose 2 solutions as parents
-            if np.random.rand() < 0.2 or len(bin) == 1:   # 20% of the time, 2 random parents are chosen
+            if np.random.rand() < 0.2:   # 20% of the time, 2 random parents are chosen
                 solutions = list(self._archive)
                 random_keys = np.random.randint(0, len(self._archive), 2)
                 parent1 = next(itertools.islice(solutions, random_keys[0], random_keys[0]+1)).parameters

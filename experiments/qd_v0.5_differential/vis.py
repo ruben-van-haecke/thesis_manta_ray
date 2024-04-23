@@ -48,7 +48,7 @@ archive: Archive = Archive.load("experiments/qd_v0.5_differential/sim_objects/ar
 map_elites = MapElites(archive)
 
 if True:    # verify the point
-    sol = archive.solutions[(11, 11, 0)][0]
+    sol = archive.solutions[(2, 4, 2)][0]
     roll, pitch, yaw = sol.behaviour
     print(f"roll: {roll}, pitch: {pitch}, yaw: {yaw}")
     parameters = sol.parameters

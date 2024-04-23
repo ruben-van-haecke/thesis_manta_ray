@@ -18,7 +18,6 @@ from thesis_manta_ray.arena.entities.target import Target
 from thesis_manta_ray.arena.entities.parkour_obstacles import CilinderParkour
 from thesis_manta_ray.task.bezier_parkour import BezierParkour
 
-from fiblat import sphere_lattice
 
 
 class OceanArena(Arena):

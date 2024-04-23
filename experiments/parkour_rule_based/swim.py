@@ -16,6 +16,9 @@ from scipy.spatial.transform import Rotation
 from dm_env import TimeStep
 from dm_control import viewer
 import numpy as np
+import matplotlib.pyplot as plt
+
+import plotly.graph_objects as go
 
 
  # morphology
@@ -23,10 +26,10 @@ morphology_specification = default_morphology_specification()
 morphology = MJCMantaRayMorphology(specification=morphology_specification)
 
 # task and controller
-simulation_time = 10
+simulation_time = 6
 velocity = 0.5
 parkour = BezierParkour.load("task/parkours/slight_curve.pkl")
-config = MoveConfig(control_substeps=4,
+config = MoveConfig(control_substeps=20,
                     simulation_time=simulation_time, 
                     velocity=velocity,
                     reward_fn="(E + 200*Δx) * (Δx)",
@@ -58,21 +61,36 @@ rule_based_layer = RuleBased(archive=archive)
 
 
 minimum, maximum = action_spec.minimum.reshape(-1, 1), action_spec.maximum.reshape(-1, 1)   # shapes (n_neurons, 1)
+left_actuation = []
+right_actuation = []
+phase_bias = [] # indexes 3 and 7
+behaviour_previous = None
+parameters_controller_previous = None
+difference_behaviour = []
+difference_parameters_controller = []
 
 def policy(timestep: TimeStep) -> np.ndarray:
+    global left, right, phase_bias, behaviour_previous, parameters_controller_previous
     time = timestep.observation["task/time"][0]
     obs = timestep.observation
     # update the controller modulation
-    scaled_action = rule_based_layer.select_parameters(current_angular_positions=obs["task/orientation"][0],
+    scaled_action, behaviour_descriptor = rule_based_layer.select_parameters(current_angular_positions=obs["task/orientation"][0],
                                                        current_xyz_velocities=obs["task/xyz_velocity"][0],
                                                        current_position=obs["task/position"][0],
                                                        parkour=parkour)
-    # if time < 5:
+    phase_bias.append(scaled_action[3])
+    if behaviour_previous is not None:
+        difference_behaviour.append(np.linalg.norm(behaviour_previous - behaviour_descriptor))
+    behaviour_previous = behaviour_descriptor
+    if parameters_controller_previous is not None:
+        difference_parameters_controller.append(np.linalg.norm(parameters_controller_previous - scaled_action))
+    parameters_controller_previous = scaled_action
+    # if time < 3:
     #     scaled_action = archive.solutions[(6, 11, 3)][0].parameters
     # else:
     #     scaled_action = archive.solutions[(6, 1, 3)][0].parameters
-    # controller_parameterizer.parameter_space(specification=controller_specification,
-    #                                          controller_action=scaled_action,)
+    controller_parameterizer.parameter_space(specification=controller_specification,
+                                             controller_action=scaled_action,)
 
     # actuation
     normalised_action = (cpg.ask(observation=timestep.observation,
@@ -80,8 +98,51 @@ def policy(timestep: TimeStep) -> np.ndarray:
                                     sampling_period=config.physics_timestep
                                     )+1)/2
     scaled_action = minimum + normalised_action * (maximum - minimum)
+    left_actuation.append(scaled_action[index_left_pectoral_fin_x][0])
+    right_actuation.append(scaled_action[index_right_pectoral_fin_x][0])
     return scaled_action[:, 0]
 viewer.launch(
     environment_loader=dm_env, 
     policy=policy
     )
+
+time = np.linspace(0, simulation_time, len(left_actuation))
+
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=time, y=left_actuation, name='Left fin'))
+fig.add_trace(go.Scatter(x=time, y=right_actuation, name='Right fin'))
+
+fig.update_layout(
+    xaxis_title='Time [s]',
+    yaxis_title='Actuation',
+    legend=dict(font=dict(size=16)),  # Increase the font size of the legend
+    xaxis=dict(title=dict(font=dict(size=16))),
+    yaxis=dict(title=dict(font=dict(size=16)))
+)
+
+fig.show()
+
+time = np.linspace(0, simulation_time, len(phase_bias))
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=time, y=phase_bias, name='Phase Bias'))
+fig.update_layout(
+    xaxis_title='Time [s]',
+    yaxis_title='Phase Bias',
+    legend=dict(font=dict(size=16)),  # Increase the font size of the legend
+    xaxis=dict(title=dict(font=dict(size=16))),
+    yaxis=dict(title=dict(font=dict(size=16)))
+)
+fig.show()
+
+time = np.linspace(0, simulation_time, len(difference_behaviour))
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=time, y=difference_behaviour, name='Difference Behaviour'))
+fig.add_trace(go.Scatter(x=time, y=difference_parameters_controller, name='Difference Parameters Controller'))
+fig.update_layout(
+    xaxis_title='Time [s]',
+    yaxis_title='Difference',
+    legend=dict(font=dict(size=16)),  # Increase the font size of the legend
+    xaxis=dict(title=dict(font=dict(size=16))),
+    yaxis=dict(title=dict(font=dict(size=16)))
+)
+fig.show()
