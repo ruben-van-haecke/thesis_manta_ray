@@ -76,7 +76,10 @@ class MoveConfig(MJCEnvironmentConfig):
         self._reward_fn = reward_fn
         self._task_mode = task_mode
         self._parkour = parkour
-        self._location_target = None
+        if task_mode == "random_target":
+            self._location_target = np.array([0, 0, 0])
+        else:
+            self._location_target = None
         self._initial_position = np.array([0.0, 0.0, 15 * 0.1])
     
     def __deepcopy__(self, memo) -> 'MoveConfig':
@@ -234,18 +237,29 @@ class Task(composer.Task):
                                 ) -> float:
         return physics.data.sensordata
     
-    def _get_orientation_entity(self,
-                                entity: Entity,
-                                physics: mjcf.Physics,
-                                ) -> float:
-        pose = entity.get_pose(physics=physics) # (position, quaternion) with quaternion [w, x, y, z]
-        return quat2euler(pose[1])  # new_euler
+    # def _get_orientation_entity(self,
+    #                             entity: Entity,
+    #                             physics: mjcf.Physics,
+    #                             ) -> float:
+    #     if physics.time() < 4:
+    #         pose = entity.get_pose(physics=physics) # (position, quaternion) with quaternion [w, x, y, z]
+    #     else:
+    #         pose = entity.get_pose(physics=physics) # (position, quaternion) with quaternion [w, x, y, z]
+    #     return quat2euler(pose[1])  # new_euler
     
     def _get_orientation(self,
                          physics: mjcf.Physics,
                          ) -> float:
-        orientation = self._get_orientation_entity(entity=self._morphology, physics=physics)
-        return orientation
+        # orientation = self._get_orientation_entity(entity=self._morphology, physics=physics)
+        root_joint = mjcf.get_frame_freejoint(self._morphology.mjcf_model)
+        if root_joint:
+            xyz_position = physics.bind(root_joint).qpos[:3]
+            orientation = physics.bind(root_joint).qpos[3:]
+            # see: https://mujoco.readthedocs.io/en/latest/computation/index.html#the-state
+            orientation = Rotation.from_rotvec(2*np.arcsin(orientation[0])*orientation[1:]).as_euler('xyz', degrees=False)
+            return orientation
+        else:
+            raise ValueError('get_velocity cannot be used on a non-free entity')
     
     def _get_position(self,
                       physics: mjcf.Physics,

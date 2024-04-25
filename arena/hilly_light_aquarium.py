@@ -53,7 +53,7 @@ class OceanArena(Arena):
                             "grid": a raster in front of the robot in which a target
                             "parkour": parkour to follow
         """
-        assert task_mode in ["no_target", "random_target", "grid", "parkour"], "task_mode is not valid"
+        assert task_mode in ["no_target", "random_target", "parkour"], "task_mode is not valid"
 
         super()._build(name=name)
         # self._initial_morphology_position = np.array(initial_morphology_position)
@@ -80,14 +80,6 @@ class OceanArena(Arena):
             self._build_walls()
         if self._task_mode == "random_target":    # one random obstacle
             self.target = self._attach_target()
-        elif self._task_mode == "grid":  # raster of obstacles of which one is choosen
-            self.target = self._attach_target()
-            points = 101
-            radius = 5
-            self._grid_coordinates = np.empty((3, points))
-            sphere = sphere_lattice(3, points)
-            self._grid_coordinates = radius * sphere  # x
-            self._grid_coordinates = self._grid_coordinates[self._grid_coordinates[:, 0] < 0]
         elif self._task_mode == "parkour":  # parkour
             self._obstacles_traject = self._build_parkour_line(self._parkour)
         # self._build_obstacles()

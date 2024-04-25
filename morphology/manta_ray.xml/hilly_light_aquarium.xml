@@ -12,6 +12,7 @@
     <default class="/">
       <geom contype="1" conaffinity="0"/>
     </default>
+    <default class="unnamed_model/"/>
     <default class="morphology/">
       <geom contype="1" conaffinity="0"/>
     </default>
@@ -30,26 +31,9 @@
     <geom name="south_wall" class="/" type="box" conaffinity="1" size="10 0.10000000000000001 2.1000000000000001" rgba="0.45098039215686275 0.57647058823529407 0.70196078431372544 0.19607843137254902" pos="0 -10.1 1.6000000000000001"/>
     <geom name="east_wall" class="/" type="box" conaffinity="1" size="0.10000000000000001 10.199999999999999 2.1000000000000001" rgba="0.45098039215686275 0.57647058823529407 0.70196078431372544 0.19607843137254902" pos="-10.1 0 1.6000000000000001"/>
     <geom name="west_wall" class="/" type="box" conaffinity="1" size="0.10000000000000001 10.199999999999999 2.1000000000000001" rgba="0.45098039215686275 0.57647058823529407 0.70196078431372544 0.19607843137254902" pos="10.1 0 1.6000000000000001"/>
-    <geom name="target_parkour_0" class="/" type="sphere" size="0.050000000000000003" rgba="100 100 100 0.5" pos="0 0 1.5"/>
-    <geom name="target_parkour_1" class="/" type="sphere" size="0.050000000000000003" rgba="100 100 100 0.5" pos="-0.33333333333333326 0 1.5658436213991769"/>
-    <geom name="target_parkour_2" class="/" type="sphere" size="0.050000000000000003" rgba="100 100 100 0.5" pos="-0.66666666666666663 0 1.7304526748971194"/>
-    <geom name="target_parkour_3" class="/" type="sphere" size="0.050000000000000003" rgba="100 100 100 0.5" pos="-1.0000000000000002 0 1.9444444444444444"/>
-    <geom name="target_parkour_4" class="/" type="sphere" size="0.050000000000000003" rgba="100 100 100 0.5" pos="-1.3333333333333333 0 2.1584362139917697"/>
-    <geom name="target_parkour_5" class="/" type="sphere" size="0.050000000000000003" rgba="100 100 100 0.5" pos="-1.666666666666667 0 2.3230452674897117"/>
-    <geom name="target_parkour_6" class="/" type="sphere" size="0.050000000000000003" rgba="100 100 100 0.5" pos="-1.9999999999999998 0 2.3888888888888888"/>
-    <geom name="target_parkour_7" class="/" type="sphere" size="0.050000000000000003" rgba="100 100 100 0.5" pos="-2.333333333333333 0 2.306584362139918"/>
-    <geom name="target_parkour_8" class="/" type="sphere" size="0.050000000000000003" rgba="100 100 100 0.5" pos="-2.6666666666666661 0 2.0267489711934159"/>
-    <geom name="target_parkour_9" class="/" type="sphere" size="0.050000000000000003" rgba="100 100 100 0.5" pos="-3 0 1.5"/>
-    <geom name="target_parkour_10" class="/" type="sphere" size="0.050000000000000003" rgba="100 100 100 0.5" pos="-3 0 1.5"/>
-    <geom name="target_parkour_11" class="/" type="sphere" size="0.050000000000000003" rgba="100 100 100 0.5" pos="-3.3333333333333326 0.032921810699588473 0.9897119341563787"/>
-    <geom name="target_parkour_12" class="/" type="sphere" size="0.050000000000000003" rgba="100 100 100 0.5" pos="-3.666666666666667 0.11522633744855966 0.75102880658436211"/>
-    <geom name="target_parkour_13" class="/" type="sphere" size="0.050000000000000003" rgba="100 100 100 0.5" pos="-4.0000000000000009 0.22222222222222224 0.7222222222222221"/>
-    <geom name="target_parkour_14" class="/" type="sphere" size="0.050000000000000003" rgba="100 100 100 0.5" pos="-4.3333333333333339 0.32921810699588477 0.84156378600823045"/>
-    <geom name="target_parkour_15" class="/" type="sphere" size="0.050000000000000003" rgba="100 100 100 0.5" pos="-4.666666666666667 0.41152263374485598 1.0473251028806585"/>
-    <geom name="target_parkour_16" class="/" type="sphere" size="0.050000000000000003" rgba="100 100 100 0.5" pos="-5 0.44444444444444448 1.2777777777777777"/>
-    <geom name="target_parkour_17" class="/" type="sphere" size="0.050000000000000003" rgba="100 100 100 0.5" pos="-5.333333333333333 0.4032921810699589 1.4711934156378599"/>
-    <geom name="target_parkour_18" class="/" type="sphere" size="0.050000000000000003" rgba="100 100 100 0.5" pos="-5.6666666666666661 0.2633744855967079 1.5658436213991769"/>
-    <geom name="target_parkour_19" class="/" type="sphere" size="0.050000000000000003" rgba="100 100 100 0.5" pos="-6 0 1.5"/>
+    <body name="unnamed_model/">
+      <geom name="unnamed_model//unnamed_geom_0" class="unnamed_model/" type="sphere" size="0.10000000000000001" rgba="100 100 100 0.5"/>
+    </body>
     <body name="morphology/">
       <freejoint name="morphology/"/>
       <body name="morphology//unnamed_body_0">

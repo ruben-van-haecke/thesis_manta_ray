@@ -21,9 +21,9 @@ from thesis_manta_ray.morphology.morphology import MJCMantaRayMorphology
 from thesis_manta_ray.morphology.specification.default import default_morphology_specification
 from thesis_manta_ray.parameters import MantaRayMorphologySpecificationParameterizer
 from task.drag_race import MoveConfig
-from fprs.specification import RobotSpecification
 
 from mujoco_utils.environment import MJCEnvironmentConfig
+from fprs.specification import RobotSpecification
 from dm_control import viewer
 from dm_env import TimeStep
 from gymnasium.core import ObsType
@@ -550,7 +550,7 @@ if __name__ == "__main__":
         robot_specification=robot_spec,
         parameterizer=controller_parameterizer,
         population_size=10,  # make sure this is a multiple of num_envs
-        num_generations=1,
+        num_generations=10,
         outer_optimalization=map_elites,#cma,
         controller=CPG,
         skip_inner_optimalization=True,
@@ -561,18 +561,20 @@ if __name__ == "__main__":
         )
     
     sim.run()
-    for sol in archive:
-        pass
-    sim.plot_observations(normalised_action=sol.parameters,
-                          observation_name="task/avg_angular_velocity")
-    sim.plot_observations(normalised_action=sol.parameters,
-                            observation_name="task/angular_velocity")
-    sim.plot_observations(normalised_action=sol.parameters,
-                            observation_name="task/orientation")
-    sim.viewer(normalised_action=sol.parameters)
+    # for sol in archive:
+    #     pass
+    # sim.plot_observations(normalised_action=sol.parameters,
+    #                       observation_name="task/avg_angular_velocity")
+    # sim.plot_observations(normalised_action=sol.parameters,
+    #                         observation_name="task/angular_velocity")
+    # sim.plot_observations(normalised_action=sol.parameters,
+    #                         observation_name="task/orientation")
+    # sim.viewer(normalised_action=sol.parameters)
+
+
     # best_gen, best_episode = sim.get_best_individual()
-    # # sim.visualize()
+    # sim.visualize()
     # sim.viewer_gen_episode(generation=best_gen, episode=best_episode)
-    # map_elites.optimization_info()
-    # archive.plot_grid_3d(x_label="roll", y_label="pitch", z_label="yaw")
+    map_elites.optimization_info()
+    archive.plot_grid_3d(x_label="roll", y_label="pitch", z_label="yaw")
     # show_video(frame_generator=run_episode())

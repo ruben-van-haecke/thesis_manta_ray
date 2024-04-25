@@ -26,15 +26,22 @@ morphology_specification = default_morphology_specification()
 morphology = MJCMantaRayMorphology(specification=morphology_specification)
 
 # task and controller
-simulation_time = 6
+simulation_time = 40
 velocity = 0.5
 parkour = BezierParkour.load("task/parkours/slight_curve.pkl")
+# config = MoveConfig(control_substeps=20,
+#                     simulation_time=simulation_time, 
+#                     velocity=velocity,
+#                     reward_fn="(E + 200*Δx) * (Δx)",
+#                     task_mode="parkour",
+#                     parkour=parkour)
 config = MoveConfig(control_substeps=20,
                     simulation_time=simulation_time, 
                     velocity=velocity,
                     reward_fn="(E + 200*Δx) * (Δx)",
-                    task_mode="parkour",
-                    parkour=parkour)
+                    task_mode="random_target",
+                    )
+config.target_location = np.array([-5, 2, 1.5])
 dm_env = config.environment(morphology=MJCMantaRayMorphology(specification=morphology_specification), wrap2gym=False)
 observation_spec = dm_env.observation_spec()
 action_spec = dm_env.action_spec()
@@ -70,14 +77,23 @@ difference_behaviour = []
 difference_parameters_controller = []
 
 def policy(timestep: TimeStep) -> np.ndarray:
-    global left, right, phase_bias, behaviour_previous, parameters_controller_previous
+    global left, right, phase_bias, behaviour_previous, parameters_controller_previous, config
     time = timestep.observation["task/time"][0]
     obs = timestep.observation
     # update the controller modulation
-    scaled_action, behaviour_descriptor = rule_based_layer.select_parameters(current_angular_positions=obs["task/orientation"][0],
-                                                       current_xyz_velocities=obs["task/xyz_velocity"][0],
-                                                       current_position=obs["task/position"][0],
-                                                       parkour=parkour)
+    if config.task_mode == "parkour":
+        scaled_action, behaviour_descriptor = rule_based_layer.select_parameters_parkour(current_angular_positions=obs["task/orientation"][0],
+                                                        current_xyz_velocities=obs["task/xyz_velocity"][0],
+                                                        current_position=obs["task/position"][0],
+                                                        parkour=parkour)
+    elif config.task_mode == "random_target":
+        scaled_action, behaviour_descriptor = rule_based_layer.select_parameters_target(current_angular_positions=obs["task/orientation"][0],
+                                                        current_xyz_velocities=obs["task/xyz_velocity"][0],
+                                                        current_position=obs["task/position"][0],
+                                                        target_location=config.target_location,
+                                                        print_flag=True,)
+    else:
+        raise ValueError(f"task_mode: {config.task_mode} not supported")
     phase_bias.append(scaled_action[3])
     if behaviour_previous is not None:
         difference_behaviour.append(np.linalg.norm(behaviour_previous - behaviour_descriptor))
@@ -146,3 +162,6 @@ fig.update_layout(
     yaxis=dict(title=dict(font=dict(size=16)))
 )
 fig.show()
+
+print(f"pearson matrix: {np.corrcoef(difference_behaviour, difference_parameters_controller)}")
+print(f"pearson correlation: {np.corrcoef(difference_behaviour, difference_parameters_controller)[0, 1]}")
