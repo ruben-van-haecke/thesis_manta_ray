@@ -26,9 +26,9 @@ morphology_specification = default_morphology_specification()
 morphology = MJCMantaRayMorphology(specification=morphology_specification)
 
 # task and controller
-simulation_time = 40
+simulation_time = 60
 velocity = 0.5
-parkour = BezierParkour.load("task/parkours/slight_curve.pkl")
+parkour = BezierParkour.load("task/parkours/full_parkour.pkl")
 # config = MoveConfig(control_substeps=20,
 #                     simulation_time=simulation_time, 
 #                     velocity=velocity,
@@ -39,10 +39,11 @@ config = MoveConfig(control_substeps=1,
                     simulation_time=simulation_time, 
                     velocity=velocity,
                     reward_fn="(E + 200*Δx) * (Δx)",
-                    task_mode="random_target",
+                    task_mode="parkour",
+                    parkour=parkour,
+                    points_parkour = 100,
                     )
 print(f"control_timestep: {config.control_timestep}")
-config.target_location = np.array([-5, 2, 1.5])
 dm_env = config.environment(morphology=MJCMantaRayMorphology(specification=morphology_specification), wrap2gym=False)
 observation_spec = dm_env.observation_spec()
 action_spec = dm_env.action_spec()
@@ -77,74 +78,62 @@ parameters_controller_previous = None
 difference_behaviour = []
 difference_parameters_controller = []
 
-control_step = 1.  # time between cpg modulations
-scaled_actions = np.empty((8, int(control_step/config.physics_timestep)))
-counter = 0
-
 def policy(timestep: TimeStep) -> np.ndarray:
-    global left, right, phase_bias, behaviour_previous, parameters_controller_previous, config, scaled_actions, counter, control_step
+    global left, right, phase_bias, behaviour_previous, parameters_controller_previous, config
     time = timestep.observation["task/time"][0]
-    if np.allclose(time[0] % control_step,  0., atol=0.01):
-        print("changing parameters")
-        obs = timestep.observation
-        # update the controller modulation
-        if config.task_mode == "parkour":
-            scaled_action, behaviour_descriptor = rule_based_layer.select_parameters_parkour(current_angular_positions=obs["task/orientation"][0],
-                                                            current_xyz_velocities=obs["task/xyz_velocity"][0],
-                                                            current_position=obs["task/position"][0],
-                                                            parkour=parkour)
-        elif config.task_mode == "random_target":
-            scaled_action, behaviour_descriptor = rule_based_layer.select_parameters_target(current_angular_positions=obs["task/orientation"][0],
-                                                            current_xyz_velocities=obs["task/xyz_velocity"][0],
-                                                            current_position=obs["task/position"][0],
-                                                            target_location=config.target_location,
-                                                            print_flag=True,
-                                                            scaling=True)
-        else:
-            raise ValueError(f"task_mode: {config.task_mode} not supported")
-        controller_parameterizer.parameter_space(specification=controller_specification,
-                                                controller_action=scaled_action,)
-        normalised_actions = (cpg.ask(observation=timestep.observation,
-                                    duration=1.,  
+    if time % 1 == 0:
+        normalised_action = (cpg.ask(observation=timestep.observation,
+                                    duration=None,  # one time step
                                     sampling_period=config.physics_timestep
                                     )+1)/2
-        scaled_actions = minimum + normalised_actions * (maximum - minimum)
-        phase_bias.append(scaled_action[3])
-        if behaviour_previous is not None:
-            difference_behaviour.append(np.linalg.norm(behaviour_previous - behaviour_descriptor))
-        behaviour_previous = behaviour_descriptor
-        if parameters_controller_previous is not None:
-            difference_parameters_controller.append(np.linalg.norm(parameters_controller_previous - scaled_action))
-        parameters_controller_previous = scaled_action
-        # if time < 3:
-        #     scaled_action = archive.solutions[(6, 11, 3)][0].parameters
-        # else:
-        #     scaled_action = archive.solutions[(6, 1, 3)][0].parameters
-        counter = 0
-        # left_actuation.append(scaled_action[index_left_pectoral_fin_x][0])
-        # right_actuation.append(scaled_action[index_right_pectoral_fin_x][0])
-        # return scaled_action[:, 0]
+        scaled_action = minimum + normalised_action * (maximum - minimum)
+        left_actuation.append(scaled_action[index_left_pectoral_fin_x][0])
+        right_actuation.append(scaled_action[index_right_pectoral_fin_x][0])
+        return scaled_action[:, 0]
     
+    obs = timestep.observation
+    # update the controller modulation
+    if config.task_mode == "parkour":
+        scaled_action, behaviour_descriptor = rule_based_layer.select_parameters_parkour(current_angular_positions=obs["task/orientation"][0],
+                                                        current_xyz_velocities=obs["task/xyz_velocity"][0],
+                                                        current_position=obs["task/position"][0],
+                                                        parkour=parkour)
+    elif config.task_mode == "random_target":
+        scaled_action, behaviour_descriptor = rule_based_layer.select_parameters_target(current_angular_positions=obs["task/orientation"][0],
+                                                        current_xyz_velocities=obs["task/xyz_velocity"][0],
+                                                        current_position=obs["task/position"][0],
+                                                        target_location=config.target_location,
+                                                        print_flag=True,
+                                                        scaling=True)
+    else:
+        raise ValueError(f"task_mode: {config.task_mode} not supported")
+    phase_bias.append(scaled_action[3])
+    if behaviour_previous is not None:
+        difference_behaviour.append(np.linalg.norm(behaviour_previous - behaviour_descriptor))
+    behaviour_previous = behaviour_descriptor
+    if parameters_controller_previous is not None:
+        difference_parameters_controller.append(np.linalg.norm(parameters_controller_previous - scaled_action))
+    parameters_controller_previous = scaled_action
+    # if time < 3:
+    #     scaled_action = archive.solutions[(6, 11, 3)][0].parameters
+    # else:
+    #     scaled_action = archive.solutions[(6, 1, 3)][0].parameters
+    controller_parameterizer.parameter_space(specification=controller_specification,
+                                             controller_action=scaled_action,)
 
     # actuation
-    # normalised_action = (cpg.ask(observation=timestep.observation,
-    #                                 duration=None,  # one time step
-    #                                 sampling_period=config.physics_timestep
-    #                                 )+1)/2
-    # scaled_action = minimum + normalised_action * (maximum - minimum)
-    scaled_action = scaled_actions[:, counter]
-    left_actuation.append(scaled_action[index_left_pectoral_fin_x])
-    right_actuation.append(scaled_action[index_right_pectoral_fin_x])
-    counter += 1
-    return scaled_action
-
-
+    normalised_action = (cpg.ask(observation=timestep.observation,
+                                    duration=None,  # one time step
+                                    sampling_period=config.physics_timestep
+                                    )+1)/2
+    scaled_action = minimum + normalised_action * (maximum - minimum)
+    left_actuation.append(scaled_action[index_left_pectoral_fin_x][0])
+    right_actuation.append(scaled_action[index_right_pectoral_fin_x][0])
+    return scaled_action[:, 0]
 viewer.launch(
     environment_loader=dm_env, 
     policy=policy
     )
-
-
 
 
 if False:

@@ -40,6 +40,7 @@ class RuleBased:
                           current_position: np.ndarray,
                           target_location: np.ndarray,
                           print_flag: bool = False,
+                          scaling: bool = True,
                           ) -> np.ndarray:
         """
         :param current_angular_positions: np.ndarray of shape (3,) for roll, pitch, yaw
@@ -73,19 +74,23 @@ class RuleBased:
             yaw *= -1
 
         # scaling
-        m = max(np.abs(target_location_after_transformation[2]), 
-                   np.linalg.norm(np.array([target_location_after_transformation[0], target_location_after_transformation[1]])))
-        pitch = np.abs(target_location_after_transformation[2])/m * pitch
-        yaw = np.linalg.norm(np.array([target_location_after_transformation[0], target_location_after_transformation[1]]))/m * yaw
+        if scaling:
+            m = max(np.abs(target_location_after_transformation[2]), 
+                    np.linalg.norm(np.array([target_location_after_transformation[0], target_location_after_transformation[1]])))
+            pitch = np.abs(target_location_after_transformation[2])/m * pitch
+            yaw = np.linalg.norm(np.array([target_location_after_transformation[0], target_location_after_transformation[1]]))/m * yaw
 
-        features = np.array([roll, pitch, yaw]).reshape(1, -1)
-        self._rolling_features = self._rolling_features * 0.5 + features * 0.5
+            features = np.array([roll, pitch, yaw]).reshape(1, -1)
+            self._rolling_features = self._rolling_features * 0.5 + features * 0.5
+        else:
+            self._rolling_features = np.array([roll, pitch, yaw]).reshape(1, -1)
+
+
         if print_flag:
             print(f"------------------------------------")
             print(f"angular_position: {current_angular_positions}")
             print(f"target_location_after_transformation: {target_location_after_transformation}")
-            print(f"fish_location_after_transformation: {fish_location_after_transformation}")
-            print(f"features: {features}")
+            print(f"rolling_features: {self._rolling_features}")
 
         # get parameters
         sol = self._archive.get_closest_solutions(feature=self._rolling_features, k=1)[0][0]

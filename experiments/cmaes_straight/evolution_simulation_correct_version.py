@@ -516,17 +516,17 @@ if __name__ == "__main__":
                                     controller_specification=controller_specification)
 
     # morphology_space = parameterizer.get_target_parameters(specification=morphology_specification)
-    bounds = np.zeros(shape=(len(controller_parameterizer.get_parameter_labels()), 2))    # minus 1 for the phase bias
-    bounds[:, 1] = 1
-    cma = CMA(mean=np.random.uniform(low=0,
-                                     high=1,
-                                     size=len(controller_parameterizer.get_parameter_labels())),
-              sigma=0.05,
-              bounds=bounds,
-              population_size=10,    # has to be more than 1
-              lr_adapt=True,
-              seed=42
-              )
+    # bounds = np.zeros(shape=(len(controller_parameterizer.get_parameter_labels()), 2))    # minus 1 for the phase bias
+    # bounds[:, 1] = 1
+    # cma = CMA(mean=np.random.uniform(low=0,
+    #                                  high=1,
+    #                                  size=len(controller_parameterizer.get_parameter_labels())),
+    #           sigma=0.05,
+    #           bounds=bounds,
+    #           population_size=10,    # has to be more than 1
+    #           lr_adapt=True,
+    #           seed=42
+    #           )
     roll = 1.
     pitch = 0.8
     yaw = np.pi/8
@@ -550,11 +550,11 @@ if __name__ == "__main__":
         robot_specification=robot_spec,
         parameterizer=controller_parameterizer,
         population_size=10,  # make sure this is a multiple of num_envs
-        num_generations=2,
-        outer_optimalization=cma,#map_elites,#cma,
+        num_generations=10,
+        outer_optimalization=map_elites,#cma,
         controller=CPG,
         skip_inner_optimalization=True,
-        record_actions=True,#False,#True,
+        record_actions=False,#True,
         action_spec=action_spec,
         num_envs=10,
         logging=False,
@@ -572,9 +572,9 @@ if __name__ == "__main__":
     # sim.viewer(normalised_action=sol.parameters)
 
 
-    best_gen, best_episode = sim.get_best_individual()
-    sim.visualize()
-    sim.viewer_gen_episode(generation=best_gen, episode=best_episode)
-    # map_elites.optimization_info()
-    # archive.plot_grid_3d(x_label="roll", y_label="pitch", z_label="yaw")
+    # best_gen, best_episode = sim.get_best_individual()
+    # sim.visualize()
+    # sim.viewer_gen_episode(generation=best_gen, episode=best_episode)
+    map_elites.optimization_info()
+    archive.plot_grid_3d(x_label="roll", y_label="pitch", z_label="yaw")
     # show_video(frame_generator=run_episode())

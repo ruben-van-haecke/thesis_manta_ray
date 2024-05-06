@@ -62,6 +62,7 @@ class MoveConfig(MJCEnvironmentConfig):
             reward_fn: str | None = None,
             task_mode: str = "parkour",
             parkour: BezierParkour | None = None,
+            points_parkour: int|None = None,
             ) -> None:
         super().__init__(
             task = Task, 
@@ -76,6 +77,7 @@ class MoveConfig(MJCEnvironmentConfig):
         self._reward_fn = reward_fn
         self._task_mode = task_mode
         self._parkour = parkour
+        self._points_parkour = points_parkour
         if task_mode == "random_target":
             self._location_target = np.array([0, 0, 0])
         else:
@@ -108,6 +110,10 @@ class MoveConfig(MJCEnvironmentConfig):
     @property
     def parkour(self) -> BezierParkour | None:
         return self._parkour
+    
+    @property
+    def points_parkour(self) -> int | None:
+        return self._points_parkour
     
     @property
     def target_location(self):
@@ -171,7 +177,9 @@ class Task(composer.Task):
     def _build_arena(self) -> OceanArena:
         arena = OceanArena(task_mode=self._config.task_mode, 
                            initial_position=self._config.initial_position,
-                           parkour=self._config.parkour)
+                           parkour=self._config.parkour,
+                           points_parkour=self._config.points_parkour,
+                           )
         return arena
     
     @staticmethod

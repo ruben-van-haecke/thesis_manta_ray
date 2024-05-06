@@ -45,6 +45,7 @@ class OceanArena(Arena):
             task_mode: str = "no_target",
             initial_position: np.ndarray = np.array([0, 0, 0]),
             parkour: BezierParkour = None,
+            points_parkour: int|None = None,
             ) -> None:
         """
         args:
@@ -69,6 +70,7 @@ class OceanArena(Arena):
         self._task_mode = task_mode
         self._initial_position = initial_position
         self._parkour = parkour
+        self._points_parkour = points_parkour
 
         self._configure_assets_directory()
         self._configure_cameras()
@@ -82,6 +84,8 @@ class OceanArena(Arena):
             self.target = self._attach_target()
         elif self._task_mode == "parkour":  # parkour
             self._obstacles_traject = self._build_parkour_line(self._parkour)
+            if points_parkour is None:
+                raise ValueError("points_parkour is None, while parkour is defined")
         # self._build_obstacles()
         # self._build_current_arrow()
         self._configure_water()
@@ -95,7 +99,7 @@ class OceanArena(Arena):
         # get parkour
         self._parkour = parkour
         # get points to build target
-        points = self._parkour.bezier_curve(20)
+        points = self._parkour.bezier_curve(self._points_parkour)
         # build the line
         parkour_line = []
         for index in range(points.shape[0]):
