@@ -115,6 +115,10 @@ class BezierParkour:
         self._segments: List[BezierSegment] = []
         self._lut = self._create_lookup_table()
         self._lut_tangent = self._create_tangent_lookup_table()
+
+    @property
+    def length(self) -> float:
+        return max(self._lut.keys())
     
     def get_distance(self, position: np.ndarray) -> Tuple[float, float]:
         """

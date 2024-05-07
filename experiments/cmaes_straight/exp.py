@@ -2,14 +2,12 @@ import sys
 import os
 import shutil
 
-from thesis_manta_ray.controller.quality_diversity import Archive, MapElites
 from thesis_manta_ray.morphology.specification.default import default_morphology_specification
 from thesis_manta_ray.morphology.morphology import MJCMantaRayMorphology
 from thesis_manta_ray.controller.specification.default import default_controller_specification 
 from thesis_manta_ray.controller.specification.controller_specification import MantaRayCpgControllerSpecification
 from thesis_manta_ray.controller.parameters import MantaRayControllerSpecificationParameterizer
 from thesis_manta_ray.controller.cmaes_cpg_vectorized import CPG
-from thesis_manta_ray.task.bezier_parkour import BezierParkour
 
 from thesis_manta_ray.task.drag_race import MoveConfig, Task
 from fprs.specification import RobotSpecification
@@ -45,14 +43,14 @@ if __name__ == "__main__":
     
 
     # task
-    task_config = MoveConfig(simulation_time=10, 
+    config = MoveConfig(simulation_time=10, 
                          velocity=0.5,
-                         reward_fn="(E + 200*Δx) * (Δx)",
-                         task_mode="no_target",)
-
+                         reward_fn="Δx_random_target",
+                         task_mode="random_target",)
+    config.target_location = np.array([-config.velocity*config.simulation_time, 0, 1.5])
 
     # controller
-    simple_env = task_config.environment(morphology=MJCMantaRayMorphology(specification=morphology_specification), 
+    simple_env = config.environment(morphology=MJCMantaRayMorphology(specification=morphology_specification), 
                                                 wrap2gym=False)
     observation_spec = simple_env.observation_spec()
     action_spec = simple_env.action_spec()
@@ -85,11 +83,11 @@ if __name__ == "__main__":
               )
 
     sim = OptimizerSimulation(
-        task_config=task_config,
+        task_config=config,
         robot_specification=robot_spec,
         parameterizer=controller_parameterizer,
         population_size=10,  # make sure this is a multiple of num_envs
-        num_generations=2,
+        num_generations=20,
         outer_optimalization=cma,
         controller=CPG,
         skip_inner_optimalization=True,
@@ -100,8 +98,7 @@ if __name__ == "__main__":
         )
     
     sim.run()
-    # for sol in archive:
-    #     pass
+
     # sim.plot_observations(normalised_action=sol.parameters,
     #                       observation_name="task/avg_angular_velocity")
     # sim.plot_observations(normalised_action=sol.parameters,
@@ -111,6 +108,7 @@ if __name__ == "__main__":
     # sim.viewer(normalised_action=sol.parameters)
 
 
-    best_gen, best_episode = sim.get_best_individual()
+    parameters = sim.get_best_individual(action=True)
+    sim.viewer(parameters)
     sim.visualize()
-    sim.viewer_gen_episode(generation=best_gen, episode=best_episode)
+    # sim.viewer_gen_episode(generation=best_gen, episode=best_episode)

@@ -5,6 +5,7 @@ import gymnasium as gym
 import numpy as np
 import warnings
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 import wandb
 import copy
 import time
@@ -206,8 +207,10 @@ class OptimizerSimulation:
             reward, obs = self.run_episode_parallel(generation=generation, episode=agent)
 
             if isinstance(self._outer_optimalization, CMA):
+                # minimize the reward
                 solutions += [(single_action, single_reward) for single_action, single_reward in zip(outer_action, reward)]
             elif isinstance(self._outer_optimalization, MapElites):
+                # maximize the reward
                 for env_id in range(self._num_envs):
                     # sol = Solution(behaviour=obs['task/orientation'][env_id, :], 
                     #                           fitness=1/reward[env_id], # fitness has to be optimized
@@ -236,23 +239,29 @@ class OptimizerSimulation:
                                         "best": np.min(self._outer_rewards[gen]),
                                         })
     
-    def get_best_individual(self) -> tuple[int, int]:
+    def get_best_individual(self, action: bool=False) -> tuple[int, int]:
         """
         returns (generation, episode) of the best individual in the population"""
         indices = np.unravel_index(np.argmin(self._outer_rewards, axis=None), self._outer_rewards.shape)
         print("Best individual (gen, episode): ", indices, " , reward: ", self._outer_rewards[indices], " , action: ", self._control_actions[indices])
         for index, value in enumerate(self._control_actions[indices]):
             print(self._parameterizer.get_parameter_labels()[index], ": ", value)
-        return indices
+        if action == True:
+            return self._control_actions[indices]
+        else:
+            return indices
     
     def visualize(self):
-        plt.plot(np.mean(self._outer_rewards, axis=1), label="average")
-        plt.plot(self._outer_rewards.max(axis=1), label="max")
-        plt.plot(self._outer_rewards.min(axis=1), label="min")
-        plt.xlabel("generation")
-        plt.ylabel("reward")
-        plt.legend()
-        plt.show()
+        average_rewards = np.mean(self._outer_rewards, axis=1)
+        max_rewards = self._outer_rewards.max(axis=1)
+        min_rewards = self._outer_rewards.min(axis=1)
+
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=np.arange(len(average_rewards)), y=average_rewards, name="average"))
+        fig.add_trace(go.Scatter(x=np.arange(len(max_rewards)), y=max_rewards, name="max"))
+        fig.add_trace(go.Scatter(x=np.arange(len(min_rewards)), y=min_rewards, name="min"))
+        fig.update_layout(xaxis_title="generation", yaxis_title="distance", font=dict(size=30))
+        fig.show()
     
     def visualize_inner(self, generation: int, episode: int):
         if self._record_actions is False:

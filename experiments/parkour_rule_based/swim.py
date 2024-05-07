@@ -1,4 +1,3 @@
-# controller
 from task.bezier_parkour import BezierParkour
 from thesis_manta_ray.controller.cmaes_cpg_vectorized import CPG
 from thesis_manta_ray.controller.parameters import MantaRayControllerSpecificationParameterizer
@@ -108,6 +107,7 @@ def policy(timestep: TimeStep) -> np.ndarray:
                                     duration=1.,  
                                     sampling_period=config.physics_timestep
                                     )+1)/2
+        # scaling
         scaled_actions = minimum + normalised_actions * (maximum - minimum)
         phase_bias.append(scaled_action[3])
         if behaviour_previous is not None:
@@ -116,22 +116,8 @@ def policy(timestep: TimeStep) -> np.ndarray:
         if parameters_controller_previous is not None:
             difference_parameters_controller.append(np.linalg.norm(parameters_controller_previous - scaled_action))
         parameters_controller_previous = scaled_action
-        # if time < 3:
-        #     scaled_action = archive.solutions[(6, 11, 3)][0].parameters
-        # else:
-        #     scaled_action = archive.solutions[(6, 1, 3)][0].parameters
         counter = 0
-        # left_actuation.append(scaled_action[index_left_pectoral_fin_x][0])
-        # right_actuation.append(scaled_action[index_right_pectoral_fin_x][0])
-        # return scaled_action[:, 0]
-    
 
-    # actuation
-    # normalised_action = (cpg.ask(observation=timestep.observation,
-    #                                 duration=None,  # one time step
-    #                                 sampling_period=config.physics_timestep
-    #                                 )+1)/2
-    # scaled_action = minimum + normalised_action * (maximum - minimum)
     scaled_action = scaled_actions[:, counter]
     left_actuation.append(scaled_action[index_left_pectoral_fin_x])
     right_actuation.append(scaled_action[index_right_pectoral_fin_x])

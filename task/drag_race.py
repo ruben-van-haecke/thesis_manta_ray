@@ -62,7 +62,6 @@ class MoveConfig(MJCEnvironmentConfig):
             reward_fn: str | None = None,
             task_mode: str = "parkour",
             parkour: BezierParkour | None = None,
-            points_parkour: int|None = None,
             ) -> None:
         super().__init__(
             task = Task, 
@@ -77,7 +76,6 @@ class MoveConfig(MJCEnvironmentConfig):
         self._reward_fn = reward_fn
         self._task_mode = task_mode
         self._parkour = parkour
-        self._points_parkour = points_parkour
         if task_mode == "random_target":
             self._location_target = np.array([0, 0, 0])
         else:
@@ -112,10 +110,6 @@ class MoveConfig(MJCEnvironmentConfig):
         return self._parkour
     
     @property
-    def points_parkour(self) -> int | None:
-        return self._points_parkour
-    
-    @property
     def target_location(self):
         if self._task_mode == "random_target":
             return self._location_target
@@ -130,7 +124,7 @@ class MoveConfig(MJCEnvironmentConfig):
     
 
 class Task(composer.Task):
-    reward_functions = ["Δx", "E * Δx", "(E + 200*Δx) * (Δx)"]
+    reward_functions = ["Δx", "Δx_random_target", "E * Δx", "(E + 200*Δx) * (Δx)"]
 
     def __init__(self,
                  config: MoveConfig,#MJCEnvironmentConfig,
@@ -178,7 +172,6 @@ class Task(composer.Task):
         arena = OceanArena(task_mode=self._config.task_mode, 
                            initial_position=self._config.initial_position,
                            parkour=self._config.parkour,
-                           points_parkour=self._config.points_parkour,
                            )
         return arena
     
@@ -370,6 +363,8 @@ class Task(composer.Task):
 
         if self._config.reward_fn == "Δx" or self._config.reward_fn is None:
             return velocity_penalty
+        elif self._config.reward_fn == "Δx_random_target":
+            return np.linalg.norm(self._config.target_location - self._get_entity_xyz_position(entity=self._morphology, physics=physics))
         elif self._config.reward_fn == "E * Δx":
             return self._get_accumulated_energy_sensors(physics=physics)*velocity_penalty #/current_distance_from_initial_position
         elif self._config.reward_fn == "(E + 200*Δx) * (Δx)":

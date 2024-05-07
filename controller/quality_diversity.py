@@ -14,6 +14,7 @@ class Solution:
                  behaviour: np.ndarray,
                  fitness: float,
                  parameters: np.ndarray,
+                 metadata: Dict = {},
                  ):
         """
         Solution to be used in Archive
@@ -25,6 +26,7 @@ class Solution:
         self._behaviour = behaviour
         self._fitness = fitness
         self._parameters = parameters
+        self._metadata = metadata
     
     @property
     def behaviour(self):
@@ -49,12 +51,21 @@ class Solution:
     @parameters.setter
     def parameters(self, value):
         self._parameters = value
+    
+    @property
+    def metadata(self):
+        return self._metadata
+    
+    @metadata.setter
+    def metadata(self, value):
+        assert isinstance(value, dict), "metadata must be a dictionary"
+        self._metadata = value
 
     def __lt__(self, other: 'Solution') -> bool:
         return self.fitness < other.fitness
     
     def __str__(self) -> str:
-        return f"behaviour: {self._behaviour}, fitness: {self._fitness}, parameters: {self._parameters}"
+        return f"behaviour: {self._behaviour}, fitness: {self._fitness}, parameters: {self._parameters}, metadata: {self._metadata}"
     
     def copy(self) -> 'Solution':
         """
@@ -433,6 +444,50 @@ class Archive:
         if store is not None:
             fig.write_html(store)
         fig.show()
+    
+    def plot_distance_neighbours_distribution(self,
+                            parameter_name: str,
+                            title: str = "MAP-Elites Archive",
+                            filename: str | None = None,
+                            show: bool = False,
+                            ) -> None:
+        """
+        For the given parameter, plot the distribution of the differences between the parameter value and the values of the 4 neighbouring solutions. 
+        parameter_name: str: The name of the parameter to plot the distribution of the differences.
+        title: str: The title of the plot.
+        filename: str: The directory and filename to store the plot as an HTML file. If None, the plot is not stored.
+        show: bool: Whether to show the plot.
+        """
+        assert parameter_name in self._parameter_names, "The parameter_name must be one of the parameter names."
+        parameter_index = self._parameter_names.index(parameter_name)
+        differences = []
+        for sol in self:
+            index = self.get_bin_index(sol.behaviour)
+            if index == None: continue
+            neighbours = [(index[0] + 1, index[1], index[2]), 
+                          (index[0] - 1, index[1], index[2]), 
+                          (index[0], index[1] + 1, index[2]), 
+                          (index[0], index[1] - 1, index[2]),
+                          (index[0], index[1], index[2] + 1),
+                          (index[0], index[1], index[2] - 1)]
+            for neighbour in neighbours:
+                if neighbour in self._solutions.keys():
+                    for neighbour_sol in self._solutions[neighbour]:
+                        differences.append(abs(neighbour_sol.parameters[parameter_index] - sol.parameters[parameter_index]))
+        fig = go.Figure(data=[go.Histogram(x=differences)])
+        fig.update_layout(
+            title=title,
+            xaxis_title=f"Difference in {parameter_name}",
+            yaxis_title="Frequency",
+            font=dict(
+            size=25,
+            )
+        )
+        if show:
+            fig.show()
+        if filename is not None:
+            fig.write_html(f"{filename}.html")
+
 
     def get_bins(self) -> List[Tuple[int, ...]]:
         """
