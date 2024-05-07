@@ -217,7 +217,10 @@ class OptimizerSimulation:
                     #                           parameters=outer_action[env_id])
                     sol = Solution(behaviour=obs['task/avg_angular_velocity'][env_id, :], 
                                               fitness=1/reward[env_id], # fitness has to be optimized
-                                              parameters=outer_action[env_id])
+                                              parameters=outer_action[env_id],
+                                              metadata={"velocity": obs["task/average_velocity"],
+                                                        "energy": obs["task/accumulated_energy"],},
+                                              )
                     solutions.append(sol)
             else:
                 raise NotImplementedError(f"This outer_optimalization is not implemented, type: {type(self._outer_optimalization)}")
@@ -260,7 +263,7 @@ class OptimizerSimulation:
         fig.add_trace(go.Scatter(x=np.arange(len(average_rewards)), y=average_rewards, name="average"))
         fig.add_trace(go.Scatter(x=np.arange(len(max_rewards)), y=max_rewards, name="max"))
         fig.add_trace(go.Scatter(x=np.arange(len(min_rewards)), y=min_rewards, name="min"))
-        fig.update_layout(xaxis_title="generation", yaxis_title="reward", font=dict(size=30))
+        fig.update_layout(xaxis_title="generation", yaxis_title="distance", font=dict(size=30))
         fig.show()
     
     def visualize_inner(self, generation: int, episode: int):

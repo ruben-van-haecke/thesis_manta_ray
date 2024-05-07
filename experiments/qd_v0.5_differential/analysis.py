@@ -14,7 +14,10 @@ from scipy.spatial.transform import Rotation
 
 archive = Archive.load("experiments/qd_v0.5_differential/sim_objects/archive.pkl")
 print(f"archive parameter names: {archive._parameter_names}")
+print(f"number of solutions: {len(archive.solutions)}")
+# print(f"number of bins: {len(archive.bins)}")
 
+# plot the distance between neighbours
 archive.plot_distance_neighbours_distribution(parameter_name="fin_amplitude_left",
                                               title="Difference in left fin amplitude between neighbours",
                                               filename="experiments/qd_v0.5_differential/plots/distance_neighbours_distribution_fin_amplitude_left",

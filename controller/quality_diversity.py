@@ -433,7 +433,8 @@ class Archive:
                 xaxis_title=x_label,
                 yaxis_title=y_label,
                 zaxis_title=z_label
-            )
+            ),
+            font=dict(size=20),  # Increase font size
         )
         
         # Set visible range for 3D plot
@@ -463,17 +464,19 @@ class Archive:
         differences = []
         for sol in self:
             index = self.get_bin_index(sol.behaviour)
-            if index == None: continue
+            if index is None:
+                continue
             neighbours = [(index[0] + 1, index[1], index[2]), 
-                          (index[0] - 1, index[1], index[2]), 
-                          (index[0], index[1] + 1, index[2]), 
-                          (index[0], index[1] - 1, index[2]),
-                          (index[0], index[1], index[2] + 1),
-                          (index[0], index[1], index[2] - 1)]
+                  (index[0] - 1, index[1], index[2]), 
+                  (index[0], index[1] + 1, index[2]), 
+                  (index[0], index[1] - 1, index[2]),
+                  (index[0], index[1], index[2] + 1),
+                  (index[0], index[1], index[2] - 1)]
             for neighbour in neighbours:
                 if neighbour in self._solutions.keys():
                     for neighbour_sol in self._solutions[neighbour]:
-                        differences.append(abs(neighbour_sol.parameters[parameter_index] - sol.parameters[parameter_index]))
+                        difference = abs(neighbour_sol.parameters[parameter_index] - sol.parameters[parameter_index])
+                        differences.append(difference)
         fig = go.Figure(data=[go.Histogram(x=differences)])
         fig.update_layout(
             title=title,
@@ -633,24 +636,25 @@ class MapElites:
             title='Archive through time',
             xaxis_title='Number of total Individuals',
             yaxis=dict(
-                title='Number of Individuals in Archive',
-                side='left',
-                showgrid=False,
-                zeroline=False,
+            title='Number of Individuals in Archive',
+            side='left',
+            showgrid=False,
+            zeroline=False,
+            tickfont=dict(size=14)  # Increase font size
             ),
             yaxis2=dict(
-                title='Fitness',
-                side='right',
-                overlaying='y',
-                showgrid=False,
-                zeroline=False,
+            title='Fitness',
+            side='right',
+            overlaying='y',
+            showgrid=False,
+            zeroline=False,
+            tickfont=dict(size=20),  # Increase font size
             ),
         )
 
         if store is not None:
             fig.write_html(store)
         fig.show()
-    
 
 
 if __name__ == "__main__":

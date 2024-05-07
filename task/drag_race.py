@@ -336,6 +336,10 @@ class Task(composer.Task):
         task_observables["task/accumulated_energy"] = ConfinedObservable(
                 low=0, high=np.inf, shape=[1], raw_observation_callable=self._get_accumulated_energy_sensors
                 )
+        task_observables["task/average_velocity"] = ConfinedObservable(
+                low=-np.inf, high=np.inf, shape=[1], raw_observation_callable=lambda
+                    physics: self._get_distance_travelled(physics=physics)/physics.time()
+                )
         # task_observables["task/xy-distance-to-target"] = ConfinedObservable(
         #         low=0, high=np.inf, shape=[1], raw_observation_callable=self._get_xy_distance_to_target
         #         )
