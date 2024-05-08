@@ -218,7 +218,7 @@ class OptimizerSimulation:
                     sol = Solution(behaviour=obs['task/avg_angular_velocity'][env_id, :], 
                                               fitness=1/reward[env_id], # fitness has to be optimized
                                               parameters=outer_action[env_id],
-                                              metadata={"velocity": obs["task/average_velocity"][env_id],
+                                              metadata={"avg_velocity": obs["task/average_velocity"][env_id],
                                                         "energy": obs["task/accumulated_energy"][env_id],
                                                         },
                                               )

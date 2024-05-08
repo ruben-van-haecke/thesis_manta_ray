@@ -218,8 +218,9 @@ class OptimizerSimulation:
                     sol = Solution(behaviour=obs['task/avg_angular_velocity'][env_id, :], 
                                               fitness=1/reward[env_id], # fitness has to be optimized
                                               parameters=outer_action[env_id],
-                                              metadata={"velocity": obs["task/average_velocity"],
-                                                        "energy": obs["task/accumulated_energy"],},
+                                              metadata={"avg_velocity": obs["task/average_velocity"][env_id],
+                                                        "energy": obs["task/accumulated_energy"][env_id],
+                                                        },
                                               )
                     solutions.append(sol)
             else:
@@ -254,17 +255,29 @@ class OptimizerSimulation:
         else:
             return indices
     
-    def visualize(self):
+    def visualize(self,
+                  filename: str = None,
+                  ) -> None:
+        """
+        args:
+            filename: the name of the file (ending with .html) to store the plot in, if None it is not stored"""
         average_rewards = np.mean(self._outer_rewards, axis=1)
+        std_rewards = np.std(self._outer_rewards, axis=1)
         max_rewards = self._outer_rewards.max(axis=1)
         min_rewards = self._outer_rewards.min(axis=1)
 
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=np.arange(len(average_rewards)), y=average_rewards, name="average"))
-        fig.add_trace(go.Scatter(x=np.arange(len(max_rewards)), y=max_rewards, name="max"))
-        fig.add_trace(go.Scatter(x=np.arange(len(min_rewards)), y=min_rewards, name="min"))
-        fig.update_layout(xaxis_title="generation", yaxis_title="distance", font=dict(size=30))
+        fig.add_trace(go.Scatter(x=np.arange(len(average_rewards)), 
+                                 y=average_rewards, name="average", 
+                                 error_y=dict(type='data', array=std_rewards, visible=True),
+                                 ))
+        
+        # fig.add_trace(go.Scatter(x=np.arange(len(max_rewards)), y=max_rewards, name="max"))
+        # fig.add_trace(go.Scatter(x=np.arange(len(min_rewards)), y=min_rewards, name="min"))
+        fig.update_layout(xaxis_title="generation", yaxis_title="distance", font=dict(size=20))
         fig.show()
+        if filename is not None:
+            fig.write_html(filename)
     
     def visualize_inner(self, generation: int, episode: int):
         if self._record_actions is False:

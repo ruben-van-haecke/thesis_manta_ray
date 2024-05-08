@@ -43,7 +43,7 @@ if __name__ == "__main__":
     
 
     # task
-    config = MoveConfig(simulation_time=10, 
+    config = MoveConfig(simulation_time=6, 
                          velocity=0.5,
                          reward_fn="Δx_random_target",
                          task_mode="random_target",)
@@ -75,11 +75,11 @@ if __name__ == "__main__":
     cma = CMA(mean=np.random.uniform(low=0,
                                      high=1,
                                      size=len(controller_parameterizer.get_parameter_labels())),
-              sigma=0.05,
+              sigma=0.1,
               bounds=bounds,
               population_size=10,    # has to be more than 1
               lr_adapt=True,
-              seed=42
+              seed=43
               )
 
     sim = OptimizerSimulation(
@@ -87,7 +87,7 @@ if __name__ == "__main__":
         robot_specification=robot_spec,
         parameterizer=controller_parameterizer,
         population_size=10,  # make sure this is a multiple of num_envs
-        num_generations=2,
+        num_generations=1500,
         outer_optimalization=cma,
         controller=CPG,
         skip_inner_optimalization=True,
@@ -110,5 +110,5 @@ if __name__ == "__main__":
 
     parameters = sim.get_best_individual(action=True)
     sim.viewer(parameters)
-    sim.visualize()
+    sim.visualize(filename="experiments/cmaes_straight/plots/evolution_progress.html")
     # sim.viewer_gen_episode(generation=best_gen, episode=best_episode)
