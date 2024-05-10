@@ -154,7 +154,8 @@ if __name__ == "__main__":
     manta_ray.export_to_xml_with_assets('morphology/manta_ray.xml') #just to be sure
 
     # task
-    task_config = MoveConfig()
+    task_config = MoveConfig(simulation_time=6,
+                             reward_fn='(E + 200*Δx) * (Δx)')
     dm_env = task_config.environment(morphology=manta_ray, wrap2gym=False)
 
     observation_spec = dm_env.observation_spec()
@@ -162,18 +163,12 @@ if __name__ == "__main__":
     export_with_assets(mjcf_model=dm_env.task.root_entity.mjcf_model, out_dir="morphology/manta_ray.xml")
 
     # controller
-    controller_specification = default_controller_specification()
+    controller_specification = default_controller_specification(action_spec=action_spec)
     action_spec = dm_env.action_spec()
     names = action_spec.name.split('\t')
     index_left_pectoral_fin_x = names.index('morphology/left_pectoral_fin_actuator_x')
     index_right_pectoral_fin_x = names.index('morphology/right_pectoral_fin_actuator_x')
-    parameterizer = MantaRayControllerSpecificationParameterizer(
-        amplitude_fin_out_plane_range=(0, 1),
-        frequency_fin_out_plane_range=(0, 3),
-        offset_fin_out_plane_range=(-1, 1),
-        left_fin_x=index_left_pectoral_fin_x,
-        right_fin_x=index_right_pectoral_fin_x,
-    )
+    parameterizer = MantaRayControllerSpecificationParameterizer()
     parameterizer.parameterize_specification(specification=controller_specification)
     cpg = CPG(specification=controller_specification)
 
@@ -182,40 +177,43 @@ if __name__ == "__main__":
     #                          duration=task_config.simulation_time,
     #                          sampling_period=task_config.control_timestep,
     #                          )
+    cpg_modulations = []
+    cpg_actions = []
 
     def oscillator_policy_fn(
             timestep: TimeStep
             ) -> np.ndarray:
-        global action_spec, cpg_actions
+        global action_spec, cpg_actions, cpg_modulations, parameterizer, controller_specification
         names = action_spec.name.split('\t')
         time = timestep.observation["task/time"][0]
-        index_left_pectoral_fin_x = names.index('morphology/left_pectoral_fin_actuator_x')
-        index_right_pectoral_fin_x = names.index('morphology/right_pectoral_fin_actuator_x')
-        index_left_pectoral_fin_z = names.index('morphology/left_pectoral_fin_actuator_z')
-        index_right_pectoral_fin_z = names.index('morphology/right_pectoral_fin_actuator_z')
 
         num_actuators = action_spec.shape[0]
         actions = np.zeros(num_actuators)
-        action = np.zeros(shape=(2, 1))
-        column_index = int(time[0]/task_config.control_timestep)
-        # action = cpg_actions[:, column_index]#.flatten()
-        action = cpg.ask(observation=timestep.observation,
-                        duration=task_config.control_timestep*2,
+        # fin_amplitude_left
+        # fin_offset_left,
+        # frequency_left 
+        # phase_bias_left
+        # fin_amplitude_right
+        # fin_offset_right
+        # frequency_right
+        # phase_bias_right
+        if time < 3:
+            modulation = np.array([1., 0.5, 0.2, 0.,#left
+                                   1., 0.5, 0.2, 1. # right
+                                   ])
+        else:
+            modulation = np.array([1., 0.5, 0.2, 0.5, # left
+                                   0.5, 0.25, 0.2, 0.5 # right
+                                   ])
+        parameterizer.parameter_space(specification=controller_specification,
+                                      controller_action=modulation)
+        actions = cpg.ask(observation=timestep.observation,
+                        duration=None, #task_config.control_timestep,
                         sampling_period=task_config.control_timestep,
                         )
-        action = action[:, -2]
-
-        omega = 10
-        left_fin_action_x = action[0]#np.cos(omega*time)
-        left_fin_action_z = np.sin(omega*time)/20
-        right_fin_action_x = action[1]#np.cos(omega*time+np.pi)
-        right_fin_action_z = np.sin(omega*time+np.pi)/20
-
-        actions[index_left_pectoral_fin_x:index_left_pectoral_fin_x+1] = left_fin_action_x
-        actions[index_right_pectoral_fin_x:index_right_pectoral_fin_x+1] = right_fin_action_x
-        actions[index_left_pectoral_fin_z:index_left_pectoral_fin_z+1] = left_fin_action_z
-        actions[index_right_pectoral_fin_z:index_right_pectoral_fin_z+1] = right_fin_action_z
-        # actions[1::2] = out_of_plane_actions
+        if len(actions.shape) > 1:
+            actions = actions[:, 0]
+        # cpg_actions.append(actions)
 
         # rescale from [-1, 1] to actual joint range
         minimum, maximum = action_spec.minimum, action_spec.maximum
@@ -223,6 +221,7 @@ if __name__ == "__main__":
         normalised_actions = (actions + 1) / 2
 
         scaled_actions = minimum + normalised_actions * (maximum - minimum)
+        cpg_actions.append(scaled_actions)
 
         return scaled_actions
 
@@ -231,3 +230,27 @@ if __name__ == "__main__":
             environment_loader=dm_env, 
             policy=oscillator_policy_fn
             )
+
+    import plotly.graph_objects as go
+
+    # Extract the 4th and 6th elements from cpg_actions
+    cpg_actions_4th = np.array([action[4] for action in cpg_actions])
+    cpg_actions_6th = np.array([action[6] for action in cpg_actions])
+
+    # Create a scatter plot
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=np.linspace(0, task_config.simulation_time, len(cpg_actions_4th)), 
+                             y=cpg_actions_4th, 
+                             name='oscillator 1'))
+    fig.add_trace(go.Scatter(x=np.linspace(0, task_config.simulation_time, len(cpg_actions_6th)), 
+                             y=cpg_actions_6th, 
+                             name='oscillator 2'))
+
+    # Set plot layout
+    fig.update_layout(title='CPG with transition',
+                      xaxis_title='time [s]',
+                      yaxis_title='oscillator output',
+                      font=dict(size=20))
+
+    # Show the plot
+    fig.show()

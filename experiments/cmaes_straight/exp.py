@@ -72,9 +72,10 @@ if __name__ == "__main__":
     # morphology_space = parameterizer.get_target_parameters(specification=morphology_specification)
     bounds = np.zeros(shape=(len(controller_parameterizer.get_parameter_labels()), 2))    # minus 1 for the phase bias
     bounds[:, 1] = 1
-    cma = CMA(mean=np.random.uniform(low=0,
-                                     high=1,
-                                     size=len(controller_parameterizer.get_parameter_labels())),
+    cma = CMA(mean=np.array([1, 0.5, 0.5, 0, 1, 0.5, 0.5, 0]),
+            #   np.random.uniform(low=0,
+            #                          high=1,
+            #                          size=len(controller_parameterizer.get_parameter_labels())),
               sigma=0.1,
               bounds=bounds,
               population_size=10,    # has to be more than 1

@@ -60,7 +60,7 @@ class MoveConfig(MJCEnvironmentConfig):
             camera_ids: List[int] | None = None,
             velocity: float = 0.5,
             reward_fn: str | None = None,
-            task_mode: str = "parkour",
+            task_mode: str = "no_target",
             parkour: BezierParkour | None = None,
             ) -> None:
         super().__init__(

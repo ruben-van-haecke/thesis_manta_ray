@@ -5,7 +5,7 @@ import shutil
 from thesis_manta_ray.controller.quality_diversity import Archive, MapElites
 from thesis_manta_ray.morphology.specification.default import default_morphology_specification
 from thesis_manta_ray.morphology.morphology import MJCMantaRayMorphology
-from thesis_manta_ray.controller.specification.default import default_controller_dragrace_specification 
+from thesis_manta_ray.controller.specification.default import default_controller_specification
 from thesis_manta_ray.controller.specification.controller_specification import MantaRayCpgControllerSpecification
 from thesis_manta_ray.controller.parameters import MantaRayControllerSpecificationParameterizer
 from thesis_manta_ray.controller.cmaes_cpg_vectorized import CPG
@@ -45,11 +45,11 @@ if __name__ == "__main__":
     names = action_spec.name.split('\t')
     index_left_pectoral_fin_x = names.index('morphology/left_pectoral_fin_actuator_x')
     index_right_pectoral_fin_x = names.index('morphology/right_pectoral_fin_actuator_x')
-    controller_specification = default_controller_dragrace_specification(action_spec=action_spec)
+    controller_specification = default_controller_specification(action_spec=action_spec)
     controller_parameterizer = MantaRayControllerSpecificationParameterizer(
-        amplitude_fin_out_plane_range=(0, 1),
-        frequency_fin_out_plane_range=(0, 1),
-        offset_fin_out_plane_range=(0, np.pi),
+        # amplitude_fin_out_plane_range=(0, 1),
+        # frequency_fin_out_plane_range=(0, 1),
+        # offset_fin_out_plane_range=(0, np.pi),
     )
     controller_parameterizer.parameterize_specification(specification=controller_specification)
     print(f"controller: {controller_specification}")
@@ -86,14 +86,14 @@ if __name__ == "__main__":
                          task_mode="random_target",),
         robot_specification=robot_spec,
         parameterizer=controller_parameterizer,
-        population_size=10,  # make sure this is a multiple of num_envs
-        num_generations=2000,
+        population_size=12,  # make sure this is a multiple of num_envs
+        num_generations=3000,
         outer_optimalization=map_elites,#cma,
         controller=CPG,
         skip_inner_optimalization=True,
         record_actions=True,
         action_spec=action_spec,
-        num_envs=10,
+        num_envs=12,
         logging=False,
         )
     

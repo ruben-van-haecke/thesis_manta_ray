@@ -12,28 +12,16 @@
     <default class="/">
       <geom contype="1" conaffinity="0"/>
     </default>
-    <default class="unnamed_model/"/>
     <default class="morphology/">
       <geom contype="1" conaffinity="0"/>
     </default>
   </default>
   <asset>
     <texture name="//unnamed_texture_0" type="skybox" builtin="flat" rgb1="1 1 1" rgb2="1 1 1" width="200" height="200"/>
-    <texture name="groundplane" type="2d" builtin="checker" rgb1="0.20000000000000001 0.29999999999999999 0.40000000000000002" rgb2="0.10000000000000001 0.20000000000000001 0.29999999999999999" mark="edge" markrgb="0.80000000000000004 0.80000000000000004 0.80000000000000004" width="200" height="200"/>
-    <material name="groundplane" class="/" texture="groundplane" texrepeat="2 2" texuniform="true" reflectance="0"/>
-    <hfield name="heightmap" file="heightmap_0-91fcc20c0c8c7a3740585df582e9b54536c2b6da.png" size="10 10 1.5 0.5"/>
   </asset>
   <worldbody>
     <camera name="top_camera" class="/" pos="-1 -1 20" quat="1 0 0 0"/>
     <light name="//unnamed_light_0" class="/" directional="true" castshadow="true" pos="0 0 20" dir="0 0 -0.5" diffuse="0.10000000000000001 0.10000000000000001 0.10000000000000001"/>
-    <geom name="height_map_geom" class="/" type="hfield" conaffinity="1" material="groundplane" hfield="heightmap"/>
-    <geom name="north_wall" class="/" type="box" conaffinity="1" size="10 0.10000000000000001 2.1000000000000001" rgba="0.45098039215686275 0.57647058823529407 0.70196078431372544 0.19607843137254902" pos="0 10.1 1.6000000000000001"/>
-    <geom name="south_wall" class="/" type="box" conaffinity="1" size="10 0.10000000000000001 2.1000000000000001" rgba="0.45098039215686275 0.57647058823529407 0.70196078431372544 0.19607843137254902" pos="0 -10.1 1.6000000000000001"/>
-    <geom name="east_wall" class="/" type="box" conaffinity="1" size="0.10000000000000001 10.199999999999999 2.1000000000000001" rgba="0.45098039215686275 0.57647058823529407 0.70196078431372544 0.19607843137254902" pos="-10.1 0 1.6000000000000001"/>
-    <geom name="west_wall" class="/" type="box" conaffinity="1" size="0.10000000000000001 10.199999999999999 2.1000000000000001" rgba="0.45098039215686275 0.57647058823529407 0.70196078431372544 0.19607843137254902" pos="10.1 0 1.6000000000000001"/>
-    <body name="unnamed_model/">
-      <geom name="unnamed_model//unnamed_geom_0" class="unnamed_model/" type="sphere" size="0.10000000000000001" rgba="100 100 100 0.5"/>
-    </body>
     <body name="morphology/">
       <freejoint name="morphology/"/>
       <body name="morphology//unnamed_body_0">

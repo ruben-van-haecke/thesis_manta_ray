@@ -1,0 +1,36 @@
+Best individual (gen, episode):  (1446, 3)  , reward:  1.8859225245954523  , action:  [0.00197533 0.9983839  0.78892608 0.61051376 0.0013127  0.99156591
+ 0.86785243 0.40829028]
+fin_amplitude_left :  0.00197533400811939
+fin_offset_left :  0.9983838983872086
+frequency_left :  0.7889260766481424
+phase_bias_left :  0.6105137599928071
+fin_amplitude_right :  0.0013126989623165955
+fin_offset_right :  0.991565912255232
+frequency_right :  0.8678524335997282
+phase_bias_right :  0.40829027733874934
+
+
+cma = CMA(mean=np.random.uniform(low=0,
+                                     high=1,
+                                     size=len(controller_parameterizer.get_parameter_labels())),
+              sigma=0.5,
+              bounds=bounds,
+              population_size=10,    # has to be more than 1
+              lr_adapt=True,
+              seed=43
+              )
+
+    sim = OptimizerSimulation(
+        task_config=config,
+        robot_specification=robot_spec,
+        parameterizer=controller_parameterizer,
+        population_size=10,  # make sure this is a multiple of num_envs
+        num_generations=1500,
+        outer_optimalization=cma,
+        controller=CPG,
+        skip_inner_optimalization=True,
+        record_actions=True,
+        action_spec=action_spec,
+        num_envs=10,
+        logging=False,
+        )

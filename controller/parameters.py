@@ -86,6 +86,17 @@ class MantaRayControllerSpecificationParameterizer(ControllerSpecificationParame
         specification.omega.value = specification.omega.low + frequency * (specification.omega.high - specification.omega.low)
         specification.phase_biases.value = specification.phase_biases.low + phase_bias * (specification.phase_biases.high - specification.phase_biases.low)
     
+    def get_scaled_parameters(self,
+                              specification: MantaRayCpgControllerSpecification,
+                              ) -> np.ndarray:
+        scaled_action = np.zeros(shape=(8, ))
+        scaled_action[[0, 4]] = specification.r.value
+        scaled_action[[1, 5]] = specification.x.value
+        scaled_action[[2, 6]] = specification.omega.value
+        scaled_action[[3, 7]] = specification.phase_biases.value
+        return scaled_action
+    
+    
 
     def get_parameter_labels(
             self,

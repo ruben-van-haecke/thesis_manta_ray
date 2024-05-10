@@ -1,0 +1,31 @@
+    archive = Archive(parameter_bounds=[(0, 1) for _ in range(len(controller_parameterizer.get_parameter_labels()))],
+                      feature_bounds=[(-np.pi, np.pi), (-np.pi/2, np.pi/2), (-np.pi, np.pi)], 
+                      resolutions=[10, 10, 10],
+                      parameter_names=controller_parameterizer.get_parameter_labels(), 
+                      feature_names=["roll", "pitch", "yawn"],
+                      symmetry = [('phase_bias_right', 'phase_bias_left'), 
+                                ('frequency_right', 'frequency_left'), 
+                                ('fin_offset_right', 'fin_offset_left'), 
+                                ('fin_amplitude_right', 'fin_amplitude_left'),
+                                ],
+                        max_items_per_bin=1
+                      )
+    map_elites = MapElites(archive, archive_file="experiments/qd_v0.5_t3/sim_objects/archive.pkl")
+
+    sim = OptimizerSimulation(
+        task_config=MoveConfig(simulation_time=3, 
+                         velocity=0.5,
+                         reward_fn="(E + 200*Δx) * (Δx)",
+                         task_mode="random_target",),
+        robot_specification=robot_spec,
+        parameterizer=controller_parameterizer,
+        population_size=12,  # make sure this is a multiple of num_envs
+        num_generations=3000,
+        outer_optimalization=map_elites,#cma,
+        controller=CPG,
+        skip_inner_optimalization=True,
+        record_actions=True,
+        action_spec=action_spec,
+        num_envs=12,
+        logging=False,
+        )
