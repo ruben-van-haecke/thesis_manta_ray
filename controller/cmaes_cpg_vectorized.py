@@ -193,6 +193,7 @@ if __name__ == "__main__":
         # fin_offset_left,
         # frequency_left 
         # phase_bias_left
+
         # fin_amplitude_right
         # fin_offset_right
         # frequency_right
@@ -202,8 +203,8 @@ if __name__ == "__main__":
                                    1., 0.5, 0.2, 1. # right
                                    ])
         else:
-            modulation = np.array([1., 0.5, 0.2, 0.5, # left
-                                   0.5, 0.25, 0.2, 0.5 # right
+            modulation = np.array([1., 0.5, 0.2, 0.75, # left
+                                   0.5, 0.25, 0.2, 0.25 # right
                                    ])
         parameterizer.parameter_space(specification=controller_specification,
                                       controller_action=modulation)
@@ -221,7 +222,8 @@ if __name__ == "__main__":
         normalised_actions = (actions + 1) / 2
 
         scaled_actions = minimum + normalised_actions * (maximum - minimum)
-        cpg_actions.append(scaled_actions)
+        cpg_actions.append(actions)
+        cpg_modulations.append(parameterizer.get_scaled_parameters(specification=controller_specification))
 
         return scaled_actions
 
@@ -233,24 +235,28 @@ if __name__ == "__main__":
 
     import plotly.graph_objects as go
 
+    print(f"specification: {controller_specification}")
+
     # Extract the 4th and 6th elements from cpg_actions
     cpg_actions_4th = np.array([action[4] for action in cpg_actions])
     cpg_actions_6th = np.array([action[6] for action in cpg_actions])
 
     # Create a scatter plot
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=np.linspace(0, task_config.simulation_time, len(cpg_actions_4th)), 
-                             y=cpg_actions_4th, 
+    fig.add_trace(go.Scatter(x=np.linspace(0, task_config.simulation_time, len(cpg_actions_4th)-1), 
+                             y=cpg_actions_4th[1:], 
                              name='oscillator 1'))
-    fig.add_trace(go.Scatter(x=np.linspace(0, task_config.simulation_time, len(cpg_actions_6th)), 
-                             y=cpg_actions_6th, 
+    fig.add_trace(go.Scatter(x=np.linspace(0, task_config.simulation_time, len(cpg_actions_6th)-1), 
+                             y=cpg_actions_6th[1:], 
                              name='oscillator 2'))
 
     # Set plot layout
     fig.update_layout(title='CPG with transition',
                       xaxis_title='time [s]',
                       yaxis_title='oscillator output',
-                      font=dict(size=20))
+                      font=dict(size=25))
 
     # Show the plot
     fig.show()
+    print(f"modulation 1: {cpg_modulations[0]}")
+    print(f"modulation 2: {cpg_modulations[-1]}")

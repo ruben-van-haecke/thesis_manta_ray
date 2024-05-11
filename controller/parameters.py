@@ -81,8 +81,10 @@ class MantaRayControllerSpecificationParameterizer(ControllerSpecificationParame
         phase_bias[1] = 1-phase_bias[0]  # loops should sum to a multiple of 2*pi, in this case sum to 0
         
         # updating specification
-        specification.x.value = specification.x.low + offset * (specification.x.high - specification.x.low)
-        specification.r.value = specification.r.low + amplitude * (specification.r.high - specification.r.low) - np.abs(specification.x.value)
+        specification.x.value = -1 + offset*(2)#specification.x.low + offset * (specification.x.high - specification.x.low) # bounded in -1, 1
+        specification.r.value = np.minimum(specification.r.low + amplitude * (specification.r.high - specification.r.low), # bounded in -1, 1
+                                           1-np.abs(specification.x.value))
+
         specification.omega.value = specification.omega.low + frequency * (specification.omega.high - specification.omega.low)
         specification.phase_biases.value = specification.phase_biases.low + phase_bias * (specification.phase_biases.high - specification.phase_biases.low)
     
