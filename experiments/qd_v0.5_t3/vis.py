@@ -1,7 +1,7 @@
 import numpy as np
 from controller.cmaes_cpg_vectorized import CPG
 from controller.parameters import MantaRayControllerSpecificationParameterizer
-from controller.specification.default import default_controller_dragrace_specification
+from controller.specification.default import default_controller_specification
 from evolution_simulation import OptimizerSimulation
 from morphology.morphology import MJCMantaRayMorphology
 from morphology.specification.default import default_morphology_specification
@@ -25,12 +25,8 @@ action_spec = simple_env.action_spec()
 names = action_spec.name.split('\t')
 index_left_pectoral_fin_x = names.index('morphology/left_pectoral_fin_actuator_x')
 index_right_pectoral_fin_x = names.index('morphology/right_pectoral_fin_actuator_x')
-controller_specification = default_controller_dragrace_specification(action_spec=action_spec)
-controller_parameterizer = MantaRayControllerSpecificationParameterizer(
-    amplitude_fin_out_plane_range=(0, 1),
-    frequency_fin_out_plane_range=(0, 1),
-    offset_fin_out_plane_range=(0, np.pi),
-)
+controller_specification = default_controller_specification(action_spec=action_spec)
+controller_parameterizer = MantaRayControllerSpecificationParameterizer()
 controller_parameterizer.parameterize_specification(specification=controller_specification)
 cpg = CPG(specification=controller_specification,
             low=-1,
@@ -64,7 +60,8 @@ config = MoveConfig(simulation_time=simulation_time,
 
 
 if True:    # verify the point
-    sol = archive.solutions[(3, 5, 0)][0]
+    sol = archive.solutions[(4, 8, 5)][0]
+    print(f"behaviour: {sol.behaviour}")
     pitch, yawn = sol.behaviour[[1, 2]]
     parameters = sol.parameters
 else:   # try a chosen point
