@@ -53,23 +53,31 @@ class RuleBased:
             np.ndarray of shape (3,) for roll, pitch, yaw, corresponding to the behaviour descriptor
         """
         #check if the transformation is correct
+        current_angular_positions = current_angular_positions + np.array([0, 0, np.pi])
+        # rotation_after = rotate(point=[1, 0, 0], rotation=current_angular_positions)
+        # print(f"rotation_after: {rotation_after}")
         target_location_after_transformation = translate_rotate(point=target_location,
                          translatation=current_position,
-                         rotation=-current_angular_positions+np.array([0, 0, np.pi]))
+                         rotation=-current_angular_positions)
         fish_location_after_transformation = translate_rotate(point=current_position,
                          translatation=current_position,
-                         rotation=-current_angular_positions+np.array([0, 0, np.pi]))
+                         rotation=-current_angular_positions)
         # find the behaviour descriptor
         # roll
         roll = 0
         # pitch
-        pitch = np.arctan(np.abs(target_location_after_transformation[2]/target_location_after_transformation[0]))
-        pitch += np.pi/2 if target_location_after_transformation[0] < 0 else 0
+        pitch = np.abs(np.arctan(target_location_after_transformation[2]/target_location_after_transformation[0]))
+        pitch = np.pi - pitch if target_location_after_transformation[0] < 0 else pitch
+        pitch = 0.4 * pitch/np.linalg.norm(target_location_after_transformation)
         if target_location_after_transformation[2] < 0: # negative pitch (there has been a rotation of 180 degrees around the z-axis)
             pitch *= -1
+
         # yaw
-        yaw = np.arctan(np.abs(target_location_after_transformation[1]/target_location_after_transformation[0]))
-        yaw += np.pi/2 if target_location_after_transformation[0] < 0 else 0
+        yaw = np.abs(np.arctan(target_location_after_transformation[1]/target_location_after_transformation[0]))
+        print(f"yaw: {yaw}")
+        yaw = np.pi - yaw if target_location_after_transformation[0] < 0 else yaw
+        yaw = 0.4 * yaw / np.linalg.norm(target_location_after_transformation)
+        print(f"yaw: {yaw}")
         if target_location_after_transformation[1] < 0: # negative yaw
             yaw *= -1
 
@@ -88,7 +96,7 @@ class RuleBased:
 
         if print_flag:
             print(f"------------------------------------")
-            print(f"angular_position: {current_angular_positions}")
+            print(f"orientation: {current_angular_positions}")
             print(f"target_location_after_transformation: {target_location_after_transformation}")
             print(f"rolling_features: {self._rolling_features}")
 

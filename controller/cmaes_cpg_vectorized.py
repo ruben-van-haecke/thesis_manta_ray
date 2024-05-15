@@ -154,8 +154,10 @@ if __name__ == "__main__":
     manta_ray.export_to_xml_with_assets('morphology/manta_ray.xml') #just to be sure
 
     # task
-    task_config = MoveConfig(simulation_time=6,
-                             reward_fn='(E + 200*Δx) * (Δx)')
+    task_config = MoveConfig(simulation_time=20,
+                             reward_fn='(E + 200*Δx) * (Δx)',
+                             task_mode='random_target',
+                             )
     dm_env = task_config.environment(morphology=manta_ray, wrap2gym=False)
 
     observation_spec = dm_env.observation_spec()
@@ -179,11 +181,12 @@ if __name__ == "__main__":
     #                          )
     cpg_modulations = []
     cpg_actions = []
+    modulation2 = None
 
     def oscillator_policy_fn(
             timestep: TimeStep
             ) -> np.ndarray:
-        global action_spec, cpg_actions, cpg_modulations, parameterizer, controller_specification
+        global action_spec, cpg_actions, cpg_modulations, parameterizer, controller_specification, modulation2
         names = action_spec.name.split('\t')
         time = timestep.observation["task/time"][0]
 
@@ -198,14 +201,20 @@ if __name__ == "__main__":
         # fin_offset_right
         # frequency_right
         # phase_bias_right
-        if time < 3:
+        # straigth
+        if time < 6:
             modulation = np.array([1., 0.5, 0.2, 0.,#left
                                    1., 0.5, 0.2, 1. # right
                                    ])
-        else:
-            modulation = np.array([1., 0.5, 0.2, 0.75, # left
-                                   0.5, 0.25, 0.2, 0.25 # right
+        elif time < 11:  # right
+            modulation = np.array([1., 0.5, 0.2, 0., # left
+                                   0., 0.5, 0., 0. # right
                                    ])
+            modulation2 = modulation
+        else:   # up
+            modulation = np.array([1., 0.75, 0.2, 0., # left
+                                      1., 0.25, 0.2, 0. # right
+                                      ])
         parameterizer.parameter_space(specification=controller_specification,
                                       controller_action=modulation)
         actions = cpg.ask(observation=timestep.observation,
@@ -245,10 +254,10 @@ if __name__ == "__main__":
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=np.linspace(0, task_config.simulation_time, len(cpg_actions_4th)-1), 
                              y=cpg_actions_4th[1:], 
-                             name='oscillator 1'))
+                             name='oscillator left'))
     fig.add_trace(go.Scatter(x=np.linspace(0, task_config.simulation_time, len(cpg_actions_6th)-1), 
                              y=cpg_actions_6th[1:], 
-                             name='oscillator 2'))
+                             name='oscillator right'))
 
     # Set plot layout
     fig.update_layout(title='CPG with transition',
@@ -260,3 +269,4 @@ if __name__ == "__main__":
     fig.show()
     print(f"modulation 1: {cpg_modulations[0]}")
     print(f"modulation 2: {cpg_modulations[-1]}")
+    print(f"modulation 3: {cpg_modulations[-2]}")

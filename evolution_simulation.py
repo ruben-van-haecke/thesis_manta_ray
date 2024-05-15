@@ -212,19 +212,19 @@ class OptimizerSimulation:
             elif isinstance(self._outer_optimalization, MapElites):
                 # maximize the reward
                 for env_id in range(self._num_envs):
-                    sol = Solution(behaviour=obs['task/orientation'][env_id, :], 
-                                              fitness=1/reward[env_id], # fitness has to be optimized
-                                              parameters=outer_action[env_id],
-                                              metadata={"avg_velocity": obs["task/average_velocity"][env_id],
-                                                        "energy": obs["task/accumulated_energy"][env_id],
-                                                        },)
-                    # sol = Solution(behaviour=obs['task/avg_angular_velocity'][env_id, :], 
+                    # sol = Solution(behaviour=obs['task/orientation'][env_id, :], 
                     #                           fitness=1/reward[env_id], # fitness has to be optimized
                     #                           parameters=outer_action[env_id],
                     #                           metadata={"avg_velocity": obs["task/average_velocity"][env_id],
                     #                                     "energy": obs["task/accumulated_energy"][env_id],
-                    #                                     },
-                    #                           )
+                    #                                     },)
+                    sol = Solution(behaviour=obs['task/avg_angular_velocity'][env_id, :], 
+                                              fitness=1/reward[env_id], # fitness has to be optimized
+                                              parameters=outer_action[env_id],
+                                              metadata={"avg_velocity": obs["task/average_velocity"][env_id],
+                                                        "energy": obs["task/accumulated_energy"][env_id],
+                                                        },
+                                              )
                     solutions.append(sol)
             else:
                 raise NotImplementedError(f"This outer_optimalization is not implemented, type: {type(self._outer_optimalization)}")

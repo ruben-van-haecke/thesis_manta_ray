@@ -89,14 +89,14 @@ if __name__ == "__main__":
         task_config=task_config,
         robot_specification=robot_spec,
         parameterizer=controller_parameterizer,
-        population_size=10,  # make sure this is a multiple of num_envs
-        num_generations=8000,
+        population_size=12,  # make sure this is a multiple of num_envs
+        num_generations=4000,
         outer_optimalization=map_elites,
         controller=CPG,
         skip_inner_optimalization=True,
         record_actions=False,#True,
         action_spec=action_spec,
-        num_envs=10,
+        num_envs=12,
         logging=False,
         )
     

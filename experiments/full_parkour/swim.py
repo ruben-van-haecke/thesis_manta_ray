@@ -39,10 +39,11 @@ config = MoveConfig(control_substeps=1,
                     simulation_time=simulation_time, 
                     velocity=velocity,
                     reward_fn="(E + 200*Δx) * (Δx)",
-                    task_mode="parkour",
-                    parkour=parkour,
+                    task_mode="random_target",
+                    # parkour=parkour,
                     )
 print(f"control_timestep: {config.control_timestep}")
+config.target_location = np.array([-10, 5, 1])
 dm_env = config.environment(morphology=MJCMantaRayMorphology(specification=morphology_specification), wrap2gym=False)
 observation_spec = dm_env.observation_spec()
 action_spec = dm_env.action_spec()
@@ -77,7 +78,7 @@ parameters_controller_previous = None
 difference_behaviour = []
 difference_parameters_controller = []
 
-control_step = 1.  # time between cpg modulations
+control_step = 5.  # time between cpg modulations
 scaled_actions = np.empty((8, int(control_step/config.physics_timestep)))
 counter = 0
 
@@ -89,7 +90,7 @@ def policy(timestep: TimeStep) -> np.ndarray:
         obs = timestep.observation
         # update the controller modulation
         if config.task_mode == "parkour":
-            scaled_action, behaviour_descriptor = rule_based_layer.select_parameters_parkour(current_angular_positions=obs["task/orientation"][0],
+            cpg_parameters, behaviour_descriptor = rule_based_layer.select_parameters_parkour(current_angular_positions=obs["task/orientation"][0],
                                                             current_xyz_velocities=obs["task/xyz_velocity"][0],
                                                             current_position=obs["task/position"][0],
                                                             print_flag=True,
@@ -97,29 +98,32 @@ def policy(timestep: TimeStep) -> np.ndarray:
                                                             parkour=parkour,
                                                             )
         elif config.task_mode == "random_target":
-            scaled_action, behaviour_descriptor = rule_based_layer.select_parameters_target(current_angular_positions=obs["task/orientation"][0],
+            cpg_parameters, behaviour_descriptor = rule_based_layer.select_parameters_target(current_angular_positions=obs["task/orientation"][0],
                                                             current_xyz_velocities=obs["task/xyz_velocity"][0],
                                                             current_position=obs["task/position"][0],
                                                             target_location=config.target_location,
                                                             print_flag=True,
-                                                            scaling=True)
+                                                            scaling=False)
         else:
             raise ValueError(f"task_mode: {config.task_mode} not supported")
+        cpg_parameters = np.array([1., 0.5, 0.2, 0.,#left
+                                   1., 0.5, 0.2, 1. # right
+                                   ])
         controller_parameterizer.parameter_space(specification=controller_specification,
-                                                controller_action=scaled_action,)
+                                                controller_action=cpg_parameters,)
         normalised_actions = (cpg.ask(observation=timestep.observation,
-                                    duration=1.,  
+                                    duration=control_step,  
                                     sampling_period=config.physics_timestep
                                     )+1)/2
         # scaling
         scaled_actions = minimum + normalised_actions * (maximum - minimum)
-        phase_bias.append(scaled_action[3])
+        phase_bias.append(controller_parameterizer.get_scaled_parameters(specification=controller_specification)[3])
         if behaviour_previous is not None:
             difference_behaviour.append(np.linalg.norm(behaviour_previous - behaviour_descriptor))
         behaviour_previous = behaviour_descriptor
         if parameters_controller_previous is not None:
-            difference_parameters_controller.append(np.linalg.norm(parameters_controller_previous - scaled_action))
-        parameters_controller_previous = scaled_action
+            difference_parameters_controller.append(np.linalg.norm(parameters_controller_previous - cpg_parameters))
+        parameters_controller_previous = cpg_parameters
         counter = 0
 
     scaled_action = scaled_actions[:, counter]

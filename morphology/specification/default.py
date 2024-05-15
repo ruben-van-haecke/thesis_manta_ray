@@ -7,7 +7,7 @@ MantaRayPectoralFinSpecification, MantaRayPectoralFinJointSpecification, MantaRa
 MantaRayPectoralFinTendonSpecification
 
 
-scaling_factor = 1.0/22.5
+scaling_factor = 1.0/25
 # define default values
 # tail
 tail_length = 10*scaling_factor
