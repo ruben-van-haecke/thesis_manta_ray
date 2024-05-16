@@ -260,7 +260,21 @@ class Task(composer.Task):
             orientation = Rotation.from_rotvec(2*np.arcsin(orientation[0])*orientation[1:]).as_euler('xyz', degrees=False)
             return orientation
         else:
-            raise ValueError('get_velocity cannot be used on a non-free entity')
+            raise ValueError('_get_orientation cannot be used on a non-free entity')
+    
+    def _get_orientation_quat(self,
+                              physics: mjcf.Physics,
+                              ) -> float:
+        # orientation = self._get_orientation_entity(entity=self._morphology, physics=physics)
+        root_joint = mjcf.get_frame_freejoint(self._morphology.mjcf_model)
+        if root_joint:
+            var = physics.bind(root_joint)
+            # print( physics.data.xpos)
+            # print("----------------------------------------")
+            id = var._physics.data.body('morphology/torso').id
+            return var._physics.data.xquat[id]
+        else:
+            raise ValueError('_get_orientation cannot be used on a non-free entity')
     
     def _get_position(self,
                       physics: mjcf.Physics,
@@ -284,7 +298,7 @@ class Task(composer.Task):
                               ) -> float:
         # if physics.time() < 2:
         #     return np.nan
-        lin_vel, angular_velocity = self._morphology.get_velocity(physics=physics) # (position, quaternion) with quaternion [w, x, y, z]
+        lin_vel, angular_velocity = self._morphology.get_velocity(physics=physics)
         angular_vel = np.array(angular_velocity)
         self._angular_velocity_sum += angular_vel
         self._angular_velocity_num += 1
@@ -317,6 +331,9 @@ class Task(composer.Task):
                 )
         task_observables["task/force"] = ConfinedObservable(
                 low=0, high=np.inf, shape=[4], raw_observation_callable=self._get_sensor_actuatorfrc
+                )
+        task_observables["task/orientation_quat"] = ConfinedObservable(
+                low=-np.inf, high=np.inf, shape=[4], raw_observation_callable=self._get_orientation_quat
                 )
         task_observables["task/orientation"] = ConfinedObservable(
                 low=-np.pi, high=np.pi, shape=[3], raw_observation_callable=self._get_orientation

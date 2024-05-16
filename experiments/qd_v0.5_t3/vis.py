@@ -60,7 +60,7 @@ config = MoveConfig(simulation_time=simulation_time,
 
 
 if True:    # verify the point
-    sol = archive.solutions[(4, 8, 5)][0]
+    sol = archive.solutions[(7, 4, 3)][0]
     print(f"behaviour: {sol.behaviour}")
     pitch, yawn = sol.behaviour[[1, 2]]
     parameters = sol.parameters

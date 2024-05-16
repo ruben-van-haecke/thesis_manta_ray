@@ -26,24 +26,24 @@ morphology_specification = default_morphology_specification()
 morphology = MJCMantaRayMorphology(specification=morphology_specification)
 
 # task and controller
-simulation_time = 60
+simulation_time = 300
 velocity = 0.5
 parkour = BezierParkour.load("task/parkours/full_parkour.pkl")
-# config = MoveConfig(control_substeps=20,
-#                     simulation_time=simulation_time, 
-#                     velocity=velocity,
-#                     reward_fn="(E + 200*Δx) * (Δx)",
-#                     task_mode="parkour",
-#                     parkour=parkour)
 config = MoveConfig(control_substeps=1,
                     simulation_time=simulation_time, 
                     velocity=velocity,
                     reward_fn="(E + 200*Δx) * (Δx)",
-                    task_mode="random_target",
-                    # parkour=parkour,
-                    )
+                    task_mode="parkour",
+                    parkour=parkour)
+# config = MoveConfig(control_substeps=1,
+#                     simulation_time=simulation_time, 
+#                     velocity=velocity,
+#                     reward_fn="(E + 200*Δx) * (Δx)",
+#                     task_mode="random_target",
+#                     # parkour=parkour,
+#                     )
 print(f"control_timestep: {config.control_timestep}")
-config.target_location = np.array([-10, 5, 1])
+# config.target_location = np.array([-10, -5, 1])
 dm_env = config.environment(morphology=MJCMantaRayMorphology(specification=morphology_specification), wrap2gym=False)
 observation_spec = dm_env.observation_spec()
 action_spec = dm_env.action_spec()
@@ -78,27 +78,32 @@ parameters_controller_previous = None
 difference_behaviour = []
 difference_parameters_controller = []
 
-control_step = 5.  # time between cpg modulations
+control_step = 2.  # time between cpg modulations
 scaled_actions = np.empty((8, int(control_step/config.physics_timestep)))
 counter = 0
+cpg_parameters = np.array([1., 0.5, 0.2, 0.,#left
+                                   1., 0.5, 0.2, 1. # right
+                                   ])
+behaviour_descriptor = np.array([0, 0, 0])
 
 def policy(timestep: TimeStep) -> np.ndarray:
-    global left, right, phase_bias, behaviour_previous, parameters_controller_previous, config, scaled_actions, counter, control_step
+    global left, right, phase_bias, behaviour_previous, parameters_controller_previous, config, scaled_actions, counter, control_step, cpg_parameters, behaviour_descriptor
     time = timestep.observation["task/time"][0]
     if np.allclose(time[0] % control_step,  0., atol=0.01):
         print("changing parameters")
         obs = timestep.observation
         # update the controller modulation
         if config.task_mode == "parkour":
-            cpg_parameters, behaviour_descriptor = rule_based_layer.select_parameters_parkour(current_angular_positions=obs["task/orientation"][0],
+            cpg_parameters, behaviour_descriptor = rule_based_layer.select_parameters_parkour(current_angular_positions=obs["task/orientation_quat"][0],
                                                             current_xyz_velocities=obs["task/xyz_velocity"][0],
                                                             current_position=obs["task/position"][0],
                                                             print_flag=True,
-                                                            scaling=True,
+                                                            scaling=False,
                                                             parkour=parkour,
                                                             )
         elif config.task_mode == "random_target":
-            cpg_parameters, behaviour_descriptor = rule_based_layer.select_parameters_target(current_angular_positions=obs["task/orientation"][0],
+            print(obs["task/orientation_quat"][0])
+            cpg_parameters, behaviour_descriptor = rule_based_layer.select_parameters_target(current_angular_positions=obs["task/orientation_quat"][0],#angle.as_euler('xyz', degrees=False),
                                                             current_xyz_velocities=obs["task/xyz_velocity"][0],
                                                             current_position=obs["task/position"][0],
                                                             target_location=config.target_location,
@@ -106,9 +111,9 @@ def policy(timestep: TimeStep) -> np.ndarray:
                                                             scaling=False)
         else:
             raise ValueError(f"task_mode: {config.task_mode} not supported")
-        cpg_parameters = np.array([1., 0.5, 0.2, 0.,#left
-                                   1., 0.5, 0.2, 1. # right
-                                   ])
+        # cpg_parameters = np.array([1., 0.5, 0.2, 0.,#left
+        #                            1., 0.5, 0.2, 1. # right
+        #                            ])
         controller_parameterizer.parameter_space(specification=controller_specification,
                                                 controller_action=cpg_parameters,)
         normalised_actions = (cpg.ask(observation=timestep.observation,

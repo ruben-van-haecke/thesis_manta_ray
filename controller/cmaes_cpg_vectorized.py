@@ -182,13 +182,15 @@ if __name__ == "__main__":
     cpg_modulations = []
     cpg_actions = []
     modulation2 = None
+    positions = []
 
     def oscillator_policy_fn(
             timestep: TimeStep
             ) -> np.ndarray:
-        global action_spec, cpg_actions, cpg_modulations, parameterizer, controller_specification, modulation2
+        global action_spec, cpg_actions, cpg_modulations, parameterizer, controller_specification, modulation2, positions
         names = action_spec.name.split('\t')
         time = timestep.observation["task/time"][0]
+        positions.append(timestep.observation["task/position"][0])
 
         num_actuators = action_spec.shape[0]
         actions = np.zeros(num_actuators)
@@ -210,7 +212,6 @@ if __name__ == "__main__":
             modulation = np.array([1., 0.5, 0.2, 0., # left
                                    0., 0.5, 0., 0. # right
                                    ])
-            modulation2 = modulation
         else:   # up
             modulation = np.array([1., 0.75, 0.2, 0., # left
                                       1., 0.25, 0.2, 0. # right
@@ -221,6 +222,8 @@ if __name__ == "__main__":
                         duration=None, #task_config.control_timestep,
                         sampling_period=task_config.control_timestep,
                         )
+        if time > 7 and time < 7.1:
+            modulation2 = parameterizer.get_scaled_parameters(specification=controller_specification)
         if len(actions.shape) > 1:
             actions = actions[:, 0]
         # cpg_actions.append(actions)
@@ -268,5 +271,41 @@ if __name__ == "__main__":
     # Show the plot
     fig.show()
     print(f"modulation 1: {cpg_modulations[0]}")
-    print(f"modulation 2: {cpg_modulations[-1]}")
-    print(f"modulation 3: {cpg_modulations[-2]}")
+    print(f"modulation 2: {modulation2}")
+    print(f"modulation 3: {cpg_modulations[-1]}")
+
+    x_positions = [position[0] for position in positions]
+    y_positions = [position[1] for position in positions]
+    z_positions = [position[2] for position in positions]
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=np.linspace(0, task_config.simulation_time, len(x_positions)), 
+                            y=x_positions, 
+                            mode='lines',
+                            name='x position'))
+    fig.add_trace(go.Scatter(x=np.linspace(0, task_config.simulation_time, len(y_positions)), 
+                            y=y_positions, 
+                            mode='lines',
+                            name='y position'))
+    fig.add_trace(go.Scatter(x=np.linspace(0, task_config.simulation_time, len(z_positions)), 
+                            y=z_positions, 
+                            mode='lines',
+                            name='z position'))
+    # Add vertical lines at x = 6 and x = 11
+    fig.add_shape(
+        type="line", line=dict(dash="dash"),
+        x0=6, x1=6, y0=-1, y1=2.3,# yref="paper"
+    )
+    fig.add_shape(
+        type="line", line=dict(dash="dash"),
+        x0=11, x1=11, y0=-1, y1=2.3,# yref="paper"
+    )
+
+    # Set plot layout
+    fig.update_layout(title='X, Y, Z Positions over Time',
+                    xaxis_title='time [s]',
+                    yaxis_title='Position',
+                    font=dict(size=25))
+
+    # Show the plot
+    fig.show()
