@@ -94,9 +94,12 @@ sim = OptimizerSimulation(
 # sim.viewer(parameters)
 # sim.check_archive(archive)
 sim.plot_observations(parameters,
+                      title="Orientation",
                       observation_name="task/orientation")
 sim.plot_observations(parameters,
+                      title="Angular velocity",
                       observation_name="task/angular_velocity")
 sim.plot_observations(parameters,
+                      title="Average angular velocity",
                       observation_name="task/avg_angular_velocity")
 sim.viewer(parameters)

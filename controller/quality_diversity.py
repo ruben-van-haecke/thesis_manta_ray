@@ -447,10 +447,11 @@ class Archive:
         fig.show()
     
     def plot_distance_neighbours_distribution(self,
-                            parameter_name: str,
+                            parameter_names: List[str],
                             title: str = "MAP-Elites Archive",
                             filename: str | None = None,
                             show: bool = False,
+                            print_above: float | None = None,
                             ) -> None:
         """
         For the given parameter, plot the distribution of the differences between the parameter value and the values of the 4 neighbouring solutions. 
@@ -459,9 +460,14 @@ class Archive:
         filename: str: The directory and filename to store the plot as an HTML file. If None, the plot is not stored.
         show: bool: Whether to show the plot.
         """
-        assert parameter_name in self._parameter_names, "The parameter_name must be one of the parameter names."
-        parameter_index = self._parameter_names.index(parameter_name)
+        assert type(parameter_names) == list, "The parameter_names must be a list."
+        for parameter_name in parameter_names:
+            assert parameter_name in self._parameter_names, "The parameter_name must be one of the parameter names."
+
+        # parameter_index = self._parameter_names.index(parameter_name)
+        parameter_indices = [self._parameter_names.index(p) for p in parameter_names]
         differences = []
+        already_in_list = []
         for sol in self:
             index = self.get_bin_index(sol.behaviour)
             if index is None:
@@ -473,14 +479,18 @@ class Archive:
                   (index[0], index[1], index[2] + 1),
                   (index[0], index[1], index[2] - 1)]
             for neighbour in neighbours:
-                if neighbour in self._solutions.keys():
+                if neighbour in self._solutions.keys() and (neighbour[1], neighbour[0]) not in already_in_list:
                     for neighbour_sol in self._solutions[neighbour]:
-                        difference = abs(neighbour_sol.parameters[parameter_index] - sol.parameters[parameter_index])
+                        difference = np.linalg.norm(neighbour_sol.parameters[parameter_indices] - sol.parameters[parameter_indices])
+                        if print_above is not None and difference > print_above:
+                            print(f"sol1: {sol},\n sol2: {neighbour_sol}, \ndifference: {difference}")
+                            print("-------------------------------------------------")
                         differences.append(difference)
+                        already_in_list.append((neighbour[0], neighbour[1]))
         fig = go.Figure(data=[go.Histogram(x=differences)])
         fig.update_layout(
             title=title,
-            xaxis_title=f"Difference in {parameter_name}",
+            xaxis_title=f"Distance",
             yaxis_title="Frequency",
             font=dict(
             size=25,
@@ -640,7 +650,7 @@ class MapElites:
             side='left',
             showgrid=False,
             zeroline=False,
-            tickfont=dict(size=14)  # Increase font size
+            # tickfont=dict(size=25)  # Increase font size
             ),
             yaxis2=dict(
             title='Fitness',
@@ -648,8 +658,9 @@ class MapElites:
             overlaying='y',
             showgrid=False,
             zeroline=False,
-            tickfont=dict(size=20),  # Increase font size
+            # tickfont=dict(size=25),  # Increase font size
             ),
+            font=dict(size=20),
         )
 
         if store is not None:

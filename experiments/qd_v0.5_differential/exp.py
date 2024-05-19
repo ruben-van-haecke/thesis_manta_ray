@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     # controller
     # parkour = BezierParkour.load("task/parkours/slight_curve.pkl")
-    task_config = MoveConfig(simulation_time=6, 
+    task_config = MoveConfig(simulation_time=8, 
                          velocity=0.5,
                          reward_fn="(E + 200*Δx) * (Δx)",
                          task_mode="no_target",)
@@ -67,13 +67,13 @@ if __name__ == "__main__":
     bounds = np.zeros(shape=(len(controller_parameterizer.get_parameter_labels()), 2))
     bounds[:, 1] = 1
     denomenator = 4
-    roll = 1.85
-    pitch = 1.2
-    yaw = 1
+    roll = 0.75
+    pitch = 0.7
+    yaw = 1.2
     # parameters: ['fin_amplitude_left', 'fin_offset_left', 'frequency_left', 'phase_bias_left', 'fin_amplitude_right', 'fin_offset_right', 'frequency_right', 'phase_bias_right']
     archive = Archive(parameter_bounds=[(0, 1) for _ in range(len(controller_parameterizer.get_parameter_labels()))],
                       feature_bounds=[(-roll, roll), (-pitch, pitch), (-yaw, yaw)], 
-                      resolutions=[15, 10, 8],
+                      resolutions=[7, 10, 15],
                       parameter_names=controller_parameterizer.get_parameter_labels(), 
                       feature_names=["roll", "pitch", "yaw"],
                       symmetry = [('phase_bias_right', 'phase_bias_left'), 
@@ -90,7 +90,7 @@ if __name__ == "__main__":
         robot_specification=robot_spec,
         parameterizer=controller_parameterizer,
         population_size=12,  # make sure this is a multiple of num_envs
-        num_generations=4000,
+        num_generations=3000,
         outer_optimalization=map_elites,
         controller=CPG,
         skip_inner_optimalization=True,

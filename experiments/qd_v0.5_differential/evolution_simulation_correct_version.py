@@ -277,7 +277,7 @@ class OptimizerSimulation:
         
         # fig.add_trace(go.Scatter(x=np.arange(len(max_rewards)), y=max_rewards, name="max"))
         # fig.add_trace(go.Scatter(x=np.arange(len(min_rewards)), y=min_rewards, name="min"))
-        fig.update_layout(xaxis_title="generation", yaxis_title="distance", font=dict(size=20))
+        fig.update_layout(xaxis_title="generation", yaxis_title="distance", font=dict(size=25))
         fig.show()
         if filename is not None:
             fig.write_html(filename)

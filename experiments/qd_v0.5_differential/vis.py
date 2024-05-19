@@ -18,12 +18,12 @@ morphology_specification = default_morphology_specification()
 morphology = MJCMantaRayMorphology(specification=morphology_specification)
 
 # task
-simulation_time = 6
+simulation_time = 8
 velocity = 0.5
 config = MoveConfig(simulation_time=simulation_time, 
                         velocity=velocity,
                         reward_fn="(E + 200*Δx) * (Δx)",
-                        task_mode="random_target")
+                        task_mode="no_target")
 
 # controller
 simple_env = config.environment(morphology=MJCMantaRayMorphology(specification=morphology_specification), # TODO: remove this, ask Dries
@@ -69,7 +69,7 @@ target_location = np.array([1, 0, 0])*simulation_time*velocity
 # target_location[[0, 2]] = np.array([np.cos(pitch), np.sin(pitch), -np.sin(pitch), np.cos(pitch)]).reshape(2, 2) @ target_location[[0, 2]]
 # config.target_location = target_location + config.initial_position
 r = Rotation.from_euler('xyz', [0, -pitch, yaw+np.pi])
-config.target_location = r.apply(target_location) + config.initial_position
+# config.target_location = r.apply(target_location) + config.initial_position
 
 
 sim = OptimizerSimulation(
@@ -94,9 +94,12 @@ sim = OptimizerSimulation(
 # sim.viewer(parameters)
 # sim.check_archive(archive)
 sim.plot_observations(parameters,
+                      title="Orientation",
                       observation_name="task/orientation")
 sim.plot_observations(parameters,
+                      title="Angular velocity",
                       observation_name="task/angular_velocity")
 sim.plot_observations(parameters,
+                      title="Average angular velocity",
                       observation_name="task/avg_angular_velocity")
 sim.viewer(parameters)

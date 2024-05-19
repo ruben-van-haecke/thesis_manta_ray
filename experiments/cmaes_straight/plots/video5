@@ -11,15 +11,13 @@ phase_bias_right :  0.4511525925305992
 
 
 
-    cma = CMA(mean=np.array([1, 0.5, 0.5, 0, 1, 0.5, 0.5, 0]),
-            #   np.random.uniform(low=0,
-            #                          high=1,
-            #                          size=len(controller_parameterizer.get_parameter_labels())),
+    cma = CMA(mean=np.random.uniform(low=0,
+                                      high=1,
+                                      size=len(controller_parameterizer.get_parameter_labels())),
               sigma=0.1,
               bounds=bounds,
               population_size=10,    # has to be more than 1
               lr_adapt=True,
-              seed=43
               )
 
     sim = OptimizerSimulation(
