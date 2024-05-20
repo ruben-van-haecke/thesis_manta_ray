@@ -31,7 +31,7 @@ archive.plot_distance_neighbours_distribution(parameter_names=["fin_offset_left"
                                               filename="experiments/qd_v0.5_differential/plots/distance_neighbours_distribution_fin_offset_left",
                                               show=True,
                                               )
-archive.plot_distance_neighbours_distribution(parameter_names=['fin_amplitude_left', 'fin_offset_left', 'frequency_left', 'fin_amplitude_right', 'fin_offset_right', 'frequency_right'],
+archive.plot_distance_neighbours_distribution(parameter_names=['fin_amplitude_left', 'fin_offset_left', 'frequency_left', 'phase_bias_left', 'fin_amplitude_right', 'fin_offset_right', 'frequency_right', 'phase_bias_right'],
                                               title="Distance between neighbour's parameters",
                                               filename="experiments/qd_v0.5_differential/plots/distance_neighbours_distribution",
                                               show=True,

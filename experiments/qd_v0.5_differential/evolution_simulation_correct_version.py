@@ -363,6 +363,7 @@ class OptimizerSimulation:
     
     def plot_observations(self, 
                      normalised_action: np.ndarray,
+                     title: str,
                      observation_name: str = "task/angular_velocity",
                      ) -> None:
         """
@@ -407,7 +408,8 @@ class OptimizerSimulation:
         fig.update_layout(
             xaxis_title="time [seconds]",
             yaxis_title="output",
-            title=observation_name
+            title=title,
+            font=dict(size=25)
         )
 
         fig.show()

@@ -90,7 +90,7 @@ if __name__ == "__main__":
         robot_specification=robot_spec,
         parameterizer=controller_parameterizer,
         population_size=12,  # make sure this is a multiple of num_envs
-        num_generations=3000,
+        num_generations=3500,
         outer_optimalization=map_elites,
         controller=CPG,
         skip_inner_optimalization=True,
