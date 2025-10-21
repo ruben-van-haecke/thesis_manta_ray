@@ -136,7 +136,7 @@ phase biases:
                             method='Radau',
                             )
             self._last_state = sol.y[:, -1]
-            self._last_time = time
+            self._last_time = time+duration-sampling_period#time
             out = sol.y[1*self._num_neurons:2*self._num_neurons, :] * np.cos(sol.y[0:self._num_neurons, :]) + sol.y[2*self._num_neurons:3*self._num_neurons, :]
         return out
     

@@ -90,11 +90,17 @@ class RuleBased:
             np.ndarray of shape (3,) for roll, pitch, yaw, corresponding to the behaviour descriptor
         """
         #check if the transformation is correct
-        current_angular_positions[0], current_angular_positions[1], current_angular_positions[2] = \
-            -current_angular_positions[2], -current_angular_positions[1], -current_angular_positions[0]
-        rot = Rotation.from_quat(current_angular_positions)
-        target_location = target_location - current_position    # translate the target location such that the current position is the origin
-        target_location_after_transformation = rot.apply(target_location, inverse=True)
+        # print(f"current_angular_positions: {current_angular_positions}")
+        # current_angular_positions[0], current_angular_positions[1], current_angular_positions[2] = \
+        #     -current_angular_positions[2], -current_angular_positions[1], -current_angular_positions[0]
+        new_quat = np.array([current_angular_positions[3], current_angular_positions[0], current_angular_positions[1], current_angular_positions[2]])
+        rot = Rotation.from_quat(new_quat)
+        r2 = Rotation.from_euler('xyz', [np.pi, 0, np.pi])
+        rot = rot * r2
+        print(f"rot: {rot.as_euler('xyz', degrees=False)}")
+        target_location = target_location + np.array([0, 0, 3])  # parkour is elevated by 3 units
+        target_location_after_translation = target_location - current_position    # translate the target location such that the current position is the origin
+        target_location_after_transformation = rot.apply(target_location_after_translation, inverse=False)
         # rotation_after = rotate(point=[1, 0, 0], rotation=current_angular_positions)
         # rotation_after = rotate(point=rotation_after, rotation=-current_angular_positions)
         # print(f"rotation_after: {rotation_after}")
@@ -108,17 +114,18 @@ class RuleBased:
         # roll
         roll = 0
         # pitch
+        scale = 0.5
         pitch = np.abs(np.arctan(target_location_after_transformation[2]/target_location_after_transformation[0]))
-        pitch = np.pi - pitch if target_location_after_transformation[0] < 0 else pitch
-        pitch = 0.4 * pitch/np.linalg.norm(target_location_after_transformation)
-        if target_location_after_transformation[2] > 0: # negative pitch (there has been a rotation of 180 degrees around the z-axis)
+        pitch = np.pi - pitch if target_location_after_transformation[0] > 0 else pitch
+        pitch = scale * pitch/np.linalg.norm(target_location_after_transformation)
+        if target_location_after_transformation[2] < 0: # negative pitch (there has been a rotation of 180 degrees around the z-axis)
             pitch *= -1
 
         # yaw
         yaw = np.abs(np.arctan(target_location_after_transformation[1]/target_location_after_transformation[0]))
-        yaw = np.pi - yaw if target_location_after_transformation[0] < 0 else yaw
-        yaw = 0.4 * yaw / np.linalg.norm(target_location_after_transformation)
-        if target_location_after_transformation[1] < 0: # negative yaw
+        yaw = np.pi - yaw if target_location_after_transformation[0] > 0 else yaw
+        yaw = scale * yaw / np.linalg.norm(target_location_after_transformation)
+        if target_location_after_transformation[1] > 0: # negative yaw
             yaw *= -1
 
         # scaling
@@ -131,13 +138,16 @@ class RuleBased:
             features = np.array([roll, pitch, yaw]).reshape(1, -1)
             self._rolling_features = self._rolling_features * 0.5 + features * 0.5
         else:
-            roll, pitch, yaw = -roll, -pitch, yaw   # needed because of the difference in axes between te qd archive and the manta ray
+            # roll, pitch, yaw = -roll, -pitch, yaw   # needed because of the difference in axes between te qd archive and the manta ray
             self._rolling_features = np.array([roll, pitch, yaw]).reshape(1, -1)
 
         sol = self._archive.get_closest_solutions(feature=self._rolling_features, k=1)[0][0]
         if print_flag:
             print(f"------------------------------------")
             print(f"orientation: {quat2euler(current_angular_positions)}")
+            print(f"current_position: {current_position}")
+            print(f"target_location: {target_location}")
+            print(f"target_location_after_translation: {target_location_after_translation}")
             print(f"target_location_after_transformation: {target_location_after_transformation}")
             print(f"behaviour needed: {self._rolling_features}")
             print(f"behaviour selected: {sol.behaviour}, metadata: {sol.metadata}, bin_index: {self._archive.get_bin_index(features=sol.behaviour)}")
@@ -164,7 +174,8 @@ class RuleBased:
             np.ndarray of shape (3,) for roll, pitch, yaw, corresponding to the behaviour descriptor
         """
         distance_to_point, distance_parkour = parkour.get_distance(position=current_position)
-        target_location = parkour.get_point(distance_parkour+1)
+        print(f"distance_to_point: {distance_to_point}, distance_parkour: {distance_parkour}")
+        target_location = parkour.get_point(distance_parkour+2)
         scaled_action, behaviour_descriptor = self.select_parameters_target(current_angular_positions=current_angular_positions,
                                                         current_xyz_velocities=current_xyz_velocities,
                                                         current_position=current_position,

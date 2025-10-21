@@ -76,7 +76,7 @@ parameters_controller_previous = None
 difference_behaviour = []
 difference_parameters_controller = []
 
-control_step = 1.  # time between cpg modulations
+control_step = .2  # time between cpg modulations
 scaled_actions = np.empty((8, int(control_step/config.physics_timestep)))
 counter = 0
 

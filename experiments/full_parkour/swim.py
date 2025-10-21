@@ -26,7 +26,7 @@ morphology_specification = default_morphology_specification()
 morphology = MJCMantaRayMorphology(specification=morphology_specification)
 
 # task and controller
-simulation_time = 6
+simulation_time = 110
 velocity = 0.5
 parkour = BezierParkour.load("task/parkours/full_parkour.pkl")
 config = MoveConfig(control_substeps=1,
@@ -78,9 +78,9 @@ parameters_controller_previous = None
 difference_behaviour = []
 difference_parameters_controller = []
 
-control_step = 2.  # time between cpg modulations
+control_step = .2  # time [seconds] between cpg modulations
 scaled_actions = np.empty((8, int(control_step/config.physics_timestep)))
-counter = 0
+counter = scaled_actions.shape[1]
 cpg_parameters = np.array([1., 0.5, 0.2, 0.,#left
                                    1., 0.5, 0.2, 1. # right
                                    ])
@@ -89,32 +89,32 @@ behaviour_descriptor = np.array([0, 0, 0])
 def policy(timestep: TimeStep) -> np.ndarray:
     global left, right, phase_bias, behaviour_previous, parameters_controller_previous, config, scaled_actions, counter, control_step, cpg_parameters, behaviour_descriptor
     time = timestep.observation["task/time"][0]
-    cpg_parameters = np.array([0.99841955, 0.49981574, 0.94514505, 0.21628591, 0.99878276, 0.49985188, 0.55924584, 0.45115259])
-    if np.allclose(time[0] % control_step,  0., atol=0.01):
+    # cpg_parameters = np.array([0.99841955, 0.49981574, 0.94514505, 0.21628591, 0.99878276, 0.49985188, 0.55924584, 0.45115259])
+    if counter == scaled_actions.shape[1]:
         print("changing parameters")
         obs = timestep.observation
         # update the controller modulation
-        # if config.task_mode == "parkour":
-        #     cpg_parameters, behaviour_descriptor = rule_based_layer.select_parameters_parkour(current_angular_positions=obs["task/orientation_quat"][0],
-        #                                                     current_xyz_velocities=obs["task/xyz_velocity"][0],
-        #                                                     current_position=obs["task/position"][0],
-        #                                                     print_flag=True,
-        #                                                     scaling=False,
-        #                                                     parkour=parkour,
-        #                                                     )
-        # elif config.task_mode == "random_target":
-        #     print(obs["task/orientation_quat"][0])
-        #     cpg_parameters, behaviour_descriptor = rule_based_layer.select_parameters_target(current_angular_positions=obs["task/orientation_quat"][0],#angle.as_euler('xyz', degrees=False),
-        #                                                     current_xyz_velocities=obs["task/xyz_velocity"][0],
-        #                                                     current_position=obs["task/position"][0],
-        #                                                     target_location=config.target_location,
-        #                                                     print_flag=True,
-        #                                                     scaling=False)
-        # else:
-        #     raise ValueError(f"task_mode: {config.task_mode} not supported")
-        # # cpg_parameters = np.array([1., 0.5, 0.2, 0.,#left
-        # #                            1., 0.5, 0.2, 1. # right
-        # #                            ])
+        if config.task_mode == "parkour":
+            cpg_parameters, behaviour_descriptor = rule_based_layer.select_parameters_parkour(current_angular_positions=obs["task/orientation_quat"][0],
+                                                            current_xyz_velocities=obs["task/xyz_velocity"][0],
+                                                            current_position=obs["task/position"][0],
+                                                            print_flag=True,
+                                                            scaling=False,
+                                                            parkour=parkour,
+                                                            )
+        elif config.task_mode == "random_target":
+            print(obs["task/orientation_quat"][0])
+            cpg_parameters, behaviour_descriptor = rule_based_layer.select_parameters_target(current_angular_positions=obs["task/orientation_quat"][0],#angle.as_euler('xyz', degrees=False),
+                                                            current_xyz_velocities=obs["task/xyz_velocity"][0],
+                                                            current_position=obs["task/position"][0],
+                                                            target_location=config.target_location,
+                                                            print_flag=True,
+                                                            scaling=False)
+        else:
+            raise ValueError(f"task_mode: {config.task_mode} not supported")
+        # cpg_parameters = np.array([1., 0.5, 0.2, 0.,#left
+        #                            1., 0.5, 0.2, 1. # right
+        #                            ])
         controller_parameterizer.parameter_space(specification=controller_specification,
                                                 controller_action=cpg_parameters,)
         normalised_actions = (cpg.ask(observation=timestep.observation,

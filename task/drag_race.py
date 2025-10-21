@@ -80,7 +80,7 @@ class MoveConfig(MJCEnvironmentConfig):
             self._location_target = np.array([0, 0, 0])
         else:
             self._location_target = None
-        self._initial_position = np.array([0.0, 0.0, 15 * 0.1])
+        self._initial_position = np.array([0.0, 0.0, 3])
     
     def __deepcopy__(self, memo) -> 'MoveConfig':
         cls = self.__class__
@@ -256,6 +256,7 @@ class Task(composer.Task):
         if root_joint:
             xyz_position = physics.bind(root_joint).qpos[:3]
             orientation = physics.bind(root_joint).qpos[3:]
+            return quat2euler(orientation)
             # see: https://mujoco.readthedocs.io/en/latest/computation/index.html#the-state
             orientation = Rotation.from_rotvec(2*np.arcsin(orientation[0])*orientation[1:]).as_euler('xyz', degrees=False)
             return orientation

@@ -67,7 +67,7 @@ if __name__ == "__main__":
     # parameters: ['fin_amplitude_left', 'fin_offset_left', 'frequency_left', 'phase_bias_left', 'fin_amplitude_right', 'fin_offset_right', 'frequency_right', 'phase_bias_right']
     archive = Archive(parameter_bounds=[(0, 1) for _ in range(len(controller_parameterizer.get_parameter_labels()))],
                       feature_bounds=[(-np.pi, np.pi), (-np.pi/2, np.pi/2), (-np.pi, np.pi)], 
-                      resolutions=[10, 10, 10],
+                      resolutions=[10, 5, 10],
                       parameter_names=controller_parameterizer.get_parameter_labels(), 
                       feature_names=["roll", "pitch", "yawn"],
                       symmetry = [('phase_bias_right', 'phase_bias_left'), 
@@ -80,14 +80,14 @@ if __name__ == "__main__":
     map_elites = MapElites(archive, archive_file="experiments/qd_v0.5_t3/sim_objects/archive.pkl")
 
     sim = OptimizerSimulation(
-        task_config=MoveConfig(simulation_time=3, 
+        task_config=MoveConfig(simulation_time=6, 
                          velocity=0.5,
                          reward_fn="(E + 200*Δx) * (Δx)",
                          task_mode="random_target",),
         robot_specification=robot_spec,
         parameterizer=controller_parameterizer,
         population_size=12,  # make sure this is a multiple of num_envs
-        num_generations=7000,
+        num_generations=4500,
         outer_optimalization=map_elites,#cma,
         controller=CPG,
         skip_inner_optimalization=True,

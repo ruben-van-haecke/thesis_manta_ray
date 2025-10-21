@@ -500,6 +500,25 @@ class Archive:
             fig.show()
         if filename is not None:
             fig.write_html(f"{filename}.html")
+    def plot_fitness_distribution(self,):
+        """
+        Plot the fitness values from the archive in a histogram with plotly
+        """
+        fitness_values = []
+        for sol in self:
+            fitness_values.append(np.log(sol.fitness))
+            if sol.fitness > 200:
+                print(f"fitness: {sol}")
+        fig = go.Figure(data=[go.Histogram(x=fitness_values)])
+        fig.update_layout(
+            title="Log[fitness] Distribution",
+            xaxis_title="Log[fitness]",
+            yaxis_title="Frequency",
+            font=dict(
+            size=25,
+            )
+        )
+        fig.show()
 
 
     def get_bins(self) -> List[Tuple[int, ...]]:
